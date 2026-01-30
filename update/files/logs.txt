@@ -1,0 +1,5 @@
+1.0.1 20260125
+http://localhost/data/update/files/update.zip
+- Fixed connection issues
+- Improved UI stability
+- New local update test

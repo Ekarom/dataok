@@ -1,0 +1,1 @@
+curl.cainfo = "e:\wamp64\bin\php\php7.3.12\extras\ssl\cacert.pem"

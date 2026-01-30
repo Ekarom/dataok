@@ -1,0 +1,8 @@
+1.0.1
+1762146731
+- menambahkan pengamanan di dalam aplikasi
+- menambahkan fitur cek update
+- menambahkan fitur page legalisir
+- optimasi code
+- perbaikan bug
+- tambah fitur login

@@ -1,9 +1,14 @@
-# Ignore everything
-*
+# Dependencies
+/node_modules
+/vendor
 
-# Allow root PHP files and this file
-!*.php
-!.gitignore
+# System Files
+.DS_Store
+Thumbs.db
 
-# Ignore all subdirectories
-/*/
+# Environment Variables
+.env
+
+# IDE
+.vscode/
+.idea/
