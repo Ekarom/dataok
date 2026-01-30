@@ -1,0 +1,9 @@
+# Ignore everything
+*
+
+# Allow root PHP files and this file
+!*.php
+!.gitignore
+
+# Ignore all subdirectories
+/*/

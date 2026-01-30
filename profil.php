@@ -1,0 +1,622 @@
+<!-- Toastr CSS -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+
+<style>
+    /* ==========================================
+       PROFILE CARD STYLES
+       ========================================== */
+    .profile-card {
+        background-color: #ffffff;
+        transition: all 0.3s ease-in-out;
+    }
+    
+    .profile-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(0, 247, 255, 1);
+    }
+    
+    /* ==========================================
+       CUSTOM ELEMENTS
+       ========================================== */
+    .hr-custom {
+        border-top: 1px solid #495057;
+    }
+    
+    .btn-custom {
+        border-radius: 0.5rem;
+        transition: background-color 0.2s;
+    }
+    
+    /* ==========================================
+       PROGRESS BAR
+       ========================================== */
+    .progress {
+        background-color: #FF2900;
+    }
+    
+    /* ==========================================
+       TOASTR NOTIFICATION
+       ========================================== */
+    .toast-top-center {
+        top: 20px;
+    }
+    
+    /* ==========================================
+       PASSWORD STRENGTH INDICATOR
+       ========================================== */
+    .password-strength-meter {
+        height: 5px;
+        background-color: #e9ecef;
+        border-radius: 3px;
+        margin-top: 8px;
+        overflow: hidden;
+        transition: all 0.3s ease;
+    }
+    
+    .password-strength-bar {
+        height: 100%;
+        width: 0%;
+        transition: all 0.3s ease;
+        border-radius: 3px;
+    }
+    
+    .strength-weak {
+        background-color: #dc3545;
+        width: 33%;
+    }
+    
+    .strength-medium {
+        background-color: #ffc107;
+        width: 66%;
+    }
+    
+    .strength-strong {
+        background-color: #28a745;
+        width: 100%;
+    }
+    
+    .password-strength-text {
+        font-size: 0.85rem;
+        margin-top: 5px;
+        font-weight: 500;
+    }
+    
+    .text-weak {
+        color: #dc3545;
+    }
+    
+    .text-medium {
+        color: #ffc107;
+    }
+    
+    .text-strong {
+        color: #28a745;
+    }
+
+    /* Circular Upload Container */
+    .profile-img-container {
+        position: relative;
+        width: 130px;
+        height: 130px;
+        margin: 0 auto 15px;
+        cursor: pointer;
+        overflow: hidden;
+        border-radius: 50%;
+        border: 4px solid #fff;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        transition: all 0.3s ease;
+    }
+    
+    .profile-img-container:hover {
+        border-color: #007bff;
+        transform: scale(1.02);
+        box-shadow: 0 6px 20px rgba(0,123,255,0.2);
+    }
+    
+    .profile-img-container .overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+        color: #fff;
+    }
+    
+    .profile-img-container:hover .overlay {
+        opacity: 1;
+    }
+    
+    .profile-img-container .overlay i {
+        font-size: 32px;
+        margin-bottom: 5px;
+    }
+    
+    .profile-img-container .overlay span {
+        font-size: 12px;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+    
+    .profile-img-container img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+</style>
+
+<!-- Content Wrapper -->
+<div class="content-wrapper">
+    <!-- Content Header -->
+    <section class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6">
+                    <h1>Profile</h1>
+                </div>
+                <div class="col-sm-6">
+                    <ol class="breadcrumb float-sm-right">
+                        <li class="breadcrumb-item"><a href="?">Home</a></li>
+                        <li class="breadcrumb-item active">User Profile</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Main Content -->
+    <section class="content">
+        <div class="container-fluid">
+            <div class="row">
+                <!-- Left Column: Profile Card -->
+                <div class="col-md-3">
+                    <!-- Profile Image Card -->
+                    <div class="card card-navy card-outline">
+                        <div class="card-body box-profile">
+                            <div class="text-center">
+                                <div class="profile-img-container" onclick="document.getElementById('photo1').click();" title="Klik untuk ganti foto">
+                                    <div id='exisImage'>
+                                        <?php
+                                        if (!empty($poto) && file_exists("images/$poto")) {
+                                            echo "<img src='images/$poto' alt='User Photo'>";
+                                        } else {
+                                            echo "<img src='images/default.png' alt='Default Photo'>";
+                                        }
+                                        ?>
+                                    </div>
+                                    <div class="overlay">
+                                        <i class="fas fa-camera"></i>
+                                        <span>Ganti Foto</span>
+                                    </div>
+                                </div>
+                                <h3 id="status" class="mt-1"></h3>
+                            </div>
+                            
+                            <?php
+                            if (!empty($nama)) {
+                                echo "<h3 class='profile-username text-center'>".$nama."</h3>";
+                            } elseif (!empty($nis)) {
+                                echo "<h3 class='profile-username text-center'>".$nis."</h3>";
+                            }
+                            ?>
+                            
+                            <p class="text-muted text-center">
+                                <?php
+                                if (isset($lv)) {
+                                    if ($lv == "1") {
+                                        echo "<span class='badge bg-menu-gradient'>Administrator</span>";
+                                    } elseif ($lv == "2") {
+                                        echo "<span class='badge bg-menu-gradient'>Staff</span>";
+                                    } elseif ($lv == "3") {
+                                        echo "<span class='badge bg-menu-gradient'>User</span>";
+                                    }
+                                }
+                                ?>
+                            </p>
+                            
+                            <!-- Photo Upload Form (Hidden) -->
+                            <form id="upload_form" enctype="multipart/form-data" method="post" style="display:none;">
+                                <input type="file" name="photo1" id="photo1" onchange="uploadFile()" accept="image/*">
+                            </form>
+
+                            <!-- Progress Display -->
+                            <div class="upload-feedback mb-3 text-center">
+                                <div class="progress mb-2" style="height: 6px; display: none; border-radius: 10px;" id="progress_wrapper">
+                                    <div id="progressBar" class="progress-bar progress-bar-striped progress-bar-animated bg-primary" role="progressbar" style="width: 0%"></div>
+                                </div>
+                                <small id="loaded_n_total" class="text-muted small"></small>
+                            </div>
+                            
+                            <button type="button" 
+                                    class="btn btn-primary btn-block" 
+                                    data-toggle="modal" 
+                                    data-target="#gantiPassModal">
+                                Ganti Password
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- About Me Card -->
+                    <div class="card">
+                        <div class="card-header bg-menu-gradient">
+                            <h3 class="card-title">About Me</h3>
+                        </div>
+                        <div class="card-body">
+                            <!-- Name -->
+                            <strong><i class="fas fa-book mr-1"></i> Nama</strong>
+                            <p class="text-muted"><?php echo !empty($nama) ? $nama : '-'; ?></p>
+                            <hr>
+                            
+                            <!-- User ID -->
+                            <strong><i class="fas fa-file-alt mr-1"></i> User Id</strong>
+                            <p class="text-muted"><?php echo !empty($nuser) ? $nuser : '-'; ?></p>
+                            <hr>
+                            
+                            <!-- Level -->
+                            <strong><i class="fas fa-pencil-alt mr-1"></i> Level</strong>
+                            <p class="text-muted">
+                                <?php
+                                if (isset($lv)) {
+                                    if ($lv == "1") {
+                                        echo "<label>Admin</label>";
+                                    } elseif ($lv == "2") {
+                                        echo "<label>User</label>";
+                                    } elseif ($lv == "3") {
+                                        echo "<label>Staff</label>";
+                                    }
+                                }
+                                ?>
+                            </p>
+                            <hr>
+                            
+                            <!-- Log -->
+                            <strong><i class="far fa-file-alt mr-1"></i> Log</strong>
+                            <p class="text-muted"><?php echo !empty($log) ? $log : '-'; ?></p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Right Column: Staff Level Info -->
+                <div class="col-md-9">
+                    <div class="card">
+                        <div class="card-header bg-menu-gradient p-2">
+                            <ul class="nav nav-pills">
+                                <li class="nav-item">
+                                    <a class="nav-link active" href="#activity" data-toggle="tab">Staff LV</a>
+                                </li>
+                            </ul>
+                        </div>
+                        
+                        <div class="card-body">
+                            <div class="tab-content">
+                                <div class="tab-pane active" id="activity">
+                                    <div class="post">
+                                        <div class="user-block">
+                                            <?php if (isset($lv)) {
+                                                if ($lv == "1") { ?>
+                                                    <span class="username">Administrator</span><br>
+                                                    <span class="description">Super Admin</span>
+                                                <?php } else if ($lv == "2") { ?>
+                                                    <span class="username">Staff</span><br>
+                                                    <span class="description">Staff User</span>
+                                                <?php } 
+                                            } ?>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+
+<!-- Modal: Change Password -->
+<div class="modal fade" id="gantiPassModal" tabindex="-1" aria-labelledby="gantiPassModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-menu-gradient">
+                <h6 class="modal-title">Ganti Password Baru</h6>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p class="text-muted text-center small mb-4">Password baru harus minimal 6 karakter.</p>
+                <form id="formGantiPass">
+                    <div class="mb-3">
+                        <label for="passL" class="form-label">Password Lama</label>
+                        <input type="password" class="form-control" id="passL" name="passL" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="passB" class="form-label">Password Baru</label>
+                        <input type="password" class="form-control" id="passB" name="passB" required>
+                        <!-- Password Strength Indicator -->
+                        <div class="password-strength-meter">
+                            <div class="password-strength-bar" id="strengthBar"></div>
+                        </div>
+                        <div class="password-strength-text" id="strengthText"></div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="passK" class="form-label">Konfirmasi Password Baru</label>
+                        <input type="password" class="form-control" id="passK" name="passK" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary btn-flat" data-dismiss="modal">Batal</button>
+                <button type="button" class="btn btn-primary btn-flat" id="btnSimpanPass">Simpan</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Notification -->
+<div class="modal fade" id="notifModal" tabindex="-1" aria-labelledby="notifModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header" id="notifModalHeader">
+                <h6 class="modal-title">Notifikasi</h6>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body" id="notifMessage">
+                <!-- Message will be inserted here -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary btn-flat" data-dismiss="modal">Tutup</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Toastr JS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+
+<script>
+$(document).ready(function() {
+    // ==========================================
+    // NOTIFICATION MODAL FUNCTION
+    // ==========================================
+    function showNotif(type, message) {
+        const modal = $('#notifModal');
+        const header = $('#notifModalHeader');
+        const messageEl = $('#notifMessage');
+        
+        // Reset classes
+        header.removeClass('bg-success bg-danger bg-warning bg-info text-white');
+        
+        // Set style based on type
+        if (type === 'success') {
+            header.addClass('bg-success text-white');
+        } else if (type === 'error') {
+            header.addClass('bg-danger text-white');
+        } else if (type === 'warning') {
+            header.addClass('bg-warning text-white');
+        } else {
+            header.addClass('bg-info text-white');
+        }
+        
+        messageEl.html(message);
+        modal.modal('show');
+    }
+
+    // ==========================================
+    // PASSWORD STRENGTH CALCULATOR
+    // ==========================================
+    function calculatePasswordStrength(password) {
+        let strength = 0;
+        
+        if (password.length === 0) {
+            return { score: 0, text: '', className: '' };
+        }
+        
+        // Length checks
+        if (password.length >= 6) strength += 1;
+        if (password.length >= 8) strength += 1;
+        if (password.length >= 12) strength += 1;
+        
+        // Character variety checks
+        if (/[a-z]/.test(password)) strength += 1; // lowercase
+        if (/[A-Z]/.test(password)) strength += 1; // uppercase
+        if (/[0-9]/.test(password)) strength += 1; // numbers
+        if (/[^a-zA-Z0-9]/.test(password)) strength += 1; // special chars
+        
+        // Determine strength level
+        if (strength <= 2) {
+            return { score: 1, text: 'Lemah', className: 'strength-weak text-weak' };
+        } else if (strength <= 4) {
+            return { score: 2, text: 'Sedang', className: 'strength-medium text-medium' };
+        } else {
+            return { score: 3, text: 'Kuat', className: 'strength-strong text-strong' };
+        }
+    }
+
+    // ==========================================
+    // PASSWORD STRENGTH INDICATOR
+    // ==========================================
+    $('#passB').on('input', function() {
+        const password = $(this).val();
+        const strength = calculatePasswordStrength(password);
+        const strengthBar = $('#strengthBar');
+        const strengthText = $('#strengthText');
+        
+        // Reset classes
+        strengthBar.removeClass('strength-weak strength-medium strength-strong');
+        strengthText.removeClass('text-weak text-medium text-strong');
+        
+        if (password.length === 0) {
+            strengthBar.css('width', '0%');
+            strengthText.text('');
+        } else {
+            strengthBar.addClass(strength.className.split(' ')[0]);
+            strengthText.addClass(strength.className.split(' ')[1]);
+            strengthText.html('<i class="fas fa-shield-alt"></i> Kekuatan: ' + strength.text);
+        }
+    });
+
+    // ==========================================
+    // CHANGE PASSWORD HANDLER
+    // ==========================================
+    $('#btnSimpanPass').click(function() {  
+        const passL = $('#passL').val();
+        const passB = $('#passB').val();
+        const passK = $('#passK').val();
+
+        // Initialize Toastr Options
+        toastr.options = {
+            "closeButton": true,
+            "debug": false,
+            "newestOnTop": false,
+            "progressBar": true,
+            "positionClass": "toast-top-right",
+            "preventDuplicates": false,
+            "onclick": null,
+            "showDuration": "300",
+            "hideDuration": "1000",
+            "timeOut": "5000",
+            "extendedTimeOut": "1000",
+            "showEasing": "swing",
+            "hideEasing": "linear",
+            "showMethod": "fadeIn",
+            "hideMethod": "fadeOut"
+        };
+        
+        // Validation with Toastr
+        if (passL === '' || passB === '' || passK === '') {
+            toastr.error('Harap isi semua kolom password!');
+            return;
+        }
+
+        if (passB.length < 6) {
+            toastr.warning('Password baru minimal 6 karakter');
+            return;
+        }
+
+        if (passB !== passK) {
+            toastr.error('Konfirmasi password tidak cocok');
+            return;
+        }
+
+        // Send AJAX request
+        $.ajax({
+            url: 'post/gantipass.php',
+            type: 'POST',
+            data: {
+                passL: passL,
+                passB: passB,
+                passK: passK
+            },
+            success: function(response) {
+                response = response.trim();
+                
+                if (response === 'SUCCESS') {
+                    toastr.success('Password berhasil diubah!');
+                    $('#gantiPassModal').modal('hide');
+                    $('#formGantiPass')[0].reset();
+                } else if (response === '1') {
+                    toastr.warning('Password lama harus diisi');
+                } else if (response === '2') {
+                    toastr.warning('Password baru harus diisi');
+                } else if (response === '3') {
+                    toastr.warning('Password konfirmasi harus diisi');
+                } else if (response === '4') {
+                    toastr.error('Konfirmasi password tidak cocok');
+                } else if (response === '5') {
+                    toastr.warning('Password minimal 6 karakter');
+                } else if (response === '6') {
+                    toastr.error('Password lama salah!');
+                } else if (response.indexOf('ERROR') !== -1) {
+                    toastr.error(response);
+                } else {
+                    toastr.error('Terjadi kesalahan: ' + response);
+                }
+            },
+            error: function() {
+                toastr.error('Terjadi kesalahan koneksi server');
+            }
+        });
+    });
+
+    // ==========================================
+    // RESET PASSWORD STRENGTH ON MODAL CLOSE
+    // ==========================================
+    $('#gantiPassModal').on('hidden.bs.modal', function() {
+        $('#formGantiPass')[0].reset();
+        $('#strengthBar').removeClass('strength-weak strength-medium strength-strong').css('width', '0%');
+        $('#strengthText').removeClass('text-weak text-medium text-strong').text('');
+    });
+
+    // ==========================================
+    // PHOTO UPLOAD HANDLER
+    // ==========================================
+    window.uploadFile = function() {
+        const fileInput = document.getElementById("photo1");
+        const file = fileInput.files[0];
+        if (!file) return;
+
+        // Visual feedback: Start
+        $("#progress_wrapper").show();
+        $("#status").html("<span class='text-muted small'>Processing...</span>");
+
+        const formdata = new FormData();
+        formdata.append("photo1", file);
+
+        const ajax = new XMLHttpRequest();
+        
+        ajax.upload.addEventListener("progress", function(e) {
+            if (e.lengthComputable) {
+                const percent = (e.loaded / e.total) * 100;
+                $("#progressBar").css("width", Math.round(percent) + "%");
+                $("#status").html("<span class='text-primary small'>Uploading: " + Math.round(percent) + "%</span>");
+                $("#loaded_n_total").html((e.loaded / 1024).toFixed(1) + " / " + (e.total / 1024).toFixed(1) + " KB");
+            }
+        }, false);
+
+        ajax.addEventListener("load", function(e) {
+            const response = e.target.responseText.trim();
+            console.log("Upload Response:", response);
+            if (response.startsWith("SUCCESS|")) {
+                const newImgUrl = response.split("|")[1];
+                
+                // Update UI
+                $("#exisImage").html("<img src='" + newImgUrl + "' alt='Photo'>");
+                $("#status").html("<span class='text-success small'>Berhasil Dikirim!</span>");
+                toastr.success("Profil foto berhasil diperbarui.");
+                
+                // Hide progress after success
+                setTimeout(() => {
+                    $("#progress_wrapper").fadeOut();
+                    $("#loaded_n_total").html("");
+                    $("#status").html("");
+                    $(".custom-file-label").text("Ganti Foto...");
+                }, 2000);
+            } else {
+                const errorMsg = response.includes("ERROR:") ? response.split("ERROR:")[1] : "Gagal mengupload.";
+                $("#status").html("<span class='text-danger small'>" + errorMsg + "</span>");
+                toastr.error(errorMsg);
+                $("#progressBar").addClass("bg-danger");
+            }
+        }, false);
+
+        ajax.addEventListener("error", function() {
+            $("#status").html("<span class='text-danger small'>Server Error</span>");
+            toastr.error("Gagal terhubung ke server.");
+        }, false);
+
+        ajax.open("POST", "post/photo.php");
+        ajax.send(formdata);
+    };
+
+});
+</script>
