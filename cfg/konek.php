@@ -35,6 +35,8 @@ if ($q_dbset && mysqli_num_rows($q_dbset) > 0) {
     $r_dbset = mysqli_fetch_array($q_dbset);
     $db_aktif = $r_dbset['dbname'];
     
+    /* 
+    // DISABLED: Jangan paksa user pindah database jika mereka sudah punya pilihan di session
     if ($db_aktif != $database) {
         if ($sqlconn->select_db($db_aktif)) {
             $database = $db_aktif;
@@ -42,6 +44,7 @@ if ($q_dbset && mysqli_num_rows($q_dbset) > 0) {
              $_SESSION['database_asli'] = $db_aktif;
         }
     }
+    */
 }
 
 date_default_timezone_set("Asia/Jakarta");

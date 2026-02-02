@@ -40,8 +40,9 @@ if (isset($_POST['skradm'], $_POST['skrpass'], $_POST['database_name'])) {
     // Switch to the selected database
     if (mysqli_select_db($sqlconn, $database_name)) {
         // --- SYNC DBSET (Follow User Selection) ---
-        @mysqli_query($sqlconn, "UPDATE dbset SET aktif='0'");
-        @mysqli_query($sqlconn, "UPDATE dbset SET aktif='1' WHERE dbname='$database_name'");
+        // DISABLED: Jangan ubah status global di database agar tidak mempengaruhi user lain
+        // @mysqli_query($sqlconn, "UPDATE dbset SET aktif='0'");
+        // @mysqli_query($sqlconn, "UPDATE dbset SET aktif='1' WHERE dbname='$database_name'");
 
         // User's selection from login form
         $smt_pilih = $semester;
@@ -61,6 +62,8 @@ if (isset($_POST['skradm'], $_POST['skrpass'], $_POST['database_name'])) {
         $tapel_real = $tahun_real . "/" . ($tahun_real + 1);
         
         // Activate user's selection in database (FOLLOW USER CHOICE)
+        // DISABLED: Jangan ubah status global tapel di database
+        /*
         mysqli_query($sqlconn, "UPDATE tapel SET aktif='0'");
         
         $stmt_active = mysqli_prepare($sqlconn, "UPDATE tapel SET aktif='1' WHERE tapel=? AND smt=?");
@@ -69,6 +72,7 @@ if (isset($_POST['skradm'], $_POST['skrpass'], $_POST['database_name'])) {
             mysqli_stmt_execute($stmt_active);
             mysqli_stmt_close($stmt_active);
         }
+        */
         
         // Set session to user's selection (NOT real-time)
         $_SESSION['tapel'] = $tapel_pilih;
@@ -182,9 +186,13 @@ if (isset($_POST['skradm'], $_POST['skrpass'], $_POST['database_name'])) {
                 if (!empty($google_secret)) {
                     $is_trusted = false;
                     if (!empty($device_token)) {
-                        $token = mysqli_real_escape_string($sqlconn, $device_token);
-                        $check_device = mysqli_query($sqlconn, "SELECT * FROM user_devices WHERE user_id='$user_id' AND device_token='$token' AND expires_at > NOW()");
-                        if ($check_device && mysqli_num_rows($check_device) > 0) $is_trusted = true;
+                        // Check if user_devices table exists first to avoid SQL errors
+                        $check_table_dev = mysqli_query($sqlconn, "SHOW TABLES LIKE 'user_devices'");
+                        if ($check_table_dev && mysqli_num_rows($check_table_dev) > 0) {
+                            $token = mysqli_real_escape_string($sqlconn, $device_token);
+                            $check_device = mysqli_query($sqlconn, "SELECT * FROM user_devices WHERE user_id='$user_id' AND device_token='$token' AND expires_at > NOW()");
+                            if ($check_device && mysqli_num_rows($check_device) > 0) $is_trusted = true;
+                        }
                     }
 
                     if (!$is_trusted) {
@@ -210,11 +218,12 @@ if (isset($_POST['skradm'], $_POST['skrpass'], $_POST['database_name'])) {
 
             // Show warning alert if user chose non-current period
             if ($show_warning_alert) {
-                echo "<script>alert('" . addslashes($warning_message) . "'); window.location.href='../data/?';</script>";
+                echo "<script>alert('" . addslashes($warning_message) . "'); window.location.href='./?';</script>";
                 exit();
             }
 
-            header('Location:../?');
+            // REDIRECT TO DASHBOARD
+            header('Location: ./?');
             exit();
 
         } else {

@@ -29,7 +29,12 @@ $error = "";
 
 // Fetch User Info (to ensure name is available for logging)
 $skradm_safe = mysqli_real_escape_string($sqlconn, $skradm);
-$q_u = mysqli_query($sqlconn, "SELECT nama FROM usera WHERE userid='$skradm_safe'");
+
+// Check if 'userid' column exists (Consistency with proseslogin.php)
+$check_col = mysqli_query($sqlconn, "SHOW COLUMNS FROM usera LIKE 'userid'");
+$user_col = ($check_col && mysqli_num_rows($check_col) > 0) ? 'userid' : 'username';
+
+$q_u = mysqli_query($sqlconn, "SELECT nama FROM usera WHERE $user_col='$skradm_safe'");
 $u_data = mysqli_fetch_assoc($q_u);
 $nama = $u_data['nama'] ?? $skradm;
 // Generate new secret if not already in session
@@ -73,7 +78,7 @@ if (isset($_POST['verify_setup'])) {
     if ($valid) {
         // Save secret to database
         $secret_escaped = mysqli_real_escape_string($sqlconn, $secret);
-        $setqr = mysqli_query($sqlconn, "UPDATE usera SET google_secret='$secret_escaped' WHERE userid='$skradm'"); 
+        $setqr = mysqli_query($sqlconn, "UPDATE usera SET google_secret='$secret_escaped' WHERE $user_col='$skradm_safe'"); 
         if (!$setqr) {
              $error = "Database Error: " . mysqli_error($sqlconn);
         } else {

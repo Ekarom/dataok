@@ -56,8 +56,8 @@ require_once "cfg/recaptcha_config.php";
     
     <!-- Icons -->
     <link rel="icon" type="image/png" href="images/<?php echo $sklogo; ?>">
-    <link rel="stylesheet" href="plugins/fontawesome-free/css/all.min.css">
-    <link rel="stylesheet" type="text/css" href="plugins/iconic/css/material-design-iconic-font.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/material-design-iconic-font/2.2.0/css/material-design-iconic-font.min.css">
     
     <!-- Styles -->
     <link rel="stylesheet" type="text/css" href="plugins/css/util.css">

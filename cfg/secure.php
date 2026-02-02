@@ -84,7 +84,15 @@ if (!isset($_SESSION['skradm'])) {
 
     $log1 = mysqli_query($sqlconn, "select * from usera_log where user='$userc' order by waktu desc limit 25");
 
-    $gettpl = mysqli_query($sqlconn, "select * from tapel where tahun='$tahunsklh'");
+    // Prefer selecting the specific semester from session if available
+    $semester_target = !empty($semester) ? $semester : '1'; 
+    $gettpl = mysqli_query($sqlconn, "select * from tapel where tahun='$tahunsklh' AND smt='$semester_target'");
+    
+    // Fallback if specific semester not found (e.g. data missing)
+    if (!$gettpl || mysqli_num_rows($gettpl) == 0) {
+        $gettpl = mysqli_query($sqlconn, "select * from tapel where tahun='$tahunsklh' ORDER BY aktif DESC LIMIT 1");
+    }
+
     if ($gettpl && mysqli_num_rows($gettpl) > 0) {
         $testtpl = mysqli_fetch_array($gettpl);
         $tpl = isset($testtpl['tapel']) ? $testtpl['tapel'] : '';

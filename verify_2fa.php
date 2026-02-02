@@ -25,8 +25,11 @@ $skradm = $_SESSION['temp_skradm'];
 // SECURITY: Escape inputs before query
 $skradm_safe = mysqli_real_escape_string($sqlconn, $skradm);
 
-// Check if user has google_secret
-$q = mysqli_query($sqlconn, "SELECT * FROM usera WHERE userid='$skradm_safe'");
+// Check if 'userid' column exists (Consistency with proseslogin.php)
+$check_col = mysqli_query($sqlconn, "SHOW COLUMNS FROM usera LIKE 'userid'");
+$user_col = ($check_col && mysqli_num_rows($check_col) > 0) ? 'userid' : 'username';
+
+$q = mysqli_query($sqlconn, "SELECT * FROM usera WHERE $user_col='$skradm_safe'");
 $user = mysqli_fetch_assoc($q);
 
 // Handle case where user not found
@@ -38,9 +41,7 @@ if (!$user) {
 
 $google_secret = isset($user['google_secret']) ? $user['google_secret'] : '';
 // Ensure user_id is taken securely from the database result
-if (isset($user['user_id'])) {
-    $user_id = $user['user_id'];
-}
+$user_id = $user[$user_col];
 
 if (isset($_POST['verify_code'])) {
     $code = trim($_POST['code']); // Trim whitespace
@@ -54,7 +55,7 @@ if (isset($_POST['verify_code'])) {
     elseif (isset($user['email_code']) && $code == $user['email_code'] && strtotime($user['email_code_expired']) > time()) {
         $is_valid = true;
         // Clear email code
-        mysqli_query($sqlconn, "UPDATE usera SET email_code=NULL, email_code_expired=NULL WHERE userid='$user_id'");
+        mysqli_query($sqlconn, "UPDATE usera SET email_code=NULL, email_code_expired=NULL WHERE $user_col='$user_id'");
     }
 
     if ($is_valid) {
@@ -101,7 +102,7 @@ if (isset($_POST['verify_code'])) {
         write_log("LOGIN", "Login");
         // --------------------------------
 
-        header("Location: ../data/?");
+        header("Location: ./?");
         exit();
     } else {
         $error = "Kode salah atau kadaluarsa.";
@@ -113,7 +114,7 @@ if (isset($_POST['send_email'])) {
         $code = rand(100000, 999999);
         $expired = date('Y-m-d H:i:s', time() + (15 * 60)); // 15 minutes
         
-        mysqli_query($sqlconn, "UPDATE usera SET email_code='$code', email_code_expired='$expired' WHERE userid='$user_id'");
+        mysqli_query($sqlconn, "UPDATE usera SET email_code='$code', email_code_expired='$expired' WHERE $user_col='$user_id'");
         
         if (function_exists('sendEmailCode')) {
             $send = sendEmailCode($user['email'], $code, $sqlconn);

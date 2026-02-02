@@ -6,8 +6,8 @@ session_start();
 session_unset();
 session_destroy();
 
-// Hapus cookies yang digunakan saat login
-$cookies = ['id', 'nama', 'level', 'tapel', 'poto', 'nik', 'username', 'password', 'scr', 'device_token'];
+// Hapus cookies yang digunakan saat login (Kecuali device_token agar "Ingat Saya" persisten)
+$cookies = ['id', 'nama', 'level', 'tapel', 'poto', 'nik', 'username', 'password', 'scr'];
 
 foreach ($cookies as $cookie) {
     if (isset($_COOKIE[$cookie])) {

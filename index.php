@@ -9,11 +9,31 @@ $show_tapel_modal = false;
 $expected = get_expected_tapel();
 
 // Check if this expected tapel/smt exists
-if (!check_tapel_exists($sqlconn, $expected['tapel'], $expected['smt'])) {
-    $show_tapel_modal = true;
-    $new_tapel = $expected['tapel'];
-    $new_smt = $expected['smt'];
-    $new_tahun = $expected['tahun'];
+// MODIFIED: Only show modal if the user's CURRENT session period doesn't exist
+// OR if they haven't explicitly chosen a period and the expected one is missing.
+$session_tapel = $_SESSION['tapel'] ?? '';
+$session_smt = $_SESSION['semester'] ?? '';
+
+$tapel_to_check = $expected['tapel'];
+$smt_to_check = $expected['smt'];
+
+if (!empty($session_tapel) && !empty($session_smt)) {
+    // If user has a session choice, check if THAT one exists (it should)
+    if (!check_tapel_exists($sqlconn, $session_tapel, $session_smt)) {
+        $show_tapel_modal = true;
+        // If the user's chosen session period is missing, we should probably default to the expected one for the modal
+        $new_tapel = $expected['tapel'];
+        $new_smt = $expected['smt'];
+        $new_tahun = $expected['tahun'];
+    }
+} else {
+    // Fallback to expected period if no session choice
+    if (!check_tapel_exists($sqlconn, $expected['tapel'], $expected['smt'])) {
+        $show_tapel_modal = true;
+        $new_tapel = $expected['tapel'];
+        $new_smt = $expected['smt'];
+        $new_tahun = $expected['tahun'];
+    }
 }
 
 $user = $_SESSION['skradm'];
@@ -70,18 +90,18 @@ if (password_verify($default_pass, $passworddb) ||
     <link rel="stylesheet" href="https://code.ionicframework.com/ionicons/2.0.1/css/ionicons.min.css">
     <!-- Select2 -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css">
-    <link rel="stylesheet" href="plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-theme@1.0.1/dist/select2-bootstrap.min.css">
     <!-- AdminLTE Theme -->
-    <link rel="stylesheet" href="plugins/admin-lte/adminlte.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/admin-lte@3.2.0/dist/css/adminlte.min.css">
     <!-- Toastr -->
-    <link rel="stylesheet" href="plugins/toastr/toastr.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
     
     <!-- jQuery -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <!-- jQuery UI -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script> 
     <!-- Select2 -->
-    <script src="plugins/select2/js/select2.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
 
     <style>
         /* ==========================================
@@ -434,7 +454,7 @@ if (password_verify($default_pass, $passworddb) ||
                         
                         <!-- Logout -->
                         <li class="nav-item">
-                            <a href="ceklogout.php" class="nav-link">
+                            <a href="exit.php" class="nav-link">
                                 <i class="nav-icon fas fa-sign-out-alt"></i>
                                 <p>Exit</p>
                             </a>
