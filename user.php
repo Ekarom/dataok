@@ -206,8 +206,8 @@ if (isset($_REQUEST['aksi']) && $_REQUEST['aksi'] == 'hapus') {
     </section>
 
     <!-- Style DataTables -->
-    <link rel="stylesheet" href="plugins/datatables-bs4/css/dataTables.bootstrap4.css">
-    <link rel="stylesheet" href="plugins/datatables-responsive/css/responsive.bootstrap4.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap4.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/responsive.bootstrap4.css">
     <!-- Konten Utama -->
     <section class="content">
         <div class="row">
@@ -531,13 +531,13 @@ if (isset($_REQUEST['aksi']) && $_REQUEST['aksi'] == 'hapus') {
 </script>
 
 <!-- Bootstrap 4 -->
-<script src="plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
 <!-- DataTables -->
-<script src="plugins/datatables/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 
-<script src="plugins/datatables-bs4/js/dataTables.bootstrap4.min.js"></script>
-<script src="plugins/datatables-responsive/js/dataTables.responsive.min.js"></script>
-<script src="plugins/datatables-responsive/js/responsive.bootstrap4.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap4.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/dataTables.responsive.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/responsive.bootstrap4.min.js"></script>
 
 <script>
   $(document).ready(function () {

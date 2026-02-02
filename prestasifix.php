@@ -380,8 +380,8 @@ if (isset($_POST['aksi']) && $_POST['aksi'] == 'hapus_file') {
             </div>
         </div>
     </section>
-
-<link rel="stylesheet" href="plugins/datatables-responsive/css/responsive.bootstrap4.css">
+    <!-- Style DataTables -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap4.css">
     <!-- Main content -->
     <section class="content">
         <div class="row">
@@ -705,12 +705,12 @@ if (isset($_POST['aksi']) && $_POST['aksi'] == 'hapus_file') {
 
 
 
-<script src="https://cdn.datatables.net/2.3.4/js/dataTables.js"></script>
-<script src="https://cdn.datatables.net/2.3.4/js/dataTables.bootstrap5.js"></script>
-<link rel="stylesheet" href="https://cdn.datatables.net/2.3.4/css/dataTables.bootstrap5.css">
-<link rel="stylesheet" href="https://cdn.datatables.net/responsive/3.0.7/css/responsive.dataTables.css">
-<script src="https://cdn.datatables.net/responsive/3.0.7/js/dataTables.responsive.js"></script>
-<script src="https://cdn.datatables.net/responsive/3.0.7/js/responsive.dataTables.js"></script>
+<!-- Bootstrap 4 -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
+<!-- DataTables -->
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+
+<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap4.min.js"></script>
 
 <script>
 $(document).ready(function() {
