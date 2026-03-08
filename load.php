@@ -139,65 +139,81 @@ $user = $row['total'];
         <!-- /.row (stat cards) -->
 
         <?php
-        // =====================================================================
-        // Statistik Prestasi Mendalam: Juara & Semester per Tahun Pelajaran
-        // =====================================================================
-        $tp_labels          = [];
-        $smt1_counts        = [];
-        $smt2_counts        = [];
-        $juara_stats        = [];
-        $total_all_prestasi = 0;
+// =====================================================================
+// Statistik Prestasi Mendalam: Juara & Semester per Tahun Pelajaran
+// =====================================================================
+$tp_labels = [];
+$smt1_counts = [];
+$smt2_counts = [];
+$juara_stats = [];
+$total_all_prestasi = 0;
 
-        $q_stats = mysqli_query($sqlconn, "SELECT dbname, tahun FROM dbset ORDER BY tahun ASC");
-        if ($q_stats) {
-            while ($r_s = mysqli_fetch_array($q_stats)) {
-                $db_n = $r_s['dbname'];
-                $db_t = $r_s['tahun'];
+$q_stats = mysqli_query($sqlconn, "SELECT dbname, tahun FROM dbset ORDER BY tahun ASC");
+if ($q_stats) {
+    while ($r_s = mysqli_fetch_array($q_stats)) {
+        $db_n = $r_s['dbname'];
+        $db_t = $r_s['tahun'];
 
-                $c_db = @new mysqli("localhost", "root", "", $db_n);
-                if (!$c_db->connect_error) {
-                    $table_check = $c_db->query("SHOW TABLES LIKE 'prestasi'");
-                    if ($table_check && $table_check->num_rows > 0) {
-                        $tp_labels[] = "TP " . $db_t;
-                        $s1 = 0;
-                        $s2 = 0;
+        $c_db = @new mysqli("localhost", "root", "", $db_n);
+        if (!$c_db->connect_error) {
+            $table_check = $c_db->query("SHOW TABLES LIKE 'prestasi'");
+            if ($table_check && $table_check->num_rows > 0) {
+                $tp_labels[] = "TP " . $db_t;
+                $s1 = 0;
+                $s2 = 0;
 
-                        $res_pres = $c_db->query("SELECT juara, tgl_kegiatan, bulan FROM prestasi");
-                        if ($res_pres) {
-                            while ($row = $res_pres->fetch_assoc()) {
-                                $total_all_prestasi++;
+                $res_pres = $c_db->query("SELECT juara, tgl_kegiatan, bulan FROM prestasi");
+                if ($res_pres) {
+                    while ($row = $res_pres->fetch_assoc()) {
+                        $total_all_prestasi++;
 
-                                $j = $row['juara'];
-                                if (!isset($juara_stats[$j])) $juara_stats[$j] = 0;
-                                $juara_stats[$j]++;
+                        $j = $row['juara'];
+                        if (!isset($juara_stats[$j]))
+                            $juara_stats[$j] = 0;
+                        $juara_stats[$j]++;
 
-                                $month = 0;
-                                if (!empty($row['tgl_kegiatan']) && $row['tgl_kegiatan'] !== '0000-00-00') {
-                                    $month = (int) date('n', strtotime($row['tgl_kegiatan']));
-                                } else {
-                                    $m_map = ['Januari'=>1,'Februari'=>2,'Maret'=>3,'April'=>4,'Mei'=>5,'Juni'=>6,
-                                              'Juli'=>7,'Agustus'=>8,'September'=>9,'Oktober'=>10,'November'=>11,'Desember'=>12];
-                                    $month = $m_map[$row['bulan']] ?? 0;
-                                }
-                                if ($month >= 7 || $month == 0) $s1++; else $s2++;
-                            }
+                        $month = 0;
+                        if (!empty($row['tgl_kegiatan']) && $row['tgl_kegiatan'] !== '0000-00-00') {
+                            $month = (int)date('n', strtotime($row['tgl_kegiatan']));
                         }
-                        $smt1_counts[] = $s1;
-                        $smt2_counts[] = $s2;
+                        else {
+                            $m_map = ['Januari' => 1, 'Februari' => 2, 'Maret' => 3, 'April' => 4, 'Mei' => 5, 'Juni' => 6,
+                                'Juli' => 7, 'Agustus' => 8, 'September' => 9, 'Oktober' => 10, 'November' => 11, 'Desember' => 12];
+                            $month = $m_map[$row['bulan']] ?? 0;
+                        }
+                        if ($month >= 7 || $month == 0)
+                            $s1++;
+                        else
+                            $s2++;
                     }
-                    $c_db->close();
                 }
+                $smt1_counts[] = $s1;
+                $smt2_counts[] = $s2;
             }
+            $c_db->close();
         }
+    }
+}
 
-        $rank_labels = [];
-        $rank_values = [];
-        arsort($juara_stats);
-        foreach ($juara_stats as $key => $val) {
-            $rank_labels[] = "Juara " . $key;
-            $rank_values[] = $val;
-        }
-        ?>
+$rank_labels = [];
+$rank_values = [];
+arsort($juara_stats);
+foreach ($juara_stats as $key => $val) {
+    $rank_labels[] = "Juara " . $key;
+    $rank_values[] = $val;
+}
+
+// =====================================================================
+// Data dropdown Tahun Pelajaran untuk Grafik Rata-rata Nilai
+// =====================================================================
+$tp_list = [];
+$q_tp = mysqli_query($sqlconn, "SELECT dbname, tahun FROM dbset ORDER BY tahun DESC");
+if ($q_tp) {
+    while ($r_tp = mysqli_fetch_assoc($q_tp)) {
+        $tp_list[] = $r_tp;
+    }
+}
+?>
 
         <!-- Panels row: Welcome, History Log | User Online + Statistics -->
         <div class="row">
@@ -277,7 +293,7 @@ else {
             <!-- /.Left col -->
 
             <!-- Right col -->
-            <section class="col-lg-7 connectedSortable">
+            <section class="col-lg-5 connectedSortable">
 
                 <!-- User Online Card -->
                 <div class="card mb-3">
@@ -389,73 +405,71 @@ endif; ?>
                 </div>
                 <!-- /.User Online Card -->
 
-                <!-- Statistics: Semester Analysis -->
-                <div class="card card-outline card-info">
+
+                <!-- Grafik Juara Berprestasi -->
+                <div class="card">
                     <div class="card-header bg-menu-gradient">
-                        <h3 class="card-title"><i class="fas fa-chart-line mr-1"></i> Analisis Prestasi per Semester</h3>
+                        <h3 class="card-title"><i class="fas fa-trophy mr-1"></i> Grafik Siswa Berprestasi</h3>
                         <div class="card-tools">
                             <button type="button" class="btn btn-tool" data-card-widget="collapse"><i class="fas fa-minus"></i></button>
                         </div>
                     </div>
                     <div class="card-body">
-                        <div class="row">
-                            <!-- Stacked Bar Chart -->
-                            <div class="col-md-8">
-                                <div class="chart">
-                                    <canvas id="semesterChart" style="min-height: 250px; height: 250px; max-height: 250px;"></canvas>
-                                </div>
+                        <!-- Filter Row -->
+                        <div class="row mb-3">
+                            <div class="col-md-4 col-6 mb-2">
+                                <select id="filterBulanJuara" class="form-control form-control-sm">
+                                    <option value="">Semua Bulan</option>
+                                    <option value="1">Januari</option>
+                                    <option value="2">Februari</option>
+                                    <option value="3">Maret</option>
+                                    <option value="4">April</option>
+                                    <option value="5">Mei</option>
+                                    <option value="6">Juni</option>
+                                    <option value="7">Juli</option>
+                                    <option value="8">Agustus</option>
+                                    <option value="9">September</option>
+                                    <option value="10">Oktober</option>
+                                    <option value="11">November</option>
+                                    <option value="12">Desember</option>
+                                </select>
                             </div>
-                            <!-- Doughnut Rank Chart -->
-                            <div class="col-md-4">
-                                <div class="text-center mb-2">
-                                    <span class="badge badge-warning p-2">Total: <?php echo $total_all_prestasi; ?> Sertifikat</span>
-                                </div>
-                                <canvas id="rankChart" style="min-height: 160px; height: 160px; max-height: 160px;"></canvas>
-                                <div class="mt-2 pt-2 border-top">
-                                    <?php
-                                    $colors = ['#f39c12','#00c0ef','#3c8dbc','#00a65a','#f56954','#d2d6de'];
-                                    foreach ($rank_labels as $i => $rl):
-                                        if ($i > 5) break;
-                                        $pct = ($total_all_prestasi > 0) ? round(($rank_values[$i] / $total_all_prestasi) * 100, 1) : 0;
-                                    ?>
-                                    <div class="d-flex justify-content-between align-items-center mb-1" style="font-size: 0.85em;">
-                                        <span><i class="fas fa-circle mr-1" style="color:<?php echo $colors[$i]; ?>"></i> <?php echo $rl; ?></span>
-                                        <span class="badge badge-light"><?php echo $pct; ?>%</span>
-                                    </div>
-                                    <?php endforeach; ?>
-                                </div>
+                            <div class="col-md-4 col-6 mb-2">
+                                <select id="filterSemesterJuara" class="form-control form-control-sm">
+                                    <option value="">Semua Semester</option>
+                                    <option value="1">Semester 1 (Ganjil)</option>
+                                    <option value="2">Semester 2 (Genap)</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4 col-6 mb-2">
+                                <select id="filterTpJuara" class="form-control form-control-sm">
+                                    <option value="">Semua Tahun</option>
+                                </select>
                             </div>
                         </div>
-                        <!-- Semester Table -->
-                        <div class="mt-3 table-responsive">
-                            <table class="table table-sm table-bordered text-center mb-0">
-                                <thead class="bg-light">
+                        <!-- Chart -->
+                        <div class="chart">
+                            <canvas id="juaraChart" style="min-height: 280px; height: 280px; max-height: 280px;"></canvas>
+                        </div>
+                        <!-- Tabel Persentase Juara per Bulan -->
+                        <div class="mt-3 table-responsive" id="tabelPersenJuara" style="display:none;">
+                            <h6 class="font-weight-bold text-center mb-2"><i class="fas fa-percentage mr-1"></i> Persentase Juara per Bulan</h6>
+                            <table class="table table-sm table-bordered table-striped text-center mb-0">
+                                <thead>
                                     <tr>
-                                        <th>Tahun Pelajaran</th>
-                                        <th class="text-primary">Smt 1 (Ganjil)</th>
-                                        <th class="text-success">Smt 2 (Genap)</th>
+                                        <th>Bulan</th>
+                                        <th style="color:#f39c12">Juara 1</th>
+                                        <th style="color:#00c0ef">Juara 2</th>
+                                        <th style="color:#3c8dbc">Juara 3</th>
                                         <th>Total</th>
                                     </tr>
                                 </thead>
-                                <tbody>
-                                    <?php if (!empty($tp_labels)): ?>
-                                        <?php foreach ($tp_labels as $i => $tp): ?>
-                                        <tr>
-                                            <td class="font-weight-bold"><?php echo $tp; ?></td>
-                                            <td><?php echo $smt1_counts[$i]; ?></td>
-                                            <td><?php echo $smt2_counts[$i]; ?></td>
-                                            <td class="font-weight-bold"><?php echo ($smt1_counts[$i] + $smt2_counts[$i]); ?></td>
-                                        </tr>
-                                        <?php endforeach; ?>
-                                    <?php else: ?>
-                                        <tr><td colspan="4" class="text-muted text-center">Tidak ada data</td></tr>
-                                    <?php endif; ?>
-                                </tbody>
+                                <tbody id="bodyPersenJuara"></tbody>
                             </table>
                         </div>
                     </div>
                 </div>
-                <!-- /.Statistics Card -->
+                <!-- /.Grafik Juara Berprestasi -->
 
             </section>
             <!-- /.Right col -->
@@ -463,63 +477,107 @@ endif; ?>
         </div>
         <!-- /.row (panels) -->
 
-
     </section>
     <!-- /.content -->
 
 </div>
 <!-- /.content-wrapper -->
 
+
 <script>
 $(document).ready(function () {
-    // 1. Stacked Bar Chart (Semester 1 vs 2 per TP)
-    var semCtx = document.getElementById('semesterChart').getContext('2d');
-    new Chart(semCtx, {
+    // Grafik Persentase Siswa Berprestasi per Bulan
+    var juaraCtx = document.getElementById('juaraChart').getContext('2d');
+    var juaraChart = new Chart(juaraCtx, {
         type: 'bar',
         data: {
-            labels: <?php echo json_encode($tp_labels); ?>,
+            labels: [],
             datasets: [
-                {
-                    label: 'Semester 1 (Ganjil)',
-                    backgroundColor: '#01b2d1',
-                    data: <?php echo json_encode($smt1_counts); ?>
-                },
-                {
-                    label: 'Semester 2 (Genap)',
-                    backgroundColor: '#28a745',
-                    data: <?php echo json_encode($smt2_counts); ?>
-                }
+                { label: 'Juara 1', backgroundColor: '#f39c12', data: [] },
+                { label: 'Juara 2', backgroundColor: '#00c0ef', data: [] },
+                { label: 'Juara 3', backgroundColor: '#3c8dbc', data: [] }
             ]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            tooltips: { mode: 'index', intersect: false },
             scales: {
-                xAxes: [{ stacked: true }],
-                yAxes: [{ stacked: true, ticks: { beginAtZero: true } }]
+                xAxes: [{ ticks: { autoSkip: false } }],
+                yAxes: [{
+                    ticks: {
+                        beginAtZero: true,
+                        max: 100,
+                        callback: function(v) { return v + '%'; }
+                    },
+                    scaleLabel: { display: true, labelString: 'Persentase (%)' }
+                }]
             },
-            legend: { position: 'bottom' }
+            legend: { display: true, position: 'bottom' },
+            tooltips: {
+                callbacks: {
+                    label: function(ti, d) {
+                        return d.datasets[ti.datasetIndex].label + ': ' + ti.yLabel + '%';
+                    }
+                }
+            }
         }
     });
 
-    // 2. Doughnut Chart (Rank Distribution)
-    var rankCtx = document.getElementById('rankChart').getContext('2d');
-    new Chart(rankCtx, {
-        type: 'doughnut',
-        data: {
-            labels: <?php echo json_encode($rank_labels); ?>,
-            datasets: [{
-                data: <?php echo json_encode($rank_values); ?>,
-                backgroundColor: ['#f39c12', '#00c0ef', '#3c8dbc', '#00a65a', '#f56954', '#d2d6de']
-            }]
-        },
-        options: {
-            maintainAspectRatio: false,
-            responsive: true,
-            legend: { display: false },
-            cutoutPercentage: 65
-        }
-    });
+    var tahunLoaded = false;
+
+    function loadJuaraChart() {
+        var bulan    = $('#filterBulanJuara').val();
+        var semester = $('#filterSemesterJuara').val();
+        var tahun    = $('#filterTpJuara').val();
+        $.ajax({
+            url: 'ajax_juara_chart.php',
+            type: 'GET',
+            data: { bulan: bulan, semester: semester, tahun: tahun },
+            dataType: 'json',
+            success: function(res) {
+                // Isi dropdown tahun (sekali saja)
+                if (!tahunLoaded && res.tahun_list && res.tahun_list.length > 0) {
+                    var sel = $('#filterTpJuara');
+                    sel.find('option:not(:first)').remove();
+                    $.each(res.tahun_list, function(i, yr) {
+                        sel.append('<option value="' + yr + '">' + yr + '</option>');
+                    });
+                    tahunLoaded = true;
+                }
+
+                // Update chart datasets
+                juaraChart.data.labels = res.labels;
+                if (res.datasets && res.datasets.length >= 3) {
+                    juaraChart.data.datasets[0].data = res.datasets[0].data;
+                    juaraChart.data.datasets[1].data = res.datasets[1].data;
+                    juaraChart.data.datasets[2].data = res.datasets[2].data;
+                }
+                juaraChart.update();
+
+                // Render tabel persentase juara per bulan
+                var tbody = $('#bodyPersenJuara');
+                tbody.empty();
+                if (res.monthly_stats && res.monthly_stats.length > 0) {
+                    $.each(res.monthly_stats, function(i, s) {
+                        tbody.append(
+                            '<tr>' +
+                            '<td class="font-weight-bold">' + s.bulan + '</td>' +
+                            '<td><span class="badge" style="background:#f39c12;color:#fff;font-size:12px;">' + s.juara_1 + ' <small>(' + s.pct_1 + '%)</small></span></td>' +
+                            '<td><span class="badge" style="background:#00c0ef;color:#fff;font-size:12px;">' + s.juara_2 + ' <small>(' + s.pct_2 + '%)</small></span></td>' +
+                            '<td><span class="badge" style="background:#3c8dbc;color:#fff;font-size:12px;">' + s.juara_3 + ' <small>(' + s.pct_3 + '%)</small></span></td>' +
+                            '<td class="font-weight-bold">' + s.total + '</td>' +
+                            '</tr>'
+                        );
+                    });
+                    $('#tabelPersenJuara').show();
+                } else {
+                    $('#tabelPersenJuara').hide();
+                }
+            }
+        });
+    }
+
+    loadJuaraChart();
+    $('#filterBulanJuara, #filterSemesterJuara, #filterTpJuara').on('change', loadJuaraChart);
 });
 </script>
