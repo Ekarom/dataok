@@ -1,6 +1,7 @@
 <?php
 include "cfg/konek.php";
 
+$s = []; // Initialize to prevent undefined variable errors
 if (isset($_POST['db_year']) && !empty($_POST['db_year'])) {
     $target_db = mysqli_real_escape_string($sqlconn, $_POST['db_year']);
     mysqli_select_db($sqlconn, $target_db);
@@ -9,13 +10,15 @@ if (isset($_POST['db_year']) && !empty($_POST['db_year'])) {
 if(isset($_POST['nis'])){
     $nis = $_POST['nis'];
     $sql = mysqli_query($sqlconn, "SELECT * FROM siswa WHERE id='$nis'");
-    $s = mysqli_fetch_array($sql);
-    
-    // Photo path handling
-    $foto_path = "images/default.png"; // Default
-    if(isset($s['photo']) && $s['photo'] != "" && file_exists("file/fotopd/".$s['photo'])){
-        $foto_path = "file/fotopd/".$s['photo'];
+    if ($sql && mysqli_num_rows($sql) > 0) {
+        $s = mysqli_fetch_array($sql);
     }
+}
+
+// Photo path handling
+$foto_path = "images/default.png"; // Default
+if(isset($s['photo']) && $s['photo'] != "" && file_exists("file/fotopd/".$s['photo'])){
+    $foto_path = "file/fotopd/".$s['photo'];
 }
 ?>
 <style>
@@ -24,7 +27,7 @@ if(isset($_POST['nis'])){
     .is-invalid { border-color: #e74c3c !important; }
 </style>
 
-<form action="?modul=press" method="POST" enctype="multipart/form-data">
+<form action="?press" method="POST" enctype="multipart/form-data" id="inputpresForm">
     <div class="row">
         <!-- Student Info Column -->
         <div class="col-md-4 text-center">
@@ -33,13 +36,13 @@ if(isset($_POST['nis'])){
                     <div class="text-center">
                         <img class="profile-user-img img-fluid img-circle" src="<?php echo $foto_path; ?>" alt="User profile picture" style="width: 150px; height: 150px; object-fit: cover;">
                     </div>
-                    <h3 class="profile-username text-center mt-3"><?php echo $s['pd']; ?></h3>
+                    <h3 class="profile-username text-center mt-3"><?php echo isset($s['pd']) ? $s['pd'] : '-'; ?></h3>
                     <center><b>KELAS</b></center>
-                    <p class="text-muted text-center badge bg-menu-gradient"><?php echo $s['kelas']; ?></p>
+                    <p class="text-muted text-center badge bg-menu-gradient"><?php echo isset($s['kelas']) ? $s['kelas'] : '-'; ?></p>
                     <ul class="list-group list-group-unbordered mb-3">
                         <li class="list-group-item">
                             <center><b>NIS</b></center>
-                            <center><b class="badge bg-menu-gradient"><?php echo $s['nis']; ?></b></center>
+                            <center><b class="badge bg-menu-gradient"><?php echo isset($s['nis']) ? $s['nis'] : '-'; ?></b></center>
                         </li>
                     </ul>
                 </div>
@@ -50,8 +53,8 @@ if(isset($_POST['nis'])){
         <div class="col-md-8">
             <div class="card">
                 <div class="card-body">
-                    <input type="hidden" name="pd" value="<?php echo $s['pd']; ?>">
-                    <input type="hidden" name="kelas" value="<?php echo $s['kelas']; ?>">
+                    <input type="hidden" name="pd" value="<?php echo isset($s['pd']) ? $s['pd'] : ''; ?>">
+                    <input type="hidden" name="kelas" value="<?php echo isset($s['kelas']) ? $s['kelas'] : ''; ?>">
                     <input type="hidden" name="db_year" value="<?php echo isset($_POST['db_year']) ? $_POST['db_year'] : (isset($_GET['db_year']) ? $_GET['db_year'] : ''); ?>">
                     
                     <div class="form-group row">
@@ -93,11 +96,22 @@ if(isset($_POST['nis'])){
                             <input type="date" class="form-control warna" name="tgl_kegiatan" required>
                         </div>
                     </div>
-
                     <div class="form-group row">
-                        <label for="lokasi" class="col-sm-4 col-form-label">Penyelenggara</label>
+                        <label for="nama_kegiatan" class="col-sm-4 col-form-label">Nama Kegiatan</label>
                         <div class="col-sm-8">
-                            <input type="text" class="form-control warna" name="lokasi" placeholder="Contoh: Dinas Pendidikan" required>
+                            <input type="text" class="form-control warna" name="nama_kegiatan" placeholder="Isi nama kegiatan" required>
+                        </div>
+                    </div>
+                    <div class="form-group row">
+                        <label for="penyelenggara" class="col-sm-4 col-form-label">Penyelenggara</label>
+                        <div class="col-sm-8">
+                            <input type="text" class="form-control warna" name="penyelenggara" placeholder="Contoh: Dinas Pendidikan" required>
+                        </div>
+                    </div>
+                    <div class="form-group row">
+                        <label for="lokasi" class="col-sm-4 col-form-label">Lokasi</label>
+                        <div class="col-sm-8">
+                            <input type="text" class="form-control warna" name="lokasi" placeholder="Isi Lokasi" required>
                         </div>
                     </div>
 
@@ -190,7 +204,9 @@ if(isset($_POST['nis'])){
 <script>
 // Completion check function
 function validateInputForm() {
-    const form = document.querySelector('#inputpres form');
+    const form = document.getElementById('inputpresForm');
+    if (!form) return;
+    
     const btnIncomplete = document.getElementById('btnIncomplete');
     const btnSave = document.getElementById('btnSave');
     
@@ -205,17 +221,17 @@ function validateInputForm() {
     });
 
     if (isComplete) {
-        btnIncomplete.style.display = 'none';
-        btnSave.style.display = 'inline-block';
+        if (btnIncomplete) btnIncomplete.style.display = 'none';
+        if (btnSave) btnSave.style.display = 'inline-block';
     } else {
-        btnIncomplete.style.display = 'inline-block';
-        btnSave.style.display = 'none';
+        if (btnIncomplete) btnIncomplete.style.display = 'inline-block';
+        if (btnSave) btnSave.style.display = 'none';
     }
 }
 
 $(document).ready(function() {
     // Listen for changes in all inputs/selects
-    $('#inputpres form').on('input change', 'input, select, textarea', function() {
+    $('#inputpresForm').on('input change', 'input, select, textarea', function() {
         validateInputForm();
     });
     
@@ -239,7 +255,7 @@ function handleFileSelect(input) {
     const validFiles = newFiles.filter(f => allowedTypes.includes(f.type));
     
     if (newFiles.length > 0 && validFiles.length === 0) {
-        toastr.error('Hanya berkas PDF atau Gambar (JPG/PNG) yang diperbolehkan!');
+        if (typeof toastr !== 'undefined') toastr.error('Hanya berkas PDF atau Gambar (JPG/PNG) yang diperbolehkan!');
     }
 
     // Add new valid files to the existing selection (additive)
@@ -253,7 +269,7 @@ function handleFileSelect(input) {
     });
     
     if (window.selectedFiles.length > 2) {
-        toastr.warning('Maksimal 2 berkas diperbolehkan.');
+        if (typeof toastr !== 'undefined') toastr.warning('Maksimal 2 berkas diperbolehkan.');
     }
     
     updateInputFiles();
@@ -278,7 +294,7 @@ function renderFileList() {
         totalSize += file.size;
         
         if (file.size > 2 * 1024 * 1024) {
-            toastr.error('Ukuran berkas ' + file.name + ' melebihi 2MB!');
+            if (typeof toastr !== 'undefined') toastr.error('Ukuran berkas ' + file.name + ' melebihi 2MB!');
             window.selectedFiles.splice(index, 1);
             updateInputFiles();
             renderFileList();
@@ -331,6 +347,7 @@ function removeFile(index) {
 
 function updateInputFiles() {
     const input = document.getElementById('fileInput');
+    if (!input) return;
     const dataTransfer = new DataTransfer();
     window.selectedFiles.forEach(file => dataTransfer.items.add(file));
     input.files = dataTransfer.files;

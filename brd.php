@@ -1,4 +1,4 @@
-<?php
+j<?php
 
 
 /*
@@ -33,8 +33,8 @@ ini_set('memory_limit', '512M');
 require_once __DIR__ . '/cfg/konek.php';
 // Jika variabel koneksi tidak didefinisikan di konek.php, gunakan default WAMP/XAMPP
 if (!isset($db_host)) $db_host = 'localhost';
-if (!isset($db_user)) $db_user = 'root';
-if (!isset($db_pass)) $db_pass = '';
+if (!isset($db_user)) $db_user = 'arsip';
+if (!isset($db_pass)) $db_pass = 'BHmD8VlJELecRqw4S5OAYXDpc';
 // $database sudah didefinisikan di konek.php (via SESSION atau default)
 
 // ======================================================================\
@@ -45,17 +45,19 @@ define('BACKUP_DIR', __DIR__ . '/_backups');
 // ======================================================================\
 // KONFIGURASI PATH (PENTING!)
 // ======================================================================\
-// Sesuaikan path ini jika Anda mendapat error 'command not found' or 'Return code: 255'.
-//
-// Linux/macOS (default): '' (kosong, mengandalkan PATH)
-// Linux/macOS (alternatif): '/usr/bin/'
-// Windows (XAMPP/WAMP): 'C:/path/to/mysql/bin/' (Gunakan forward slash '/')
-//
-$mysql_path = 'c:/wamp64/bin/mysql/mysql9.1.0/bin/'; // Contoh: 'C:/xampp/mysql/bin/';
+// Deteksi OS dan set path MySQL secara otomatis
+if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
+    // Windows - gunakan path WAMP/XAMPP
+    $mysql_path = 'c:\\wamp64\\bin\\mysql\\mysql9.1.0\\bin\\';
+} else {
+    // Linux/Unix/macOS - kosongkan path (gunakan system PATH)
+    // Atau set ke '/usr/bin/' jika MySQL tidak ada di PATH
+    $mysql_path = ''; // Atau '/usr/bin/' jika diperlukan
+}
 $tahun = date("Y");
 // =IA====================================================================
 // LOGIKA PHP BACKEND (AJAX HANDLER)
-// ======================================================================\
+// =====================================================================\
 
 // Pastikan direktori backup ada dan dapat ditulis
 if (!is_dir(BACKUP_DIR)) {
@@ -132,9 +134,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['action'])) {
     $target_db_escaped = $target_db ? escapeshellarg($target_db) : null;
     $backup_db_escaped = $backup_db ? escapeshellarg($backup_db) : null;
 
-    // Path lengkap ke mysqldump dan mysql
-    $mysqldump = escapeshellarg($mysql_path . 'mysqldump');
-    $mysql = escapeshellarg($mysql_path . 'mysql');
+    // Path lengkap ke mysqldump dan mysql (OS-dependent)
+    // Windows menggunakan .exe, Linux/Unix tidak
+    if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
+        // Windows - gunakan .exe dan double quotes untuk path dengan spasi
+        $mysqldump = '"' . $mysql_path . 'mysqldump.exe"';
+        $mysql = '"' . $mysql_path . 'mysql.exe"';
+    } else {
+        // Linux/Unix - tanpa .exe, gunakan escapeshellarg jika ada path
+        if (!empty($mysql_path)) {
+            $mysqldump = escapeshellarg($mysql_path . 'mysqldump');
+            $mysql = escapeshellarg($mysql_path . 'mysql');
+        } else {
+            // Jika path kosong, gunakan command langsung dari PATH
+            $mysqldump = 'mysqldump';
+            $mysql = 'mysql';
+        }
+    }
     $gzip = escapeshellarg('gzip'); // Asumsi gzip ada di PATH
     $gunzip = escapeshellarg('gunzip'); // Asumsi gunzip ada di PATH
 
@@ -254,7 +270,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['action'])) {
                 }
 
                 $cmd_create = "{$mysql} -h {$db_host_escaped} -u {$db_user_escaped}{$pass_flag} -e " . escapeshellarg("CREATE DATABASE IF NOT EXISTS `{$target_db}`");
-                $cmd_clone = "{$mysqldump} -h {$db_host_escaped} -u {$db_user_escaped}{$pass_flag} --routines --triggers --events {$source_db_escaped} | {$mysql} -h {$db_host_escaped} -u {$db_user_escaped}{$pass_flag} {$target_db_escaped}";
+                $cmd_clone = "{$mysqldump} -h {$db_host_escaped} -u {$db_user_escaped}{$pass_flag} --skip-lock-tables --single-transaction {$source_db_escaped} | {$mysql} -h {$db_host_escaped} -u {$db_user_escaped}{$pass_flag} {$target_db_escaped}";
 
                 $output = [];
                 $return_var = 0;
@@ -344,7 +360,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['action'])) {
                 $backup_file_escaped = escapeshellarg($backup_file); // Tidak digunakan lagi, tapi aman dibiarkan
 
                 // PERUBAHAN: Gunakan proc_open dan gzwrite
-                $cmd_dump_only = "{$mysqldump} -h {$db_host_escaped} -u {$db_user_escaped}{$pass_flag} --routines --triggers --events {$backup_db_escaped}";
+                // Tambahkan --skip-lock-tables dan --single-transaction untuk menghindari error permission
+                // Hapus --events, --routines, --triggers karena user tidak punya privilege
+                $cmd_dump_only = "{$mysqldump} -h {$db_host_escaped} -u {$db_user_escaped}{$pass_flag} --skip-lock-tables --single-transaction {$backup_db_escaped}";
 
                 $descriptorspec = [
                     0 => ["pipe", "r"],  // STDIN
@@ -476,28 +494,56 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['action'])) {
             // Aksi: Ambil Daftar DB
             // ========================
             case 'get_databases':
-                $cmd_list = "{$mysql} -h {$db_host_escaped} -u {$db_user_escaped}{$pass_flag} -e " . escapeshellarg("SHOW DATABASES");
+                // Tambahkan -N untuk skip column headers
+                $cmd_list = "{$mysql} -h {$db_host_escaped} -u {$db_user_escaped}{$pass_flag} -N -e " . escapeshellarg("SHOW DATABASES");
                 exec($cmd_list . " 2>&1", $output, $return_var);
 
                 if ($return_var !== 0) {
-                    throw new Exception("Gagal mengambil daftar database: " . implode("\n", $output));
+                    $debug_msg = "User: '{$db_user}', Host: '{$db_host}'. Command: " . $mysql;
+                    throw new Exception("Gagal mengambil daftar database via command line.\n$debug_msg\nOutput: " . implode("\n", $output));
                 }
 
                 $databases = [];
-                // $exclude_dbs = ['information_schema', 'mysql', 'performance_schema', 'phpmyadmin', 'sys'];
-                /* foreach ($output as $line) {
-                      if ($line !== 'Database' && !in_array($line, $exclude_dbs)) {
-                          $databases[] = $line;
-                      }
-                  }
-                  */
+                $exclude_dbs = ['information_schema', 'mysql', 'performance_schema', 'phpmyadmin', 'sys', 'Database', 
+                                'data'];
+                
+                // Pattern untuk database aplikasi yang valid (sesuaikan dengan kebutuhan Anda)
+                // Contoh: dnet_ad2025, pnet_pd2025, sas_2025, sas_2026, dll
+                $valid_patterns = [
+                    '/^dnet_/',      // Database yang dimulai dengan dnet_
+                ];
+                
                 foreach ($output as $line) {
-                    // Filter database: dnet*
-                    if (strpos($line, 'dnet') === 0) {
+                    $line = trim($line);
+                    if (empty($line)) continue;
+                    
+                    // Skip database yang ada di exclude list
+                    if (in_array($line, $exclude_dbs)) {
+                        continue;
+                    }
+                    
+                    // Cek apakah database cocok dengan salah satu pattern yang valid
+                    $is_valid = false;
+                    foreach ($valid_patterns as $pattern) {
+                        if (preg_match($pattern, $line)) {
+                            $is_valid = true;
+                            break;
+                        }
+                    }
+                    
+                    // Hanya masukkan database yang valid
+                    if ($is_valid) {
                         $databases[] = $line;
                     }
                 }
+                
                 $response = ['success' => true, 'databases' => $databases];
+                
+                // Debug info jika kosong
+                if (empty($databases)) {
+                    $response['debug_output'] = $output;
+                    $response['message'] = "Tidak ada database ditemukan (setelah filter). Cek console untuk raw output.";
+                }
                 break;
 
             // ========================
@@ -572,6 +618,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['action'])) {
 // ======================================================================\
 // Jika bukan request AJAX, tampilkan halaman HTML
 ?>
+<!-- DataTables -->
+<link rel="stylesheet" href="https://cdn.datatables.net/1.10.24/css/dataTables.bootstrap4.min.css">
+<script src="https://cdn.datatables.net/1.10.24/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.10.24/js/dataTables.bootstrap4.min.js"></script>
+
 <style>
     .blinking-text {
         animation-name: color-blink;
@@ -655,7 +706,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['action'])) {
                 <div class="card">
                     <div class="card-header bg-menu-gradient">
 
-                        <p class="blinking-text">Jangan lupa Backup Database sebelum melakukan hal lain..!!!</p>
+                        <b class="blinking-text">Jangan lupa Backup Database sebelum melakukan hal lain..!!!</b>
                     </div>
                     <!-- /.panel-heading -->
 
@@ -673,7 +724,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['action'])) {
                         ?>
 
                     <div class="card card-primary card-tabs">
-                        <div class="card-header bg-menu-gradient p-0 pt-1">
+                        <div class="card-header bg-menu-gradient p-0 pt-1 border-bottom-0">
                                 <ul class="nav nav-tabs" id="custom-tabs-three-tab" role="tablist">
                                     <li class="nav-item">
                                         <a class="nav-link" id="dbset-tab-link" data-toggle="pill" href="#dbset"
@@ -756,7 +807,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['action'])) {
                                                 <div class="col-md-5">
                                                     <div class="form-group">
                                                         <label for="target_db_clone">Database Tahun Selanjutnya =
-                                                            (Auto)</label>
+                                                            dnet_ad<?php echo $tahun; ?></label>
                                                         <input type="text" class="form-control" id="target_db_clone"
                                                             name="target_db" placeholder="dnet_ad<?php echo $tahun; ?>"
                                                             value="dnet_ad<?php echo $tahun; ?>" required>
@@ -994,30 +1045,43 @@ semua elemen HTML di atasnya selesai di-parsing oleh browser.
             logClone('Memuat daftar database...', 'info');
             logBackup('Memuat daftar database...', 'info');
 
-            const databases = await getDatabases();
+            const result = await getDatabases();
             const selects = document.querySelectorAll('#source_db_clone, #backup_db');
 
             selects.forEach(select => {
                 select.innerHTML = '<option value="">Pilih database...</option>'; // Reset
-                if (databases) {
-                    databases.forEach(db => {
-                        const option = document.createElement('option');
-                        option.value = db;
-                        option.textContent = db;
-                        select.appendChild(option);
-                    });
-                    logClone('Daftar database berhasil dimuat.', 'success');
-                    logBackup('Daftar database berhasil dimuat.', 'success');
+                if (result.success && result.databases) {
+                    if (result.databases.length === 0) {
+                         if (result.debug_output) {
+                             console.log("DEBUG RAW OUTPUT:", result.debug_output);
+                             logClone(`Peringatan: 0 database ditemukan. Raw Output: ${JSON.stringify(result.debug_output)}`, 'warn');
+                         } else {
+                             logClone('Peringatan: 0 database ditemukan.', 'warn');
+                         }
+                    } else {
+                        result.databases.forEach(db => {
+                            const option = document.createElement('option');
+                            option.value = db;
+                            option.textContent = db;
+                            select.appendChild(option);
+                        });
+                        logClone(`Berhasil memuat ${result.databases.length} database.`, 'success');
+                        // Hanya log ke backup sekali saja agar tidak duplikat
+                        if (select.id === 'backup_db') {
+                             logBackup(`Berhasil memuat ${result.databases.length} database.`, 'success');
+                        }
+                    }
                 } else {
-                    logClone('Gagal memuat daftar database.', 'error');
-                    logBackup('Gagal memuat daftar database.', 'error');
+                    const errorMsg = result.message || 'Gagal memuat daftar database.';
+                    logClone(`Gagal memuat daftar database: ${errorMsg}`, 'error');
+                    logBackup(`Gagal memuat daftar database: ${errorMsg}`, 'error');
                 }
             });
         }
 
         async function getDatabases(forceRefresh = false) {
             if (cachedDatabases && !forceRefresh) {
-                return cachedDatabases;
+                return { success: true, databases: cachedDatabases };
             }
 
             const formData = new FormData();
@@ -1026,9 +1090,9 @@ semua elemen HTML di atasnya selesai di-parsing oleh browser.
 
             if (data.success && data.databases) {
                 cachedDatabases = data.databases;
-                return cachedDatabases;
+                return { success: true, databases: cachedDatabases };
             }
-            return null;
+            return { success: false, message: data.message || 'Gagal mengambil data dari server.' };
         }
 
         // --- Validasi Target DB Dynamic ---
@@ -1051,9 +1115,10 @@ semua elemen HTML di atasnya selesai di-parsing oleh browser.
                 return;
             }
 
-            const databases = await getDatabases();
+            const result = await getDatabases();
 
-            if (databases) {
+            if (result.success && result.databases) {
+                const databases = result.databases;
                 const exists = databases.includes(targetDbName);
                 if (exists) {
                     logFn(`PERINGATAN: Database target '${targetDbName}' sudah ada. Operasi akan menimpa data!`, 'warn');
@@ -1072,6 +1137,11 @@ semua elemen HTML di atasnya selesai di-parsing oleh browser.
                     buttonEl.classList.add(buttonEl.id === 'cloneButton' ? 'btn-primary' : 'btn-warning');
                 }
                 buttonEl.disabled = false;
+            } else {
+                // Jika gagal validasi, log warning tapi biarkan tombol aktif (atau disable tergantung kebijakan)
+                // Di sini kita biarkan aktif tapi log error
+                logFn(`Gagal validasi target DB: ${result.message}`, 'warn');
+                buttonEl.disabled = false; 
             }
         }
 

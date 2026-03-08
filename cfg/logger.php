@@ -28,7 +28,27 @@ if (!function_exists('write_log')) {
 
         // Fetch user identity
         $current_user = !empty($userc) ? $userc : (isset($_SESSION['skradm']) ? $_SESSION['skradm'] : 'System');
-        $current_nama = !empty($nama) ? $nama : $current_user;
+        
+        // --- ROBUST NAME RESOLUTION FIX ---
+        if (!empty($nama)) {
+            $current_nama = $nama;
+        } elseif ($current_user !== 'System' && ($db instanceof mysqli)) {
+            // Dynamically detect column name (userid or username)
+            $check_col = mysqli_query($db, "SHOW COLUMNS FROM usera LIKE 'userid'");
+            $user_col = ($check_col && mysqli_num_rows($check_col) > 0) ? 'userid' : 'nama';
+            
+            // Attempt to fetch name from DB
+            $s_uid_lookup = mysqli_real_escape_string($db, $current_user);
+            $q_nm = mysqli_query($db, "SELECT nama FROM usera WHERE $user_col = '$s_uid_lookup' LIMIT 1");
+            if ($q_nm && mysqli_num_rows($q_nm) > 0) {
+                $r_nm = mysqli_fetch_assoc($q_nm);
+                $current_nama = !empty($r_nm['nama']) ? $r_nm['nama'] : $current_user;
+            } else {
+                $current_nama = $current_user;
+            }
+        } else {
+            $current_nama = $current_user;
+        }
         
         // Fetch IP
         $current_ip = !empty($ip) ? $ip : ($_SERVER['REMOTE_ADDR'] ?? '127.0.0.1');
@@ -38,8 +58,8 @@ if (!function_exists('write_log')) {
         if ($url !== null) {
             $current_url = $url;
         } else {
-            $backtrace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 1);
-            $current_url = isset($backtrace[0]['file']) ? basename($backtrace[0]['file']) : basename($_SERVER['PHP_SELF']);
+            $backtrace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 2);
+            $current_url = isset($backtrace[1]['file']) ? basename($backtrace[1]['file']) : basename($_SERVER['PHP_SELF']);
         }
         $user_agent = $_SERVER['HTTP_USER_AGENT'] ?? '-';
         $waktu = date("Y-m-d H:i:s");

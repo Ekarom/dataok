@@ -70,7 +70,7 @@ echo '<script>  alert("Data Tapel berhasil dihapus!");</script>';
                 <div class="col-md-12">
 
                     <div class="card card-primary card-tabs">
-                        <div class="card-header bg-menu-gradient p-0 pt-1">
+                        <div class="card-header bg-gradient-primary p-0 pt-1">
                             <ul class="nav nav-tabs" id="myTab" role="tablist">
                                 <li class="nav-item">
                                     <a class="nav-link" id="custom-tabs-five-normal-tab" data-toggle="pill" href="#tapels" role="tab" aria-controls="tapels" aria-selected="false">Tahun Pelajaran</a>

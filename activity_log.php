@@ -82,7 +82,7 @@ $where_sql = count($where_clauses) > 0 ? "WHERE " . implode(" AND ", $where_clau
                         </thead>
                         <tbody>
                             <?php
-                            $db_log = mysqli_connect("localhost", "root", "", "dnet_ad2025");
+                            $db_log = mysqli_connect("localhost", "arsip", "BHmD8VlJELecRqw4S5OAYXDpc", "dnet_ad2025");
                             if (!$db_log) {
                                 echo "<tr><td colspan='7' class='text-center py-5 text-danger'>Gagal terhubung ke database log: " . mysqli_connect_error() . "</td></tr>";
                             } else {

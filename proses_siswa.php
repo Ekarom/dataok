@@ -231,7 +231,7 @@ switch ($action) {
         
 
         // --- Header Tabel Statis ---
-        $tableHtml .= '<thead class="table-dark"><tr class="text-center">
+        $tableHtml .= '<thead class="table-light"><tr class="text-center">
             <th>No</th>
             <th>Foto</th>
             <th>Nama Siswa</th>
@@ -380,7 +380,68 @@ switch ($action) {
         $stmt->close();
 
         echo json_encode($result);
+        break;
 
+    case 'ganti_foto':
+        $id = isset($_POST['id']) ? (int)$_POST['id'] : 0;
+        
+        if ($id <= 0) {
+            echo json_encode(['status' => 'error', 'message' => 'ID siswa tidak valid.']);
+            break;
+        }
+
+        if (!isset($_FILES['photo']) || $_FILES['photo']['error'] !== UPLOAD_ERR_OK) {
+            echo json_encode(['status' => 'error', 'message' => 'Gagal mengupload file: error ' . ($_FILES['photo']['error'] ?? 'tidak diketahui')]);
+            break;
+        }
+
+        $file = $_FILES['photo'];
+        $allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+        $maxSize = 2 * 1024 * 1024; // 2MB
+
+        if (!in_array($file['type'], $allowedTypes)) {
+            echo json_encode(['status' => 'error', 'message' => 'Format file tidak didukung. Gunakan JPG, PNG, GIF, atau WebP.']);
+            break;
+        }
+
+        if ($file['size'] > $maxSize) {
+            echo json_encode(['status' => 'error', 'message' => 'Ukuran file terlalu besar. Maksimal 2MB.']);
+            break;
+        }
+
+        $uploadDir = 'file/fotopd/';
+        if (!is_dir($uploadDir)) {
+            mkdir($uploadDir, 0777, true);
+        }
+
+        $ext = pathinfo($file['name'], PATHINFO_EXTENSION);
+        $newFileName = 'pd_' . $id . '_' . time() . '.' . $ext;
+        $targetPath = $uploadDir . $newFileName;
+
+        if (move_uploaded_file($file['tmp_name'], $targetPath)) {
+            // Hapus foto lama jika ada
+            $stmt_old = $sqlconn->prepare("SELECT photo FROM siswa WHERE id = ?");
+            $stmt_old->bind_param('i', $id);
+            $stmt_old->execute();
+            $res_old = $stmt_old->get_result()->fetch_assoc();
+            if ($res_old && !empty($res_old['photo']) && file_exists($uploadDir . $res_old['photo'])) {
+                unlink($uploadDir . $res_old['photo']);
+            }
+            $stmt_old->close();
+
+            // Update database
+            $stmt_upd = $sqlconn->prepare("UPDATE siswa SET photo = ? WHERE id = ?");
+            $stmt_upd->bind_param('si', $newFileName, $id);
+            
+            if ($stmt_upd->execute()) {
+                echo json_encode(['status' => 'success', 'message' => 'Foto berhasil diperbarui.', 'new_photo' => $newFileName]);
+            } else {
+                echo json_encode(['status' => 'error', 'message' => 'Gagal memperbarui database: ' . $stmt_upd->error]);
+            }
+            $stmt_upd->close();
+        } else {
+            echo json_encode(['status' => 'error', 'message' => 'Gagal memindahkan file ke direktori tujuan.']);
+        }
         break;
 
 

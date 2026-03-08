@@ -40,7 +40,9 @@ if (isset($_POST['save'])) {
     $tgl_kegiatan = date('Y-m-d', strtotime(str_replace('/', '-', $raw_date))); // Handle / or - separator
     $tgl_kegiatan = mysqli_real_escape_string($sqlconn, $tgl_kegiatan);
     $prestasi = mysqli_real_escape_string($sqlconn, $_POST['prestasi']);
+    $kegiatan = mysqli_real_escape_string($sqlconn, $_POST['nama_kegiatan']);
     $tingkat = mysqli_real_escape_string($sqlconn, $_POST['tingkat']);
+    $penyelenggara =mysqli_real_escape_string($sqlconn, $_POST['penyelenggara']);
     $lokasi = mysqli_real_escape_string($sqlconn, $_POST['lokasi']);
     $bulan = mysqli_real_escape_string($sqlconn, $_POST['bulan']);
 
@@ -116,12 +118,12 @@ if (isset($_POST['save'])) {
 
     $pdf_string = implode(',', $pdf_list);
 
-    $addtotable = mysqli_query($sqlconn, "INSERT INTO prestasi (pd, kelas, juara, jenisprestasi, prestasi, tingkat, tgl_kegiatan, lokasi, bulan, pdf) VALUES ('$pd', '$kelas', '$juara', '$jenisprestasi', '$prestasi', '$tingkat', '$tgl_kegiatan', '$lokasi', '$bulan', '$pdf_string')");
+    $addtotable = mysqli_query($sqlconn, "INSERT INTO prestasi (pd, kelas, juara, jenisprestasi, prestasi, nama_kegiatan, tingkat, penyelenggara, tgl_kegiatan, lokasi, bulan, pdf) VALUES ('$pd', '$kelas', '$juara', '$jenisprestasi', '$prestasi', '$kegiatan', '$tingkat', '$penyelenggara', '$tgl_kegiatan', '$lokasi', '$bulan', '$pdf_string')");
     
     if ($addtotable) {
         write_log("ADD", "Menambah Data Prestasi Atas Nama: $pd");
         if(isset($_POST['is_ajax'])) { echo "success"; exit; }
-        echo '<script>$(function() { toastr.success("Data berhasil ditambahkan"); setTimeout(function(){ window.location.href = "?modul=press"; }, 3000); });</script>';
+        echo '<script>$(function() { toastr.success("Data berhasil ditambahkan"); setTimeout(function(){ window.location.href = "?press"; }, 3000); });</script>';
     } else {
         foreach ($pdf_list as $f) { unlink('file/prestasi/' . $f); }
         if(isset($_POST['is_ajax'])) { echo "error: " . mysqli_error($sqlconn); exit; }
@@ -141,7 +143,9 @@ if (isset($_POST['update2'])) {
     $tgl_kegiatan = date('Y-m-d', strtotime(str_replace('/', '-', $raw_date))); // Handle / or - separator
     $tgl_kegiatan = mysqli_real_escape_string($sqlconn, $tgl_kegiatan);
     $prestasi = mysqli_real_escape_string($sqlconn, $_POST['prestasi']);
+    $kegiatan = mysqli_real_escape_string($sqlconn, $_POST['nama_kegiatan']);
     $tingkat = mysqli_real_escape_string($sqlconn, $_POST['tingkat']);
+    $penyelenggara = mysqli_real_escape_string($sqlconn, $_POST['penyelenggara']);
     $lokasi = mysqli_real_escape_string($sqlconn, $_POST['lokasi']);
     $bulan = mysqli_real_escape_string($sqlconn, $_POST['bulan']);
 
@@ -222,13 +226,13 @@ if (isset($_POST['update2'])) {
         }
     }
     $pdf_string = implode(',', array_filter($pdf_list));
-    $update = mysqli_query($sqlconn, "UPDATE prestasi SET pd='$pd', kelas='$kelas', juara='$juara', jenisprestasi='$jenisprestasi', prestasi='$prestasi', tingkat='$tingkat', tgl_kegiatan='$tgl_kegiatan', lokasi='$lokasi', bulan='$bulan', pdf='$pdf_string' WHERE id='$id'");
+    $update = mysqli_query($sqlconn, "UPDATE prestasi SET pd='$pd', kelas='$kelas', juara='$juara', jenisprestasi='$jenisprestasi', prestasi='$prestasi', nama_kegiatan='$kegiatan', tingkat='$tingkat', penyelenggara='$penyelenggara', tgl_kegiatan='$tgl_kegiatan', lokasi='$lokasi', bulan='$bulan', pdf='$pdf_string' WHERE id='$id'");
 
     if ($update) {
-        $log_msg = "Update data prestasi: $pd ($prestasi)" . (!empty($pdf_list) ? " (dengan lampiran baru)" : "");
+        $log_msg = "Update data prestasi: $pd ($prestasi)" . (!empty($pdf_list) ?: "");
         write_log("EDIT", $log_msg);
         if(isset($_POST['is_ajax'])) { echo "success"; exit; }
-        echo "<script>$(function() { toastr.success('Data berhasil diupdate'); setTimeout(function(){ window.location.href='?modul=press'; }, 3000); });</script>";
+        echo "<script>$(function() { toastr.success('Data berhasil diupdate'); setTimeout(function(){ window.location.href='?press'; }, 3000); });</script>";
     } else {
         // If update failed, and new files were uploaded, try to delete them to prevent orphaned files
         foreach ($pdf_list as $f) { unlink('file/prestasi/' . $f); }
@@ -261,7 +265,7 @@ if (isset($_REQUEST['aksi']) && $_REQUEST['aksi'] == 'hapus' && isset($_REQUEST[
         if($sql) {
             write_log("DELETE", "Menghapus data prestasi ID: $id_hapus ($nama_pd)");
             if(isset($_REQUEST['is_ajax'])) { echo "success"; exit; }
-            echo '<script>$(function() { toastr.success("Data berhasil dihapus!"); setTimeout(function(){ window.location.href="?modul=press"; }, 3000); });</script>';
+            echo '<script>$(function() { toastr.success("Data berhasil dihapus!"); setTimeout(function(){ window.location.href="?press"; }, 3000); });</script>';
         } else {
             if(isset($_REQUEST['is_ajax'])) { echo "error: Gagal menghapus"; exit; }
             echo '<script>$(function() { toastr.error("Gagal menghapus data!"); window.history.back(); });</script>';
@@ -361,6 +365,8 @@ if (isset($_POST['aksi']) && $_POST['aksi'] == 'hapus_file') {
 
     .modal-footer-premium { background: #fbfbfb; border-top: 1px solid #f1f1f1; padding: 15px 25px; }
 </style>
+    <link rel="stylesheet" href="plugins/datatables-bs4/css/dataTables.bootstrap4.css">
+    <link rel="stylesheet" href="plugins/datatables-responsive/css/responsive.bootstrap4.css">
 
 <!-- Content Wrapper. Contains page content -->
 <div class="content-wrapper">
@@ -380,8 +386,6 @@ if (isset($_POST['aksi']) && $_POST['aksi'] == 'hapus_file') {
             </div>
         </div>
     </section>
-    <!-- Style DataTables -->
-    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap4.css">
     <!-- Main content -->
     <section class="content">
         <div class="row">
@@ -408,7 +412,16 @@ if (isset($_POST['aksi']) && $_POST['aksi'] == 'hapus_file') {
             </div>
             <div class="col">
                 <div class="row align-items-center">
-                    <div class="col-md-3">
+                    <div class="col-md-2">
+                        <select id="rekap_triwulan" class="form-control form-control-sm custom-select-rekap" style="border-radius: 20px !important;" onchange="updateMonthsByQuarter(this.value)">
+                            <option value="">- Triwulan -</option>
+                            <option value="1">Triwulan I</option>
+                            <option value="2">Triwulan II</option>
+                            <option value="3">Triwulan III</option>
+                            <option value="4">Triwulan IV</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
                         <select id="rekap_m1" class="form-control form-control-sm custom-select-rekap" style="border-radius: 20px !important;">
                             <option value="Januari">Januari</option>
                             <option value="Februari">Februari</option>
@@ -427,7 +440,7 @@ if (isset($_POST['aksi']) && $_POST['aksi'] == 'hapus_file') {
                     <div class="col-md-auto px-2 label-sd text-muted">
                         s/d
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-2">
                         <select id="rekap_m2" class="form-control form-control-sm custom-select-rekap" style="border-radius: 20px !important;">
                             <option value="Januari">Januari</option>
                             <option value="Februari">Februari</option>
@@ -444,10 +457,21 @@ if (isset($_POST['aksi']) && $_POST['aksi'] == 'hapus_file') {
                         </select>
                     </div>
                     <div class="col-md-2">
+                        <select id="rekap_kejuaraan" class="form-control form-control-sm custom-select-rekap" style="border-radius: 20px !important;">
+                            <option value="">- Semua Kejuaraan -</option>
+                            <?php 
+                            $q_kej = mysqli_query($sqlconn, "SELECT DISTINCT prestasi FROM prestasi WHERE prestasi != '' ORDER BY prestasi ASC");
+                            while($rk = mysqli_fetch_array($q_kej)) {
+                                echo "<option value='".htmlspecialchars($rk['prestasi'], ENT_QUOTES)."'>".$rk['prestasi']."</option>";
+                            }
+                            ?>
+                        </select>
+                    </div>
+                    <div class="col-md-1">
                         <input type="number" id="rekap_y" class="form-control form-control-sm custom-input-rekap" style="border-radius: 20px !important;" value="<?php echo date('Y'); ?>">
                     </div>
                     <div class="col-md-auto ml-auto pr-2">
-                        <button type="button" class="btn btn-rekap-print" onclick="printRekap()"><i class="fa fa-print"></i></button>
+                        <button type="button" class="btn btn-rekap-print" onclick="printRekapTriwulan()"><i class="fa fa-print"></i></button>
                     </div>
                 </div>
             </div>
@@ -498,21 +522,23 @@ if (isset($_POST['aksi']) && $_POST['aksi'] == 'hapus_file') {
         }
     </style>
 
-    <div class="table-responsive text-nowrap">
-            <table id="press" class="table table-striped table-sm" style="width:100%"> 
+    <div class="table-responsive">
+            <table id="pres" class="table table-striped" style="width:100%"> 
                 <thead>
                 <tr align="center">
                                         <th>No</th>
-                                        <th>Nama</th>
-                                        <th>Kelas</th>
-                                        <th>Juara</th>
-                                        <th>Jenis Prestasi</th>
-                                        <th>Tanggal</th>
-                                        <th>Tingkat</th>
-                                        <th>Lokasi</th>
-                                        <th>Bulan</th>
-                                        <th>Log</th>
-                                        <?php if ($lv == "1" || $lv == "2") { ?>
+                                        <th width="10%">Nama</th>
+                                        <th width="5%">Kelas</th>
+                                        <th width="5%">Juara</th>
+                                        <th width="10%">Jenis Prestasi</th>
+                                        <th width="10%">Nama Kegiatan</th>
+                                        <th width="10%">Tanggal</th>
+                                        <th width="10%">Tingkat</th>
+                                        <th width="17%">Penyelenggara</th>
+                                        <th width="10%">Lokasi</th>
+                                        <th width="10%">Bulan</th>
+                                        <th width="10%">Log</th>
+                                        <?php if (isset($lv) && ($lv == "1" || $lv == "2")) { ?>
                                             <th>Edit</th>
                                             <th>View</th>
                                         <?php } ?>
@@ -522,9 +548,10 @@ if (isset($_POST['aksi']) && $_POST['aksi'] == 'hapus_file') {
                                 <tbody>
                                     <?php
                                     $sql = mysqli_query($sqlconn, "SELECT * FROM prestasi ORDER BY id");
-                                    $no = 0;
-                                    while ($s = mysqli_fetch_array($sql)) {
-                                        $no++;
+                                    if ($sql) {
+                                        $no = 0;
+                                        while ($s = mysqli_fetch_array($sql)) {
+                                            $no++;
                                     ?>
                                         <tr>
                                             <td><?php echo $no; ?></td>
@@ -532,13 +559,15 @@ if (isset($_POST['aksi']) && $_POST['aksi'] == 'hapus_file') {
                                             <td><?php echo $s['kelas']; ?></td>
                                             <td><?php echo $s['juara']; ?></td>
                                             <td><?php echo $s['jenisprestasi']; ?></td>
+                                            <td><?php echo $s['nama_kegiatan']; ?></td>
                                             <td><?php echo $s['tgl_kegiatan']; ?></td>
                                             <td><?php echo $s['tingkat']; ?></td>
+                                            <td><?php echo $s['penyelenggara']; ?></td>
                                             <td><?php echo $s['lokasi']; ?></td>
                                             <td><?php echo $s['bulan']; ?></td>
-                                            <td><?php echo $s['date']; ?></td>
+                                            <td><?php echo isset($s['date']) ? $s['date'] : ''; ?></td>
 
-                                            <?php if ($lv == "1" || $lv == "2") { ?>
+                                            <?php if (isset($lv) && ($lv == "1" || $lv == "2")) { ?>
                                                 <td>
                                                     <a href='#myEdit' id='custId' data-toggle='modal' data-id='<?php echo $s['id']; ?>'>
                                                         <button type="button" class="btn btn-info btn-sm btn-flat"><i class="fa fa-edit"></i></button>
@@ -552,12 +581,17 @@ if (isset($_POST['aksi']) && $_POST['aksi'] == 'hapus_file') {
                                             <?php } ?>
 
                                             <td>
-                                                <a href="?modul=press&aksi=hapus&urut=<?php echo $s['id']; ?>">
+                                                <a href="?press&aksi=hapus&urut=<?php echo $s['id']; ?>">
                                                     <button type="button" class="btn btn-danger btn-sm btn-flat" onclick="return confirm('Apakah anda yakin ingin menghapus data ini?');"><i class="fa fa-trash"></i></button>
                                                 </a>
                                             </td>
                                         </tr>
-                                    <?php } ?>
+                                    <?php 
+                                        }
+                                    } else {
+                                        echo "<tr><td colspan='15' class='text-center text-danger'>Terjadi error saat load table (atau tidak ada data) : " . mysqli_error($sqlconn) . "</td></tr>";
+                                    } 
+                                    ?>
                                 </tbody>
                             </table>
                         </div>
@@ -689,14 +723,22 @@ if (isset($_POST['aksi']) && $_POST['aksi'] == 'hapus_file') {
 <script type="text/javascript">
   $(document).ready(function () {
     $('#inputpres').on('show.bs.modal', function (e) {
-      var nis = $(e.relatedTarget).data('id');
+      // Handle both standard trigger (relatedTarget) and manual trigger (.data('id'))
+      var nis = $(e.relatedTarget).data('id') || $(this).data('id');
       var db_year = '<?php echo isset($_GET['db_year']) ? $_GET['db_year'] : ''; ?>';
+      
+      // Clear previous content to avoid flickering
+      $('.fetched-input').html('<div class="text-center p-4"><i class="fa fa-spinner fa-spin fa-2x"></i><p>Memuat form...</p></div>');
+      
       $.ajax({
         type: 'post',
         url: 'inputprestasi.php',
         data: { nis: nis, db_year: db_year },
         success: function (data) {
           $('.fetched-input').html(data);
+        },
+        error: function() {
+          $('.fetched-input').html('<div class="alert alert-danger">Gagal memuat form. Silahkan coba lagi.</div>');
         }
       });
     });
@@ -706,11 +748,12 @@ if (isset($_POST['aksi']) && $_POST['aksi'] == 'hapus_file') {
 
 
 <!-- Bootstrap 4 -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
 <!-- DataTables -->
-<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-
-<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap4.min.js"></script>
+<script src="plugins/datatables/jquery.dataTables.min.js"></script>
+<script src="plugins/datatables-bs4/js/dataTables.bootstrap4.min.js"></script>
+<script src="plugins/datatables-responsive/js/dataTables.responsive.min.js"></script>
+<script src="plugins/datatables-responsive/js/responsive.bootstrap4.min.js"></script>
 
 <script>
 $(document).ready(function() {
@@ -718,7 +761,7 @@ $(document).ready(function() {
     if ($.fn.DataTable.isDataTable('#press')) {
         $('#press').DataTable().destroy();
     }
-    new DataTable('#press', {
+    $('#press').DataTable({
         responsive: true
     });
 
@@ -743,7 +786,7 @@ $(document).ready(function() {
                 if (response.trim() == 'success') {
                     toastr.success("Data Berhasil Ditambahkan");
                     setTimeout(function(){
-                        window.location.href = "?modul=press";
+                        window.location.href = "?press";
                     }, 3000);
                 } else {
                     toastr.error("Gagal Menyimpan: " + response);
@@ -777,7 +820,7 @@ $(document).ready(function() {
                 if (response.trim() == 'success') {
                     toastr.success("Data Berhasil Diupdate");
                     setTimeout(function(){
-                        window.location.href = "?modul=press";
+                        window.location.href = "?press";
                     }, 3000);
                 } else {
                     toastr.error("Gagal Diupdate: " + response);
@@ -793,7 +836,7 @@ $(document).ready(function() {
     $(document).on('click', 'a[href*="aksi=hapus"]', function(e) {
         e.preventDefault();
         var deleteUrl = $(this).attr('href');
-        deleteUrl = deleteUrl.replace('?modul=press', 'prestasifix.php?');
+        deleteUrl = deleteUrl.replace('?press', 'prestasifix.php?');
         
         $.ajax({
             url: deleteUrl + '&is_ajax=true',
@@ -802,7 +845,7 @@ $(document).ready(function() {
                 if (response.trim() == 'success') {
                     toastr.success("Data berhasil dihapus!");
                     setTimeout(function(){
-                        window.location.href = "?modul=press";
+                        window.location.href = "?press";
                     }, 3000);
                 } else {
                     toastr.error("Gagal menghapus data: " + response);
@@ -815,11 +858,46 @@ $(document).ready(function() {
     });
 });
 
+function updateMonthsByQuarter(q) {
+    if (!q) return;
+    const m1 = $('#rekap_m1');
+    const m2 = $('#rekap_m2');
+    
+    if (q == '1') {
+        m1.val('Januari');
+        m2.val('Maret');
+    } else if (q == '2') {
+        m1.val('April');
+        m2.val('Juni');
+    } else if (q == '3') {
+        m1.val('Juli');
+        m2.val('September');
+    } else if (q == '4') {
+        m1.val('Oktober');
+        m2.val('Desember');
+    }
+}
+
 function printRekap() {
     var m1 = $('#rekap_m1').val();
     var m2 = $('#rekap_m2').val();
     var y = $('#rekap_y').val();
     var db = '<?php echo $db_req; ?>';
     window.open('print_rekap_pres.php?m1=' + m1 + '&m2=' + m2 + '&y=' + y + '&db=' + db, '_blank');
+}
+
+function printRekapTriwulan() {
+    var m1 = $('#rekap_m1').val();
+    var m2 = $('#rekap_m2').val();
+    var y = $('#rekap_y').val();
+    var tw = $('#rekap_triwulan').val();
+    var kej = $('#rekap_kejuaraan').val();
+    var db = '<?php echo $db_req; ?>';
+    
+    var url = 'print_rekap_triwulan.php?m1=' + m1 + '&m2=' + m2 + '&y=' + y + '&db=' + db;
+    if (tw) url += '&tw=' + tw;
+    if (kej) url += '&kej=' + encodeURIComponent(kej);
+    
+    window.open(url, '_blank');
 }
 </script>

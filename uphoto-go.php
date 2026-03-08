@@ -85,28 +85,46 @@ try {
                     continue;
                 }
                 
-                // Find student
-                $stmt = mysqli_prepare($sqlconn, "SELECT pd FROM siswa WHERE nis = ? LIMIT 1");
+                // Find student — coba NISN dulu, lalu fallback ke NIS
+                $row = null;
+                $match_col = null;
+
+                $stmt = mysqli_prepare($sqlconn, "SELECT pd FROM siswa WHERE nisn = ? LIMIT 1");
                 mysqli_stmt_bind_param($stmt, "s", $nis);
                 mysqli_stmt_execute($stmt);
                 $res = mysqli_stmt_get_result($stmt);
-                
                 if ($row = mysqli_fetch_assoc($res)) {
+                    $match_col = 'nisn';
+                }
+                mysqli_stmt_close($stmt);
+
+                if (!$row) {
+                    $stmt2 = mysqli_prepare($sqlconn, "SELECT pd FROM siswa WHERE nis = ? LIMIT 1");
+                    mysqli_stmt_bind_param($stmt2, "s", $nis);
+                    mysqli_stmt_execute($stmt2);
+                    $res2 = mysqli_stmt_get_result($stmt2);
+                    if ($row = mysqli_fetch_assoc($res2)) {
+                        $match_col = 'nis';
+                    }
+                    mysqli_stmt_close($stmt2);
+                }
+
+                if ($row) {
                     $new_name = preg_replace('/[^a-zA-Z0-9]/', '', $nis) . '.' . $fext;
                     if (copy($f->getPathname(), $foto_dir . $new_name)) {
-                        $up = mysqli_prepare($sqlconn, "UPDATE siswa SET photo = ? WHERE nis = ?");
+                        $up = mysqli_prepare($sqlconn, "UPDATE siswa SET photo = ? WHERE $match_col = ?");
                         mysqli_stmt_bind_param($up, "ss", $new_name, $nis);
                         mysqli_stmt_execute($up);
-                        
-                        $log[] = "SUCCESS: " . $nis . " - " . $row['pd'];
+                        mysqli_stmt_close($up);
+
+                        $log[] = "SUCCESS: " . $nis . " (via $match_col) - " . $row['pd'];
                         $sukses++;
                     } else {
                         $log[] = "ERROR: Failed to copy " . $nis;
                     }
                 } else {
-                    $log[] = "ERROR: Student with NIS [" . $nis . "] not found in database";
+                    $log[] = "ERROR: Student with NIS/NISN [" . $nis . "] not found in database";
                 }
-                mysqli_stmt_close($stmt);
             } else {
                 $log[] = "SKIPPED: " . $fname . " (Not an image)";
             }

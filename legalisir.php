@@ -69,9 +69,9 @@ if (isset($_POST['add'])) {
 
     $simpan = mysqli_query($sqlconn, "insert into legalisir (no_surat,tgl_dokumen,ditujukan,perihal,pembuat,pdf) values('$no_surat','$tgl_dokumen','$ditujukan','$perihal','$pembuat','$pdf_string')");
     if ($simpan) {
-        write_log("ADD", "Menambah data legalisir baru: $no_surat (untuk: $ditujukan)");
+        write_log("ADD", "Menambah data legalisir dengan no. surat : $no_surat ");
         if(isset($_POST['is_ajax'])) { echo "success"; exit; }
-        echo "<script>$(function() { toastr.success('Berhasil ditambahkan'); setTimeout(function(){ window.location.href='?modul=Legalisir'; }, 3000); });</script>";
+        echo "<script>$(function() { toastr.success('DataBerhasil ditambahkan'); setTimeout(function(){ window.location.href='?legalisir'; }, 3000); });</script>";
     } else {
         foreach ($pdf_list as $f) { unlink('file/legalisir/' . $f); }
         if(isset($_POST['is_ajax'])) { echo "error: " . mysqli_error($sqlconn); exit; }
@@ -153,20 +153,20 @@ if (isset($_POST['update2'])) {
 }
 
     if ($update) {
-        $log_msg = "Update data legalisir: $no_surat" . (!empty($pdf_list) ? " (dengan lampiran baru)" : "");
+        $log_msg = "Update data legalisir dengan No Surat: $no_surat" . (!empty($pdf_list) ?  : "");
         write_log("EDIT", $log_msg);
         if(isset($_POST['is_ajax'])) { echo "success"; exit; }
-        echo "<script>$(function() { toastr.success('Data berhasil diupdate'); setTimeout(function(){ window.location.href='?modul=Legalisir'; }, 3000); });</script>";
+        echo "<script>$(function() { toastr.success('Data berhasil diupdate'); setTimeout(function(){ window.location.href='?legalisir'; }, 3000); });</script>";
     } else {
         if(isset($_POST['is_ajax'])) { echo "error: " . mysqli_error($sqlconn); exit; }
-        echo "<script>$(function() { toastr.error('Gagal update Data Legalisir: " . mysqli_escape_string($sqlconn, mysqli_error($sqlconn)) . "'); });</script>";
+        echo "<script>$(function() { toastr.error('Gagal update Data legalisir: " . mysqli_escape_string($sqlconn, mysqli_error($sqlconn)) . "'); });</script>";
     }
 }
 
 // <<<-----------------POST HAPUS--------------->>>
 if (isset($_REQUEST['aksi'])) {
-    $id_hapus = $_REQUEST['urut'];
-    $cek2 = mysqli_query($sqlconn, "SELECT pdf FROM legalisir WHERE id = '$id_hapus'");
+    $id = $_REQUEST['urut'];
+    $cek2 = mysqli_query($sqlconn, "SELECT pdf FROM legalisir WHERE id = '$id'");
     $r_hapus = mysqli_fetch_array($cek2);
     if ($r_hapus) {
         $old_files = explode(',', $r_hapus['pdf']);
@@ -174,11 +174,10 @@ if (isset($_REQUEST['aksi'])) {
             if ($f != "" && file_exists('file/legalisir/' . $f)) { unlink('file/legalisir/' . $f); }
         }
     }
-    $sql = mysqli_query($sqlconn, "delete from legalisir where id= '$id_hapus'");
+    $sql = mysqli_query($sqlconn, "delete from legalisir where id= '$id'");
     if ($sql) {
-        write_log("DELETE", "Menghapus data legalisir ID: $id_hapus");
         if(isset($_REQUEST['is_ajax'])) { echo "success"; exit; }
-        echo '<script>$(function() { toastr.success("Data berhasil dihapus!"); setTimeout(function(){ window.location.href="?modul=Legalisir"; }, 3000); });</script>';
+        echo '<script>$(function() { toastr.success("Data berhasil dihapus!"); setTimeout(function(){ window.location.href="?legalisir"; }, 3000); });</script>';
     } else {
         if(isset($_REQUEST['is_ajax'])) { echo "error: Gagal menghapus"; exit; }
         echo '<script>$(function() { toastr.error("Gagal menghapus data!"); setTimeout(function(){ window.history.back(); }, 3000); });</script>';
@@ -224,12 +223,12 @@ if (isset($_POST['aksi']) && $_POST['aksi'] == 'hapus_file') {
         <div class="container-fluid">
             <div class="row mb-2">
                 <div class="col-sm-6">
-                    <h1>Data Legalisir</h1>
+                    <h1>Data legalisir</h1>
                 </div>
                 <div class="col-sm-6">
                     <ol class="breadcrumb float-sm-right">
                         <li class="breadcrumb-item"><a href="index.php">Home</a></li>
-                        <li class="breadcrumb-item active">Data Legalisir</li>
+                        <li class="breadcrumb-item active">Data legalisir</li>
                     </ol>
                 </div>
             </div>
@@ -281,7 +280,7 @@ if (isset($_POST['aksi']) && $_POST['aksi'] == 'hapus_file') {
                                     color: #333 !important;
                                 }
                             </style>
-                            <select class="form-control form-control-sm" style="width: 110px;" onchange="if(this.value) window.location.href='?modul=Legalisir&db_year='+this.value">
+                            <select class="form-control form-control-sm" style="width: 110px;" onchange="if(this.value) window.location.href='?legalisir&db_year='+this.value">
                                 <option value="">Pilih Tahun</option>
                                 <?php
                                 // Ambil daftar database tahun dari dbset (dnet_ad2025 ke atas)
@@ -351,8 +350,8 @@ if (isset($_POST['aksi']) && $_POST['aksi'] == 'hapus_file') {
                                                     </a>
                                                 </td>
                                                 <td>
-                                                    <a href="?modul=legalisir&aksi=hapus&urut=<?php echo $s['id']; ?>">
-                                                        <button type='button' class="btn btn-danger btn-sm" onclick="return confirm('Apakah Anda yakin untuk menghapus data?');"><i class="fas fa-trash"></i></button>
+                                                    <a href="?legalisir&aksi=hapus&urut=<?php echo $s['id']; ?>">
+                                                        <button type='button' class="btn btn-danger btn-sm"><i class="fas fa-trash"></i></button>
                                                     </a>
                                                 </td>
                                             <?php } ?>
@@ -373,7 +372,7 @@ if (isset($_POST['aksi']) && $_POST['aksi'] == 'hapus_file') {
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header bg-menu-gradient">
-                <h5 class="modal-title">Lihat Dokumen</h5>
+                <b class="modal-title">Lihat Dokumen</b>
             </div>
             <div class="modal-body">
                 <div class="fetched-data"></div>
@@ -391,7 +390,7 @@ if (isset($_POST['aksi']) && $_POST['aksi'] == 'hapus_file') {
                 url: 'view_legalisir.php',
                 data: 'urut=' + rowid,
                 success: function(data) {
-                    $('.fetched-data').html(data);
+                    $('#myView2 .fetched-data').html(data);
                 }
             });
         });
@@ -403,7 +402,7 @@ if (isset($_POST['aksi']) && $_POST['aksi'] == 'hapus_file') {
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header bg-menu-gradient">
-                <h5 class="modal-title">Edit Dokumen</h5>
+                <b class="modal-title">Edit Dokumen</b>
             </div>
             <div class="modal-body">
                 <div class="fetched-data"></div>
@@ -421,7 +420,7 @@ if (isset($_POST['aksi']) && $_POST['aksi'] == 'hapus_file') {
                 url: 'edit_legalisir.php',
                 data: 'urut=' + rowid,
                 success: function(data) {
-                    $('.fetched-data').html(data);
+                    $('#myEdit1 .fetched-data').html(data);
                 }
             });
         });
@@ -448,7 +447,7 @@ if (isset($_POST['aksi']) && $_POST['aksi'] == 'hapus_file') {
                         </div>
                         <div class="col-md-6">
                             <div class="form-group">
-                                <label><i class="fa fa-calendar-alt"></i> Tanggal Surat</label>
+                                <label><i class="fa fa-calendar-alt"></i> Tanggal Dikirim</label>
                                 <input type="date" name="tgl_dokumen" class="form-control form-control-sm warna" required>
                             </div>
                         </div>
@@ -458,7 +457,7 @@ if (isset($_POST['aksi']) && $_POST['aksi'] == 'hapus_file') {
                     <div class="row">
                         <div class="col-md-6">
                             <div class="form-group">
-                                <label><i class="fa fa-paper-plane"></i> Ditujukan Kepada</label>
+                                <label><i class="fa fa-paper-plane"></i> Tujuan / Instansi</label>
                                 <input type="text" name="ditujukan" class="form-control form-control-sm warna" required placeholder="Instansi atau Pihak Penerima">
                             </div>
                         </div>
@@ -481,53 +480,59 @@ if (isset($_POST['aksi']) && $_POST['aksi'] == 'hapus_file') {
                     </div>
 
                     <!-- Section 4: Lampiran -->
-                    <div class="file-upload-wrapper" id="drop-area">
-                        <div class="file-upload-selector border rounded-top">
-                            <div class="upload-area d-flex align-items-center">
-                                <div style="flex-shrink: 0;">
-                                    <button type="button" class="btn btn-sm btn-light-info" onclick="document.getElementById('fileInput').click()">Pilih File...</button>
-                                </div>
-                                <div class="dropzone text-center prevent-select">
-                                    <span class="upload-text"><i class="fa fa-cloud-upload-alt mr-1"></i> atau drag & drop berkas disini.</span>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label><i class="fa fa-paperclip"></i> Lampiran Berkas</label>
+                                <div class="file-upload-wrapper" id="drop-area">
+                                    <div class="file-upload-selector border rounded-top">
+                                        <div class="upload-area d-flex align-items-center">
+                                            <div style="flex-shrink: 0;">
+                                                <button type="button" class="btn btn-sm btn-light-info" onclick="document.getElementById('fileInput').click()">Pilih File...</button>
+                                            </div>
+                                            <div class="dropzone text-center prevent-select">
+                                                <span class="upload-text"><i class="fa fa-cloud-upload-alt mr-1"></i> atau drag & drop berkas disini.</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div id="file-list-display" class="file-list-uploaded d-none text-left">
+                                        <!-- File items will be injected here -->
+                                    </div>
+                                    <div class="uploader-footer border rounded-bottom p-2 border-top-0">
+                                        <div class="fs-xs"><span class="font-600 text-blck">Total : <span id="total-size-display">0 B</span></span></div>
+                                        <div class="fs-nano text-muted">
+                                            Lampirkan berkas <span class="font-600 text-blck">.pdf</span> maksimal <span class="font-600 text-blck">1</span> berkas dan ukuran maksimal <span class="font-600 text-blck">2.0 MB</span>
+                                        </div>
+                                    </div>
+                                    <input type="file" name="file[]" id="fileInput" class="hidden-file-input" accept=".pdf" multiple onchange="handleFileSelect(this)">
                                 </div>
                             </div>
                         </div>
-                        <div id="file-list-display" class="file-list-uploaded d-none">
-                            <!-- File items will be injected here -->
-                        </div>
-                        <div class="uploader-footer border rounded-bottom p-2 border-top-0">
-                            <div class="fs-xs"><span class="font-600 text-blck">Total : </span><span id="total-size-display">0 B</span></div>
-                            <div class="fs-nano text-muted">
-                                Lampirkan berkas <span class="font-600 text-blck">.pdf</span> maksimal <span class="font-600 text-blck">1</span> berkas dan ukuran maksimal <span class="font-600 text-blck">2.0 MB</span>
-                            </div>
-                        </div>
-                        <input type="file" name="file[]" id="fileInput" class="hidden-file-input" accept=".pdf" multiple onchange="handleFileSelect(this)">
                     </div>
                 </div>
 
                 <div class="modal-footer d-flex justify-content-between">
                     <button type="button" class="btn bg-gradient-danger custom" data-dismiss="modal">Batal</button>
-                    <button type="button" id="btnIncomplete" class="btn bg-gradient-secondary custom" style="cursor: not-allowed;">Belum Lengkap</button>
+                    <button type="button" id="btnIncomplete" class="btn bg-gradient-secondary custom" style="cursor: not-allowed;">Isian Belum Lengkap</button>
                     <button type="submit" id="btnSave" class="btn bg-gradient-primary custom" name="add" style="display: none;">Simpan</button>
                 </div>
 
                 <script>
                 function checkFormCompletion() {
                     const form = document.querySelector('#myModal form');
-                    const no_surat = form.querySelector('[name="no_surat"]').value.trim();
-                    const tgl_dokumen = form.querySelector('[name="tgl_dokumen"]').value;
-                    const ditujukan = form.querySelector('[name="ditujukan"]').value.trim();
-                    const perihal = form.querySelector('[name="perihal"]').value.trim();
-                    const pembuat = form.querySelector('[name="pembuat"]').value.trim();
-
-                    const isComplete = no_surat !== "" && 
-                                       tgl_dokumen !== "" && 
-                                       ditujukan !== "" && 
-                                       perihal !== "" && 
-                                       pembuat !== "";
-
                     const btnIncomplete = document.getElementById('btnIncomplete');
                     const btnSave = document.getElementById('btnSave');
+                    
+                    if (!form || !btnIncomplete || !btnSave) return;
+                    
+                    const requiredInputs = form.querySelectorAll('[required]');
+                    let isComplete = true;
+                    
+                    requiredInputs.forEach(input => {
+                        if (!input.value.trim()) {
+                            isComplete = false;
+                        }
+                    });
 
                     if (isComplete) {
                         btnIncomplete.style.display = 'none';
@@ -538,17 +543,16 @@ if (isset($_POST['aksi']) && $_POST['aksi'] == 'hapus_file') {
                     }
                 }
 
-                // Initialize and listen for changes
                 $(document).ready(function() {
-                    $('#myModal form').on('change keyup', 'input, select, textarea', function() {
+                    $('#myModal form').on('input change', 'input, select, textarea', function() {
                         checkFormCompletion();
                     });
-                    checkFormCompletion();
                     
-                    // Re-check when modal opens
                     $('#myModal').on('shown.bs.modal', function () {
                         checkFormCompletion();
                     });
+                    
+                    checkFormCompletion();
                 });
                 </script>
             </form>
@@ -566,15 +570,6 @@ if (isset($_POST['aksi']) && $_POST['aksi'] == 'hapus_file') {
 <script src="plugins/datatables-responsive/js/responsive.bootstrap4.min.js"></script>
 
 <script>
-  $(document).ready(function () {
-    $('#us').DataTable({
-      responsive: true,
-      autoWidth: true
-    });
-  });
-
-  let selectedFiles = [];
-
   function formatBytes(bytes, decimals = 1) {
     if (bytes === 0) return '0 B';
     const k = 1024;
@@ -584,10 +579,10 @@ if (isset($_POST['aksi']) && $_POST['aksi'] == 'hapus_file') {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
   }
 
-  function handleFileSelect(input) {
+  window.handleFileSelect = function(input) {
       const files = Array.from(input.files);
       const pdfFiles = files.filter(f => f.type === 'application/pdf');
-      selectedFiles = pdfFiles;
+      window.selectedFilesAdd = pdfFiles;
       updateInputFiles();
       renderFileList();
   }
@@ -602,16 +597,18 @@ if (isset($_POST['aksi']) && $_POST['aksi'] == 'hapus_file') {
 
       listContainer.innerHTML = '';
       let totalSize = 0;
+      let files = window.selectedFilesAdd || [];
 
-      if (selectedFiles.length > maxFiles) {
+      if (files.length > maxFiles) {
           alert(`Maksimal ${maxFiles} berkas yang dapat diunggah!`);
-          selectedFiles = selectedFiles.slice(0, maxFiles);
+          files = files.slice(0, maxFiles);
+          window.selectedFilesAdd = files;
           updateInputFiles();
       }
 
-      if (selectedFiles.length > 0) { listContainer.classList.remove('d-none'); } else { listContainer.classList.add('d-none'); }
+      if (files.length > 0) { listContainer.classList.remove('d-none'); } else { listContainer.classList.add('d-none'); }
 
-      selectedFiles.forEach((file, index) => {
+      files.forEach((file, index) => {
           totalSize += file.size;
           const item = document.createElement('div');
           item.className = 'file-item-new';
@@ -623,7 +620,7 @@ if (isset($_POST['aksi']) && $_POST['aksi'] == 'hapus_file') {
                       <div class="file-name-new">${file.name}</div>
                       <div class="file-size-new">Ukuran Berkas: ${formatBytes(file.size)}</div>
                       <div class="upload-status" id="status-${index}">
-                          <div class="fs-nano mt-1" style="color: #27ae60;"><i class="fa fa-circle-notch fa-spin mr-1"></i> Sedang mengunggah...</div>
+                          <div class="fs-nano mt-1" style="color: #27ae60;"><i class="fa fa-circle-notch fa-spin mr-1"></i> Sedang disiapkan...</div>
                       </div>
                   </div>
               </div>
@@ -633,25 +630,15 @@ if (isset($_POST['aksi']) && $_POST['aksi'] == 'hapus_file') {
           `;
           listContainer.appendChild(item);
 
-          // Simulate upload delay
           setTimeout(() => {
               const statusEl = document.getElementById(`status-${index}`);
-              const nameEl = item.querySelector('.file-name-new');
-
-              if (statusEl) {
-                  statusEl.remove();
-              }
-
-              if (nameEl) {
-                   const fileUrl = URL.createObjectURL(file);
-                   nameEl.innerHTML = `<a href="${fileUrl}" target="_blank" class="text-info text-decoration-none">${file.name} <i class="fa fa-external-link-alt ml-1 fs-nano"></i></a>`;
-              }
-          }, 1500);
+              if (statusEl) { statusEl.remove(); }
+          }, 1000);
       });
 
       if (totalSize > maxSizeTotal) { 
           alert(`Ukuran berkas melebihi 2 MB!`);
-          selectedFiles = [];
+          window.selectedFilesAdd = [];
           updateInputFiles();
           renderFileList();
           return;
@@ -659,8 +646,8 @@ if (isset($_POST['aksi']) && $_POST['aksi'] == 'hapus_file') {
       if (totalDisplay) totalDisplay.textContent = formatBytes(totalSize);
   }
 
-  function removeFile(index) {
-      selectedFiles.splice(index, 1);
+  window.removeFile = function(index) {
+      window.selectedFilesAdd.splice(index, 1);
       updateInputFiles();
       renderFileList();
   }
@@ -668,38 +655,40 @@ if (isset($_POST['aksi']) && $_POST['aksi'] == 'hapus_file') {
   function updateInputFiles() {
       const input = document.getElementById('fileInput');
       const dataTransfer = new DataTransfer();
-      selectedFiles.forEach(file => dataTransfer.items.add(file));
+      (window.selectedFilesAdd || []).forEach(file => dataTransfer.items.add(file));
       input.files = dataTransfer.files;
   }
 
-  // Drag and Drop
-  const dropArea = document.getElementById('drop-area');
-  if (dropArea) {
-      ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-          dropArea.addEventListener(eventName, preventDefaults, false);
-      });
-      function preventDefaults(e) { e.preventDefault(); e.stopPropagation(); }
-      ['dragenter', 'dragover'].forEach(eventName => { dropArea.addEventListener(eventName, () => dropArea.classList.add('dragover'), false); });
-      ['dragleave', 'drop'].forEach(eventName => { dropArea.addEventListener(eventName, () => dropArea.classList.remove('dragover'), false); });
-      dropArea.addEventListener('drop', handleDrop, false);
-      function handleDrop(e) {
-          const files = e.dataTransfer.files;
-          if (files.length > 0) {
-              const dataTransfer = new DataTransfer();
-              Array.from(document.getElementById('fileInput').files).forEach(file => dataTransfer.items.add(file));
-              Array.from(files).forEach(file => dataTransfer.items.add(file));
-              document.getElementById('fileInput').files = dataTransfer.files;
-              handleFileSelect(document.getElementById('fileInput'));
-          }
+  $(document).ready(function () {
+      window.selectedFilesAdd = [];
+
+      // Drag and Drop
+      const dropArea = document.getElementById('drop-area');
+      if (dropArea) {
+          ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+              dropArea.addEventListener(eventName, e => { e.preventDefault(); e.stopPropagation(); }, false);
+          });
+          ['dragenter', 'dragover'].forEach(eventName => { dropArea.addEventListener(eventName, () => dropArea.classList.add('dragover'), false); });
+          ['dragleave', 'drop'].forEach(eventName => { dropArea.addEventListener(eventName, () => dropArea.classList.remove('dragover'), false); });
+          dropArea.addEventListener('drop', e => {
+              const files = e.dataTransfer.files;
+              if (files.length > 0) {
+                  const input = document.getElementById('fileInput');
+                  const dataTransfer = new DataTransfer();
+                  Array.from(input.files).forEach(file => dataTransfer.items.add(file));
+                  Array.from(files).forEach(file => dataTransfer.items.add(file));
+                  input.files = dataTransfer.files;
+                  handleFileSelect(input);
+              }
+          }, false);
       }
-  }
 
     // AJAX Handling for Add Form
     $('#myModal form').on('submit', function(e) {
         e.preventDefault();
         var formData = new FormData(this);
-        formData.append('add', 'true'); // Trigger the PHP check
-        formData.append('is_ajax', 'true'); // Tell PHP to return simple response
+        formData.append('add', 'true'); 
+        formData.append('is_ajax', 'true'); 
 
         $.ajax({
             url: 'legalisir.php', 
@@ -710,20 +699,16 @@ if (isset($_POST['aksi']) && $_POST['aksi'] == 'hapus_file') {
             success: function(response) {
                 if (response.trim() == 'success') {
                     toastr.success("Data berhasil ditambahkan");
-                    setTimeout(function(){
-                        window.location.href = "?modul=Legalisir";
-                    }, 3000);
+                    setTimeout(function(){ window.location.href = "?legalisir"; }, 3000);
                 } else {
                     toastr.error("Gagal menyimpan: " + response);
                 }
             },
-            error: function() {
-                toastr.error("Terjadi kesalahan server");
-            }
+            error: function() { toastr.error("Terjadi kesalahan server"); }
         });
     });
 
-    // AJAX Handling for Edit Form (Delegated event)
+    // AJAX Handling for Edit Form
     $(document).on('submit', '#myEdit1 form', function(e) {
         e.preventDefault();
         var formData = new FormData(this);
@@ -739,7 +724,7 @@ if (isset($_POST['aksi']) && $_POST['aksi'] == 'hapus_file') {
             success: function(response) {
                 if (response.trim() == 'success') {
                     toastr.success("Data berhasil diupdate");
-                    setTimeout(function(){ window.location.href = "?modul=Legalisir"; }, 3000);
+                    setTimeout(function(){ window.location.href = "?legalisir"; }, 3000);
                 } else {
                     toastr.error("Gagal update data: " + response);
                 }
@@ -751,30 +736,23 @@ if (isset($_POST['aksi']) && $_POST['aksi'] == 'hapus_file') {
     // AJAX Handling for Delete
     $(document).on('click', 'a[href*="aksi=hapus"]', function(e) {
         e.preventDefault();
-        var deleteUrl = $(this).attr('href');
-        // Replace "?modul=..." with "legalisir.php?" to start parameters correctly
-        deleteUrl = deleteUrl.replace(/\?modul=[^&]+/, 'legalisir.php?');
-        
+        if (!confirm('Apakah Anda yakin untuk menghapus data?')) {
+            return false;
+        }
+        var deleteUrl = $(this).attr('href').replace(/\?[^&]+/, 'legalisir.php?');
         $.ajax({
             url: deleteUrl + '&is_ajax=true',
             type: 'GET',
             success: function(response) {
                 if (response.trim() == 'success') {
                     toastr.success("Data berhasil dihapus!");
-                    setTimeout(function(){ window.location.href = "?modul=Legalisir"; }, 3000);
-                } else {
-                    toastr.error("Gagal menghapus data: " + response);
-                }
+                    setTimeout(function(){ window.location.href = "?legalisir"; }, 3000);
+                } else { toastr.error("Gagal menghapus data: " + response); }
             },
             error: function() { toastr.error("Terjadi kesalahan server saat menghapus"); }
         });
     });
-
-    function removeFile(index) {
-        selectedFiles.splice(index, 1);
-        updateInputFiles();
-        renderFileList();
-    }
+  });
 </script>
 
 

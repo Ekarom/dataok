@@ -22,7 +22,7 @@ if($_REQUEST['urut']) {
 
 
 
-<form id="form-edit-usulan-<?php echo $id; ?>" method="post" enctype="multipart/form-data">
+<form method="post" enctype="multipart/form-data">
 
     <input type="hidden" name="id" value="<?php echo $r['id']; ?>">
 
@@ -328,47 +328,13 @@ if($_REQUEST['urut']) {
 
 
 
-    <div class="modal-footer d-flex justify-content-between">
-        <button type="button" class="btn btn-secondary custom" data-dismiss="modal">Tutup</button>
-        <button type="button" id="btnIncompleteEdit-<?php echo $id; ?>" class="btn btn-secondary custom disabled" style="cursor: not-allowed;">Lengkapi Data</button>
-        <button type="submit" id="btnSaveEdit-<?php echo $id; ?>" class="btn btn-primary custom " name="update" style="display: none;">Update</button>
+    <div class="modal-footer">
+
+        <button type="button" class="btn btn-secondary btn-flat" data-dismiss="modal">Tutup</button>
+
+        <button type="submit" class="btn btn-primary btn-flat" name="update">Update</button>
+
     </div>
-
-    <script>
-    function checkFormCompletionEdit(id) {
-        const form = document.getElementById('form-edit-usulan-' + id);
-        const btnIncomplete = document.getElementById('btnIncompleteEdit-' + id);
-        const btnSave = document.getElementById('btnSaveEdit-' + id);
-        
-        if (!form || !btnIncomplete || !btnSave) return;
-        
-        const requiredInputs = form.querySelectorAll('[required]');
-        let isComplete = true;
-        
-        requiredInputs.forEach(input => {
-            if (!input.value.trim()) {
-                isComplete = false;
-            }
-        });
-
-        if (isComplete) {
-            btnIncomplete.style.display = 'none';
-            btnSave.style.display = 'inline-block';
-        } else {
-            btnIncomplete.style.display = 'inline-block';
-            btnSave.style.display = 'none';
-        }
-    }
-
-    $(document).ready(function() {
-        const id = '<?php echo $id; ?>';
-        $('#form-edit-usulan-' + id).on('input change', 'input, select, textarea', function() {
-            checkFormCompletionEdit(id);
-        });
-        // Initial check
-        setTimeout(() => checkFormCompletionEdit(id), 100);
-    });
-    </script>
 
 </form>
 

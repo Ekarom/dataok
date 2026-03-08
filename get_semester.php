@@ -4,9 +4,14 @@
 header('Content-Type: application/json');
 
 if (isset($_POST['database_name'])) {
-    $server = "localhost"; 
-    $username = "root";    
-    $password = "";    
+    // $server = "localhost"; 
+    // $username = "arsip";    
+    // $password = "BHmD8VlJELecRqw4S5OAYXDpc";    
+    // $database = $_POST['database_name'];
+
+    $server = "localhost";
+    $username = "root";
+    $password = "";
     $database = $_POST['database_name'];
 
     // Basic security check to prevent connecting to unauthorized DBs if needed
@@ -29,21 +34,24 @@ if (isset($_POST['database_name'])) {
             while ($row = $result->fetch_assoc()) {
                 $semesters[] = $row['smt'];
             }
-        } else {
-             // If no data in tapel, return default empty or maybe 1 & 2?
-             // Returning empty list so frontend handles "No semester data" or defaults
         }
-    } else {
-         // Table might not exist or other error
-         // sending error to frontend
-         echo json_encode(['error' => 'Query error or table not found']);
-         $conn->close();
-         exit;
+        else {
+        // If no data in tapel, return default empty or maybe 1 & 2?
+        // Returning empty list so frontend handles "No semester data" or defaults
+        }
+    }
+    else {
+        // Table might not exist or other error
+        // sending error to frontend
+        echo json_encode(['error' => 'Query error or table not found']);
+        $conn->close();
+        exit;
     }
 
     echo json_encode($semesters);
     $conn->close();
-} else {
+}
+else {
     echo json_encode(['error' => 'No database name provided']);
 }
 ?>

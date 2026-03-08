@@ -31,12 +31,12 @@ function updateData($conn, $fields, $id = 1)
 $cek_awal = $sqlconn->query("SELECT id FROM profils WHERE id = 1");
 if ($cek_awal && $cek_awal->num_rows == 0) {
     $sql_seed = "INSERT INTO profils (
-        id, nsekolah, alamat, kecamatan, kelurahan, provinsi, kabupaten, kodepos, no_telp, email, website, 
-        nipkasudin, nrkkasudin, kasudin, nipkepsek, nrkkepsek, kepsek, nippengawas, nrpengawas, pengawas, nikipsi, nrkpsi, nampsi, nipkasi, nrkasi, kasi, nipktu, nrktu, ktu, logo_sekolah, background_login
+        id, sudin, kop_dinas, nsekolah, alamat, kecamatan, kelurahan, provinsi, kabupaten, kodepos, no_telp, email, website, 
+        nipkasudin, nrkkasudin, kasudin, nipkepsek, nrkkepsek, kepsek, nippengawas, nrpengawas, pengawas, nikipsi, nrkpsi, nampsi, nipkasi, nrkasi, kasi, nipktu, nrktu, ktu, logo_sekolah, background_login, logo_pemda
     ) VALUES (
-        1, '', '', '', '', '', '', '', '', '', '', 
-        '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', 
-        '-', '-', '-', '-', '-', 'logo_default.png', 'bg_default.jpg'
+        1, '', '', '', '', '', '', '', '', '', '', '', '', 
+        '', '', '', '', '', '', '', '', '', '', 
+        '', '', '', '', '', 'logo_default.png', 'bg_default.jpg', ''
     )";
     $sqlconn->query($sql_seed);
 }
@@ -52,6 +52,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     // A. Update Data Sekolah
     if ($_POST['action'] == 'update_sekolah') {
         $fields = [
+			'sudin'=> $_POST['sudin'],
+			'kop_dinas'=> $_POST['kop_dinas'],
             'nsekolah' => $_POST['nsekolah'],
             'npsn' => $_POST['npsn'],
             'alamat' => $_POST['njalan'],
@@ -104,8 +106,8 @@ $data = ($result) ? $result->fetch_assoc() : null;
 // Inisialisasi data kosong jika belum ada record (Fallback)
 if (!$data) {
     $columns = [
-        'nsekolah', 'npsn', 'alamat', 'kecamatan', 'kelurahan', 'provinsi', 'kabupaten', 'kodepos', 'no_telp', 'email', 'website',
-        'nipkasudin', 'nrkkasudin', 'kasudin', 'nipkepsek', 'nrkkepsek', 'kepsek', 'nippengawas', 'nrkpengawas', 'pengawas', 'nipkasi', 'nrkkasi', 'kasi', 'nipktu', 'nrkktu', 'ktu', 'logo_sekolah', 'background_login'
+        'sudin','kop_dinas','nsekolah', 'npsn', 'alamat', 'kecamatan', 'kelurahan', 'provinsi', 'kabupaten', 'kodepos', 'no_telp', 'email', 'website',
+        'nipkasudin', 'nrkkasudin', 'kasudin', 'nipkepsek', 'nrkkepsek', 'kepsek', 'nippengawas', 'nrkpengawas', 'pengawas', 'nipkasi', 'nrkkasi', 'kasi', 'nipktu', 'nrkktu', 'ktu', 'logo_sekolah', 'background_login', 'logo_pemda'
     ];
     $data = array_fill_keys($columns, '');
 }
@@ -121,6 +123,8 @@ if (!$data) {
 <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+<!-- Summernote CSS -->
+<link href="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-bs4.min.css" rel="stylesheet">
 
 <style>
 
@@ -226,7 +230,7 @@ if (!$data) {
 
                         <div class="card-header bg-menu-gradient">
 
-                            <h3 class="card-title">Data Identitas Sekolah</h3>
+                            <h3 class="card-title"><i class="fas fa-school"></i>&nbsp; Data Identitas Sekolah</h3>
 
                         </div>
 
@@ -236,10 +240,32 @@ if (!$data) {
 
                             <div class="card-body">
 
+																		<div class="form-group row">
+                                    <label class="col-sm-3 col-form-label">Kop Dinas (Header)</label>
+                                    <div class="col-sm-9">
+                                        <textarea id="summernote" name="kop_dinas"><?= $data['kop_dinas'] ?></textarea>
+                                        <div class="mt-2">
+                                            <small class="text-muted">Gunakan template untuk hasil presisi.</small>
+                                            <button type="button" class="btn btn-outline-success btn-sm ml-2" id="useTemplate">
+                                                <i class="fas fa-file-alt"></i> Gunakan Template Kop SMPN 171
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group row">
+                                    <label class="col-sm-3 col-form-label">Sudin</label>
+                                    <div class="col-sm-9"><input type="text" class="form-control" name="sudin"
+                                            value="<?= $data['sudin'] ?>"></div>
+                                </div>
                                 <div class="form-group row">
                                     <label class="col-sm-3 col-form-label">Nama Sekolah</label>
                                     <div class="col-sm-9"><input type="text" class="form-control" name="nsekolah"
                                             value="<?= $data['nsekolah'] ?>"></div>
+                                </div>
+                                <div class="form-group row">
+                                    <label class="col-sm-3 col-form-label">NPSN</label>
+                                    <div class="col-sm-9"><input type="text" class="form-control" name="npsn"
+                                            value="<?= isset($data['npsn']) ? $data['npsn'] : '' ?>"></div>
                                 </div>
                                 <div class="form-group row">
                                     <label class="col-sm-3 col-form-label">Jalan</label>
@@ -266,17 +292,18 @@ if (!$data) {
                                                 class="form-control" name="nprovinsi" value="<?= isset($data['provinsi']) ? $data['provinsi'] : '' ?>">
                                         </div>
                                     </div>
-                                </div>
+                                    </div>
                                 <div class="row">
-                                    <div class="col-md-4">
+                                    <div class="col-md-6">
                                         <div class="form-group"><label>Kode Pos</label><input type="text"
                                                 class="form-control" name="pos" value="<?= isset($data['kodepos']) ? $data['kodepos'] : '' ?>"></div>
                                     </div>
-                                    <div class="col-md-4">
+                                    <div class="col-md-6">
                                         <div class="form-group"><label>Telepon</label><input type="text"
                                                 class="form-control" name="tlp" value="<?= isset($data['no_telp']) ? $data['no_telp'] : '' ?>"></div>
                                     </div>
                                 </div>
+                                
                                 <div class="form-group row">
                                     <label class="col-sm-3 col-form-label">Email</label>
                                     <div class="col-sm-9"><input type="email" class="form-control" name="email"
@@ -287,11 +314,7 @@ if (!$data) {
                                     <div class="col-sm-9"><input type="text" class="form-control" name="web"
                                             value="<?= isset($data['website']) ? $data['website'] : '' ?>"></div>
                                 </div>
-                                <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label">NPSN</label>
-                                    <div class="col-sm-9"><input type="text" class="form-control" name="npsn"
-                                            value="<?= isset($data['npsn']) ? $data['npsn'] : '' ?>"></div>
-                                </div>
+                                
                             </div>
 
                             <div class="card-footer text-right">
@@ -377,7 +400,9 @@ if (!$data) {
                                                     oninput="this.value = this.value.replace(/[^0-9]/g, '')"
                                                     inputmode="numeric" placeholder="Hanya Angka">
                                             </div>
-                                            <button type="submit" class="btn btn-success">Simpan</button>
+                                            <div class="card-footer text-right">
+                                            <button type="submit" class="btn btn-success"><i class="fas fa-save"></i>&nbsp;Simpan</button>
+                                            </div>
                                         </form>
                                     </div>
                                 <?php } ?>
@@ -400,7 +425,9 @@ if (!$data) {
                     <?php
                     $uploads = [
                         'logo_sekolah' => 'Logo Sekolah',
+                        'logo_pemda' => 'Logo Pemda',
                         'background_login' => 'Background Login',
+                        
                     ];
 
                     foreach ($uploads as $field => $title) {
@@ -465,7 +492,68 @@ if (!$data) {
 
 <!-- JAVASCRIPT UNTUK PREVIEW, ROTATE & UPLOAD -->
 
+<!-- Summernote JS -->
+<script src="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-bs4.min.js"></script>
+
 <script>
+    $(document).ready(function() {
+        $('#summernote').summernote({
+            height: 300,
+            placeholder: 'Tulis kop dinas di sini...',
+            toolbar: [
+                ['style', ['style']],
+                ['font', ['bold', 'underline', 'clear']],
+                ['fontname', ['fontname']],
+                ['color', ['color']],
+                ['para', ['ul', 'ol', 'paragraph']],
+                ['table', ['table']],
+                ['insert', ['link', 'picture', 'video']],
+                ['view', ['fullscreen', 'codeview', 'help']]
+            ]
+        });
+
+        $('#useTemplate').click(function() {
+            // Ambil data terbaru dari input field
+            var nsekolah = $('input[name="nsekolah"]').val() || 'NAMA SEKOLAH';
+            var alamat = $('input[name="njalan"]').val() || 'ALAMAT SEKOLAH';
+            var kelurahan = $('input[name="nkel"]').val() || 'KELURAHAN';
+            var kecamatan = $('input[name="nkec"]').val() || 'KECAMATAN';
+            var kabupaten = $('input[name="nkab"]').val() || 'KABUPATEN/KOTA';
+            var web = $('input[name="web"]').val() || 'website.sch.id';
+            var email = $('input[name="email"]').val() || 'email@sch.id';
+            var pos = $('input[name="pos"]').val() || '00000';
+
+            var template = `
+                <table style="width: 100%; border-collapse: collapse; margin-bottom: 5px;">
+                    <tbody>
+                        <tr>
+                            <td style="width: 15%; text-align: center; vertical-align: middle;">
+                                <img src="images/logo_pemda_1771498676.png" style="width: 80px; height: auto;" alt="Logo DKI">
+                            </td>
+                            <td style="width: 70%; text-align: center; vertical-align: middle;">
+                                <h4 style="margin: 0; font-size: 13px; font-weight: bold; font-family: Arial, sans-serif;
+                                           text-transform: uppercase; line-height: 1.2;">PEMERINTAH PROVINSI DAERAH KHUSUS IBUKOTA JAKARTA</h4>
+                                <h4 style="margin: 0; font-size: 13px; font-weight: bold; font-family: Arial, sans-serif;
+                                           text-transform: uppercase; line-height: 1.2;">DINAS PENDIDIKAN</h4>
+                                <h2 style="margin: 3px 0; font-size: 20px; font-weight: bold; font-family: Arial, sans-serif;
+                                           text-transform: uppercase;">${nsekolah}</h2>
+                                <p style="margin: 0; font-size: 11px; font-family: Arial, sans-serif; line-height: 1.3;">${alamat} Kel. ${kelurahan} Kec. ${kecamatan} ${kabupaten}</p>
+                                <p style="margin: 0; font-size: 11px; font-family: Arial, sans-serif; line-height: 1.3;">Website: ${web} | Email: ${email}</p>
+                                <h3 style="margin: 6px 0 0 0; font-size: 18px; font-weight: bold; font-family: Arial, sans-serif;
+                                           letter-spacing: 5px; text-transform: uppercase; line-height: 1;">J A K A R T A</h3>
+                            </td>
+                            <td style="width: 15%; text-align: center; vertical-align: middle;">
+                                <img src="images/logo_sekolah_1771458005.png" style="width: 80px; height: auto; opacity: 1;" alt="Logo Sekolah" onerror="this.style.display='none'">
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                <p style="text-align: right; font-style: italic; font-size: 11px; margin: 3px 0 0 0; font-family: Arial, sans-serif;">Kode Pos ${pos}</p>
+                <hr class="garis-tebal" style="border: 0; border-top: 3px solid black; margin-top: 5px; opacity: 1;">
+            `;
+            $('#summernote').summernote('code', template);
+        });
+    });
 
     var rotations = { 'logo_pemda': 0, 'logo_sekolah': 0, 'background_login': 0 };
 

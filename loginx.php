@@ -1,13 +1,8 @@
 <?php
 // Database connection configuration
-// $server = "localhost";
-// $username = "arsip";
-// $password = "BHmD8VlJELecRqw4S5OAYXDpc";
-// $database = "";
-
 $server = "localhost";
-$username = "root";
-$password = "";
+$username = "arsip";
+$password = "BHmD8VlJELecRqw4S5OAYXDpc";
 $database = "";
 
 // Connect to server for database listing
@@ -50,34 +45,6 @@ if ($db_conn->connect_error) {
 require_once "cfg/konek.php";
 require_once "cfg/recaptcha_config.php";
 
-// --- CHECK LOCKOUT STATUS ON PAGE LOAD ---
-$is_blocked = false;
-$remaining_seconds = 0;
-$ip_address = $_SERVER['REMOTE_ADDR'];
-if (!empty($_SERVER['HTTP_CLIENT_IP'])) {
-    $ip_address = $_SERVER['HTTP_CLIENT_IP'];
-} elseif (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
-    $ip_address = $_SERVER['HTTP_X_FORWARDED_FOR'];
-}
-$ip_address = mysqli_real_escape_string($sqlconn, $ip_address);
-
-$check_table = mysqli_query($sqlconn, "SHOW TABLES LIKE 'login_attempts'");
-if ($check_table && mysqli_num_rows($check_table) > 0) {
-    $check_limit = mysqli_query($sqlconn, "SELECT * FROM login_attempts WHERE ip_address = '$ip_address'");
-    if ($check_limit && mysqli_num_rows($check_limit) > 0) {
-        $limit_data = mysqli_fetch_assoc($check_limit);
-        $attempts = $limit_data['attempts'];
-        $last_attempt = strtotime($limit_data['last_attempt_time']);
-        $lockout_time = 5 * 60;
-
-        if ($attempts >= 3 && (time() - $last_attempt) < $lockout_time) {
-            $is_blocked = true;
-            $remaining_seconds = $lockout_time - (time() - $last_attempt);
-        }
-    }
-}
-// ------------------------------------------
-
 ?>
 
 <!DOCTYPE html>
@@ -89,8 +56,8 @@ if ($check_table && mysqli_num_rows($check_table) > 0) {
     
     <!-- Icons -->
     <link rel="icon" type="image/png" href="images/<?php echo $sklogo; ?>">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/material-design-iconic-font/2.2.0/css/material-design-iconic-font.min.css">
+    <link rel="stylesheet" href="plugins/fontawesome-free/css/all.min.css">
+    <link rel="stylesheet" type="text/css" href="plugins/iconic/css/material-design-iconic-font.min.css">
     
     <!-- Styles -->
     <link rel="stylesheet" type="text/css" href="plugins/css/util.css">
@@ -241,13 +208,6 @@ if ($check_table && mysqli_num_rows($check_table) > 0) {
             background-repeat: no-repeat;
         }
 
-        .login100-form-btn:disabled {
-            background-color: #cccccc;
-            color: #666666;
-            cursor: not-allowed;
-            border-color: #999999;
-        }
-
         @keyframes gradientMove {
             0% {
                 background-position: 0% 50%;
@@ -312,7 +272,7 @@ if ($check_table && mysqli_num_rows($check_table) > 0) {
                     <br>
                     <div class="container-login100-form-btn">
                         <span class="text-center p-t-90 txt1"></span>
-                        <button id="login-btn" class="login100-form-btn" <?php echo $is_blocked ? 'disabled' : ''; ?>>
+                        <button class="login100-form-btn">
                             Login
                         </button>
                     </div>
@@ -323,12 +283,13 @@ if ($check_table && mysqli_num_rows($check_table) > 0) {
 
 // Pastikan tidak ada spasi sebelum tag php
 
-        if($is_blocked || (isset($_GET['salah']) && $_GET['salah'] == 3)){
-            // --- KASUS 1: user diblokir ---
-                // Ambil waktu tunggu dari URL parameter 't' atau dari deteksi IP
-                $wait_time = isset($_GET['wait']) ? (int)$_GET['wait'] : (isset($_GET['t']) ? (int)$_GET['t'] : $remaining_seconds);
-                $minutes = floor($wait_time / 60);
-                $seconds = $wait_time % 60;
+        if(isset($_GET['salah'])){
+            // --- KASUS 1: user diblokir (salah=3) ---
+            if($_GET['salah'] == 3){
+                // Ambil waktu tunggu dari URL parameter 't'
+                $remaining_seconds = isset($_GET['wait']) ? (int)$_GET['wait'] : (isset($_GET['t']) ? (int)$_GET['t'] : 0);
+                $minutes = floor($remaining_seconds / 60);
+                $seconds = $remaining_seconds % 60;
                 $sPadded = $seconds < 10 ? '0' . $seconds : $seconds;
 
                 echo "<div class='error-gradient-border' style='color: red; padding: 10px; border: 1px solid red; background: #ffe6e6; margin-bottom: 10px;'>
@@ -336,35 +297,27 @@ if ($check_table && mysqli_num_rows($check_table) > 0) {
                         Anda salah memasukkan password sebanyak 3x.<br>
                         Silahkan tunggu: <span id='countdown' style='font-weight:bold; font-size:1.2em;'>$minutes menit $sPadded detik</span>
                       </div>";
+                // Javascript untuk hitung mundur real-time
                 echo "<script>
-                    var timeLeft = $wait_time;
+                    var timeLeft = $remaining_seconds;
                     var elem = document.getElementById('countdown');
-                    var loginBtn = document.getElementById('login-btn');
-                    
-                    if (loginBtn) loginBtn.disabled = true;
-
                     var timerId = setInterval(function() {
                         if (timeLeft <= 0) {
                             clearInterval(timerId);
-                            if (elem) elem.innerHTML = '0 menit 00 detik';
-                            if (loginBtn) {
-                                loginBtn.disabled = false;
-                                loginBtn.innerHTML = 'Login';
-                            }
+                            elem.innerHTML = '0 menit 00 detik';
                             window.location.href = 'login.php';
                         } else {
                             timeLeft--;
                             var m = Math.floor(timeLeft / 60);
                             var s = timeLeft % 60;
                             var sPadded = s < 10 ? '0' + s : s;
-                            if (elem) elem.innerHTML = m + ' menit ' + sPadded + ' detik';
+                            elem.innerHTML = m + ' menit ' + sPadded + ' detik';
                         }
                     }, 1000);
                 </script>";
-        }
-        elseif(isset($_GET['salah'])){
+            }
             // --- KASUS 2: Error umum/akses langsung (salah=2) ---
-            if($_GET['salah'] == 2){
+            elseif($_GET['salah'] == 2){
                 echo "<div class='error-gradient-border' style='color: red; padding: 10px;'><strong>Error!</strong> Akses tidak valid atau koneksi gagal.</div>";
             }
             // --- KASUS 3: Password salah, tapi belum diblokir (salah=1) ---

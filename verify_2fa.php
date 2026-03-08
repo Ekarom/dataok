@@ -97,9 +97,11 @@ if (isset($_POST['verify_code'])) {
         }
 
         // --- LOG SUCCESSFUL LOGIN ---
-        $userc = $skradm;
-        $nama = isset($user['nama']) ? $user['nama'] : $skradm;
-        write_log("LOGIN", "Login");
+        // Log login
+            $userc = $userz;
+            $nama = $row_user['nama'];
+            write_log("LOGIN", "Login", "User Logged In");
+
         // --------------------------------
 
         header("Location: ./?");

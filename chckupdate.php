@@ -34,7 +34,7 @@
             <!-- /.card-header -->
             <div class="card-body">
 			<h1></h1>
-    <button id="check-btn" class="btn btn-primary">Check Update</button>
+    <button id="check-btn" class="btn btn-primary custom">Check Update</button>
 
     <div id="update-info"></div><span id="wait" style="display:none;">.</span>
     

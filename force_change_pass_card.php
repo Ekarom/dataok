@@ -119,7 +119,7 @@
 
                 <div class="row mt-4">
                     <div class="col-12">
-                        <button type="button" class="btn btn-danger btn-block btn-lg" id="btnCardSimpanPass">
+                        <button type="button" class="btn btn-danger btn-block btn-lg" id="btnCardSimpanPass" disabled>
                             <i class="fas fa-save mr-2"></i> Simpan
                         </button>
                     </div>
@@ -131,6 +131,19 @@
 
 <script>
 $(document).ready(function() {
+    // Toggle button state based on input
+    function toggleCardSubmitButton() {
+        const passB = $('#cardPassB').val().trim();
+        const passK = $('#cardPassK').val().trim();
+        const btn = $('#btnCardSimpanPass');
+        
+        if (passB !== '' && passK !== '') {
+            btn.prop('disabled', false);
+        } else {
+            btn.prop('disabled', true);
+        }
+    }
+
     // Strength Meter Logic
     function calculateCardPasswordStrength(password) {
         let strength = 0;
@@ -177,6 +190,7 @@ $(document).ready(function() {
         $('#cardStrengthBar').css('width', strength.percentage + '%').css('background-color', strength.color);
         $('#cardStrengthText').html((strength.text ? '<i class="fas fa-shield-alt mr-1"></i>' : '') + strength.text).css('color', strength.color).css('font-weight', 'bold');
         checkPasswordMatch();
+        toggleCardSubmitButton();
     });
 
     function checkPasswordMatch() {
@@ -198,6 +212,7 @@ $(document).ready(function() {
 
     $('#cardPassK').on('input', function() {
         checkPasswordMatch();
+        toggleCardSubmitButton();
     });
 
     // Save Handler

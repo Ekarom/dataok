@@ -237,12 +237,7 @@ if (isset($_POST['skradm'], $_POST['skrpass'], $_POST['database_name'])) {
             if ($remaining < 0) $remaining = 0;
 
             unset($_SESSION['skradm']);
-            if ($data_attempts['attempts'] >= 3) {
-                // Redirect immediately to Blocked state on 3rd failure
-                header("Location: login.php?salah=3&wait=300");
-            } else {
-                header("Location: login.php?salah=1&attempts=$remaining");
-            }
+            header("Location: login.php?salah=1&attempts=$remaining");
             exit();
         }
     } else {

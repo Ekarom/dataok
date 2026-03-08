@@ -20,7 +20,8 @@ if($_REQUEST['urut']) {
             prestasi.pd, 
             prestasi.kelas, 
             prestasi.tingkat, 
-            prestasi.lokasi, 
+            prestasi.penyelenggara, 
+            prestasi.lokasi,
             prestasi.juara, 
             prestasi.pdf,
             prestasi.jenisprestasi,
@@ -39,6 +40,7 @@ if($_REQUEST['urut']) {
             $kelas = $r['kelas'] ?? '';
             $prestasi = $r['prestasi'] ?? '';
             $tingkat = $r['tingkat'] ?? '';
+            $penyelenggara = $r['penyelenggara'] ?? '';
             $lokasi = $r['lokasi'] ?? '';
             $juara = $r['juara'] ?? '';
             $pdf = $r['pdf'] ?? '';
@@ -121,6 +123,29 @@ if($_REQUEST['urut']) {
         border-radius: 10px;
         font-size: 0.9rem;
     }
+    .border-pemenang {
+        border: 4px solid #ffd700 !important;
+        box-shadow: 0 0 15px rgba(255, 215, 0, 0.4), inset 0 0 10px rgba(255, 255, 255, 0.5);
+        background: #fff;
+        position: relative;
+        z-index: 2;
+    }
+    .award-frame-wrapper {
+        position: relative;
+        display: inline-block;
+        padding: 20px;
+    }
+    .frame-star {
+        position: absolute;
+        color: #ffd700;
+        text-shadow: 0 0 5px rgba(255, 215, 0, 0.5);
+        z-index: 1;
+    }
+    .star-top-left { top: 0; left: 0; font-size: 1.2rem; }
+    .star-top-right { top: 0; right: 0; font-size: 1.2rem; }
+    .star-bottom-left { bottom: 0; left: 0; font-size: 1.2rem; }
+    .star-bottom-right { bottom: 0; right: 0; font-size: 1.2rem; }
+    .star-center-top { top: -10px; left: 50%; transform: translateX(-50%); font-size: 1.5rem; }
 </style>
 
 <div class="modal-view-body">
@@ -140,7 +165,18 @@ if($_REQUEST['urut']) {
 
                          ?>
 
-                  <center><img  class='profile-user-img img-fluid img-circle shadow-sm' style='width: 150px; height: 150px; object-fit: cover; border: 2px solid #fff;' src="file/fotopd/<?php echo $r['photo']; ?>"></center>
+                  <center>
+                    <div class="award-frame-wrapper">
+                        <i class="fas fa-star frame-star star-center-top"></i>
+                        <i class="fas fa-star frame-star star-top-left"></i>
+                        <i class="fas fa-star frame-star star-top-right"></i>
+                        <i class="fas fa-star frame-star star-bottom-left"></i>
+                        <i class="fas fa-star frame-star star-bottom-right"></i>
+                        <a href="file/fotopd/<?php echo $r['photo']; ?>" target="_blank" title="Klik untuk melihat foto penuh">
+                            <img class='profile-user-img img-fluid img-circle shadow-sm border-pemenang' style='width: 150px; height: 150px; object-fit: cover; cursor: hand;' src="file/fotopd/<?php echo $r['photo']; ?>">
+                        </a>
+                    </div>
+                  </center>
 
                    <span id="status2" ></span>
 
@@ -154,7 +190,18 @@ if($_REQUEST['urut']) {
 
 ?>
 
-<center><img class="profile-user-img img-fluid img-circle" src="images/default.png" alt="User profile picture"></center>
+<center>
+    <div class="award-frame-wrapper">
+        <i class="fas fa-star frame-star star-center-top"></i>
+        <i class="fas fa-star frame-star star-top-left"></i>
+        <i class="fas fa-star frame-star star-top-right"></i>
+        <i class="fas fa-star frame-star star-bottom-left"></i>
+        <i class="fas fa-star frame-star star-bottom-right"></i>
+        <a href="images/default.png" target="_blank" title="Klik untuk melihat foto penuh">
+            <img class="profile-user-img img-fluid img-circle border-pemenang" style='width: 150px; height: 150px; object-fit: cover; cursor: zoom-in;' src="images/default.png" alt="User profile picture">
+        </a>
+    </div>
+</center>
 
                    <span id="status2" ></span>
 
@@ -168,7 +215,7 @@ if($_REQUEST['urut']) {
 
         <!-- Attachment Preview -->
         <div class="view-section">
-            <center><span class="view-section-title"><i class="fa fa-paperclip mr-1"></i> Lampiran Berkas</span></center>
+            <center><span class="view-section-title"><i class="fa fa-paperclip mr-1"></i> Lampiran Prestasi</span></center>
             <div class="mt-1">
                 <?php 
                 if (!empty($r['pdf'])) {
@@ -178,7 +225,7 @@ if($_REQUEST['urut']) {
                             $ext = strtolower(pathinfo($f, PATHINFO_EXTENSION));
                             $is_image = in_array($ext, ['jpg', 'jpeg', 'png']);                       
                             if ($is_image) {
-                                echo "<div class='attachment-container mb-3 text-center'><img src='file/prestasi/$f' class='attachment-img'></div>";
+                                echo "<div class='attachment-container mb-3 text-center'><a href='file/prestasi/$f' target='_blank' title='Klik untuk melihat gambar penuh'><img src='file/prestasi/$f' class='attachment-img''></a></div>";
                             } else {
                                 echo "<div class='attachment-container mb-3'><embed type='application/pdf' src='file/prestasi/$f' width='100%' height='500px' style='border:none;'></div>";
                             }
@@ -222,14 +269,18 @@ if($_REQUEST['urut']) {
                     <div class="view-value"><i class="fa fa-calendar-alt view-icon"></i> <?php echo ($r['bulan']); ?></div>
                 </div>
                 <div class="col-md-12">
-                    <label class="view-label">Lokasi Kegiatan</label>
-                    <div class="view-value"><i class="fa fa-map-marker-alt view-icon" style="color:#dc3545;"></i> <?php echo $r['lokasi']; ?></div>
+                    <label class="view-label">Penyelenggara</label>
+                    <div class="view-value"><i class="fa fa-user-tie view-icon" style="color:#dc3545;"></i> <?php echo $r['penyelenggara']; ?></div>
+                    </div>
+                    <div class="col-md-12">
+                    <label class="view-label">Lokasi</label>
+                    <div class="view-value"><i class="fa fa-map-marker-alt view-icon" style="color:#ffc107;"></i> <?php echo $r['lokasi']; ?></div>
                 </div>
             </div>
         </div>
 
         <div class="modal-footer px-0 pb-0">
-            <button type="button" class="btn btn-secondary custom" data-dismiss="modal">Tutup</button>
+            <button type="button" class="btn bg-gradient-danger custom" data-dismiss="modal">Batal</button>
         </div>
     </form>
 </div>

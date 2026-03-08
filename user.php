@@ -74,6 +74,19 @@ if (isset($_REQUEST['resetp'])) {
     }
 }
 
+// --- AKSI: RESET GOOGLE AUTHENTICATOR ---
+if (isset($_REQUEST['resetga'])) {
+    $id_req = mysqli_real_escape_string($sqlconn, $_REQUEST['id']);
+    
+    // Menggunakan placeholder kolom 'googleauth' - silakan sesuaikan jika berbeda
+    if(mysqli_query($sqlconn, "UPDATE usera SET googleauth = NULL WHERE id = '$id_req'")){
+        write_log("RESET", "Reset Google Authenticator user ID: $id_req");
+        display_notification('success', 'Google Authenticator berhasil direset.'); 
+    } else {
+        display_notification('danger', 'Gagal mereset Google Authenticator: ' . mysqli_error($sqlconn));
+    }
+}
+
 // --- AKSI: TAMBAH user ---
 if (isset($_POST['tambah'])) {
     $userid = mysqli_real_escape_string($sqlconn, $_POST['userid']);
@@ -206,7 +219,6 @@ if (isset($_REQUEST['aksi']) && $_REQUEST['aksi'] == 'hapus') {
     </section>
 
     <!-- Style DataTables -->
-    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap4.css">
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/responsive.bootstrap4.css">
     <!-- Konten Utama -->
     <section class="content">
@@ -229,19 +241,19 @@ if (isset($_REQUEST['aksi']) && $_REQUEST['aksi'] == 'hapus') {
                         <?php } ?>
                     </div>
                     
-                    <div class="card-body">
+                     <div class="card-body text-nowrap">
                         <table width="100%" id="example2" class="table table-striped table-hover table-sm">
                             <thead>
                                 <tr align="center">
                                     <th width="2%">No</th>
-                                    <th width="3%">user ID</th>
+                                    <th width="3%">Username</th>
                                     <th width="5%">Nama</th>
                                     <th width="5%">NRK/NIKKI</th>
                                     <th width="3%">Level</th>
                                     <th width="10%">Last Login</th>
                                     <th width="5%">IP</th>
                                     <th width="3%">Status</th>
-                                    <th width="5%">Rst Pass</th>
+                                    <th width="5%">Reset</th>
                                     <th width="3%">Edit</th>
                                     <th width="3%">Hapus</th>
                                 </tr>
@@ -291,24 +303,27 @@ if (isset($_REQUEST['aksi']) && $_REQUEST['aksi'] == 'hapus') {
                                         <!-- Tombol Reset Password -->
                                         <td align="center">
                                             <a href="?modul=user&resetp=reset&id=<?php echo $s['id']; ?>" onclick="if (confirm('Reset password menjadi = smpn171**?')) { window.location.href='?modul=user&resetp=reset&id=<?php echo $s['id']; ?>'; } return false;">
-                                                <button type="button" class="btn btn-danger btn-sm btn-flat" title="Default Password = smpn171**"><i class="fa fa-key"></i></button>
+                                                <button type="button" class="btn btn-danger btn-sm" title="Default Password = smpn171**"><i class="fa fa-key"></i></button>
+                                            </a>
+                                            <a href="?modul=user&resetga=reset&id=<?php echo $s['id']; ?>" onclick="if (confirm('Reset Google Authenticator user ini?')) { window.location.href='?modul=user&resetga=reset&id=<?php echo $s['id']; ?>'; } return false;">
+                                                <button type="button" class="btn btn-warning btn-sm" title="Reset Google Authenticator"><i class="fab fa-google"></i></button>
                                             </a>
                                         </td>
 
                                         <!-- Tombol Edit -->
                                         <td align="center">
                                             <a href='#myEdit' data-toggle='modal' data-id='<?php echo $s['id']; ?>'>
-                                                <button type="button" class="btn btn-info btn-sm btn-flat"><i class="fa fa-edit"></i></button>
+                                                <button type="button" class="btn btn-info btn-sm"><i class="fa fa-edit"></i></button>
                                             </a>
                                         </td>
                                         
                                         <!-- Tombol Hapus -->
                                         <td align="center">
                                             <?php if ($lv != '1') { ?>
-                                                <button type="button" class="btn btn-danger btn-sm btn-flat" onclick="alert('Akses Ditolak. Hubungi Admin.');"><i class="fa fa-trash"></i></button>
+                                                <button type="button" class="btn btn-danger btn-sm" onclick="alert('Akses Ditolak. Hubungi Admin.');"><i class="fa fa-trash"></i></button>
                                             <?php } else { ?>
                                                 <a href="?modul=user&aksi=hapus&urut=<?php echo $s['id']; ?>" onclick="if (confirm('Yakin ingin menghapus user ini?')) { window.location.href='?modul=user&aksi=hapus&urut=<?php echo $s['id']; ?>'; } return false;">
-                                                    <button type="button" class="btn btn-danger btn-sm btn-flat"><i class="fa fa-trash"></i></button>
+                                                    <button type="button" class="btn btn-danger btn-sm"><i class="fa fa-trash"></i></button>
                                                 </a>
                                             <?php } ?>
                                         </td>
@@ -531,14 +546,12 @@ if (isset($_REQUEST['aksi']) && $_REQUEST['aksi'] == 'hapus') {
 </script>
 
 <!-- Bootstrap 4 -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
 <!-- DataTables -->
-<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-
-<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap4.min.js"></script>
-<script src="https://cdn.datatables.net/1.13.6/js/dataTables.responsive.min.js"></script>
-<script src="https://cdn.datatables.net/1.13.6/js/responsive.bootstrap4.min.js"></script>
-
+<script src="plugins/datatables/jquery.dataTables.min.js"></script>
+<script src="plugins/datatables-bs4/js/dataTables.bootstrap4.min.js"></script>
+<script src="plugins/datatables-responsive/js/dataTables.responsive.min.js"></script>
+<script src="plugins/datatables-responsive/js/responsive.bootstrap4.min.js"></script>
 <script>
   $(document).ready(function () {
     $('#example2').DataTable({

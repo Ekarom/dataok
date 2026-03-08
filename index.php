@@ -5,36 +5,12 @@ include "cfg/konek.php";
 include "cfg/secure.php";
 include "cfg/tapel.php"; // Ensure functions are available
 
-$show_tapel_modal = false;
-$expected = get_expected_tapel();
+// Ambil daftar kelas untuk modal daftar hadir
+$dh_kelas_list = [];
+$rk_dh = @mysqli_query($sqlconn, "SELECT DISTINCT kelas FROM siswa WHERE kelas != '' ORDER BY kelas ASC");
+if ($rk_dh) { while ($k = mysqli_fetch_assoc($rk_dh)) { $dh_kelas_list[] = $k['kelas']; } }
 
-// Check if this expected tapel/smt exists
-// MODIFIED: Only show modal if the user's CURRENT session period doesn't exist
-// OR if they haven't explicitly chosen a period and the expected one is missing.
-$session_tapel = $_SESSION['tapel'] ?? '';
-$session_smt = $_SESSION['semester'] ?? '';
 
-$tapel_to_check = $expected['tapel'];
-$smt_to_check = $expected['smt'];
-
-if (!empty($session_tapel) && !empty($session_smt)) {
-    // If user has a session choice, check if THAT one exists (it should)
-    if (!check_tapel_exists($sqlconn, $session_tapel, $session_smt)) {
-        $show_tapel_modal = true;
-        // If the user's chosen session period is missing, we should probably default to the expected one for the modal
-        $new_tapel = $expected['tapel'];
-        $new_smt = $expected['smt'];
-        $new_tahun = $expected['tahun'];
-    }
-} else {
-    // Fallback to expected period if no session choice
-    if (!check_tapel_exists($sqlconn, $expected['tapel'], $expected['smt'])) {
-        $show_tapel_modal = true;
-        $new_tapel = $expected['tapel'];
-        $new_smt = $expected['smt'];
-        $new_tahun = $expected['tahun'];
-    }
-}
 
 $user = $_SESSION['skradm'];
 
@@ -130,25 +106,20 @@ if (password_verify($default_pass, $passworddb) ||
             border-radius: 10px !important;
             color: #ecf0f1 !important;
             transition: all 0.3s ease;
-            margin: 0 5px;
         }
 
-        .nav-sidebar .nav-link:hover, 
-        .nav-sidebar .nav-link.active,
-        .nav-sidebar .nav-link:focus {
-            background: linear-gradient(-45deg, #2c3e50, #3e6ff8, #01b2d1ff, #2c3e50) !important;
-            background-size: 400% 400% !important;
+        .nav-sidebar .nav-link:hover, .nav-sidebar .nav-link.active {
+            background-color: rgba(255,255,255,0.2) !important;
             transform: translateX(5px);
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            border: 2px solid #fbff00ff !important;
-            color: #fff !important;
         }
 
         .nav-sidebar .nav-icon {
             color: #fff !important;
-            opacity: 0.9;
-        }
-        
+            opacity: 0.8;
+            }
+
+              
         .brand-link {
             border-bottom: 1px solid rgba(255,255,255,0.1) !important;
             text-decoration: none !important;
@@ -220,7 +191,7 @@ if (password_verify($default_pass, $passworddb) ||
     </style>
 </head>
 
-<body class="hold-transition sidebar-mini layout-fixed" style="height: auto;">
+<body class="hold-transition sidebar-mini layout-fixed">
  <div class="wrapper">
     <!-- Navbar -->
 <nav class="main-header navbar navbar-expand bg-menu-gradient">
@@ -229,7 +200,6 @@ if (password_verify($default_pass, $passworddb) ||
         <li class="nav-item">
           <a class="nav-link" <?php echo !$triggerForceChange ? 'data-widget="pushmenu" href="#" role="button"' : 'style="cursor: default;"'; ?>><i class="fas fa-bars"></i></a>
         </li>
-
        </ul>
       <li class="nav-item d-none d-sm-inline-block">
             Tahun Pelajaran: <?php echo isset($tapel) ? $tapel : '-'; ?> | Semester: <?php if (isset($semester) && $semester == 1) { echo 'Ganjil'; } else { echo 'Genap'; } ?>
@@ -263,6 +233,77 @@ if (password_verify($default_pass, $passworddb) ||
           </script>
                 </li>
             </ul>
+            
+      <!-- START: Interactive Tapel Check -->
+      <?php
+
+      
+      $show_tapel_modal = false;
+      $expected = get_expected_tapel();
+      
+      // Check if this expected tapel/smt exists
+      if (!check_tapel_exists($sqlconn, $expected['tapel'], $expected['smt'])) {
+          $show_tapel_modal = true;
+          $new_tapel = $expected['tapel'];
+          $new_smt = $expected['smt'];
+          $new_tahun = $expected['tahun'];
+      }
+      ?>
+      
+      <?php if($show_tapel_modal): ?>
+      <script>
+        $(document).ready(function(){
+            // Append modal to body to fix backdrop issue
+            $('#modalNewTapel').appendTo('body').modal('show');
+            
+            $('#btnCreateTapel').click(function(){
+                var tapel = '<?php echo $new_tapel; ?>';
+                var smt = '<?php echo $new_smt; ?>';
+                var tahun = '<?php echo $new_tahun; ?>';
+                
+                $.ajax({
+                    type: 'POST',
+                    url: 'create_tapel.php',
+                    data: {tapel: tapel, smt: smt, tahun: tahun},
+                    success: function(response){
+                        if(response.trim() == "success"){
+                            alert("Tahun Pelajaran Baru Berhasil Dibuat dan Diaktifkan! Silahkan Login Ulang untuk memperbaharui sesi.");
+                            window.location.href = 'exit.php';
+                        } else {
+                            alert("Gagal: " + response);
+                        }
+                    },
+                    error: function(){
+                        alert("Terjadi kesalahan koneksi.");
+                    }
+                });
+            });
+        });
+      </script>
+      
+      <!-- Modal New Tapel -->
+      <div class="modal fade" id="modalNewTapel" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
+        <div class="modal-dialog" role="document">
+          <div class="modal-content ">
+            <div class="modal-header bg-info">
+              <h5 class="modal-title" id="exampleModalLabel"><i class="fas fa-calendar-alt"></i> Deteksi Tahun Pelajaran Baru</h5>
+            </div>
+            <div class="modal-body">
+              <p>Sistem mendeteksi bahwa saat ini sudah memasuki periode:</p>
+              <h3>Tahun Pelajaran: <b><?php echo $new_tapel; ?></b></h3>
+              <h3>Semester: <b><?php echo $new_smt == '1' ? '1 (Ganjil)' : '2 (Genap)'; ?></b></h3>
+              <p>Data ini belum ada di database. Apakah Anda ingin membuatnya dan mengaktifkannya sekarang?</p>
+            </div>
+            <div class="modal-footer justify-content-between"> 
+               <!-- User cannot easily close without action, mostly forced or just close if they want to ignore but backdrop static prevents accidental close -->
+              <button type="button" class="btn btn-outline-light" data-dismiss="modal">Nanti Saja</button>
+              <button type="button" class="btn btn-outline-light" id="btnCreateTapel"><b>Ya, Buat & Aktifkan</b></button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <?php endif; ?>
+      <!-- END: Interactive Tapel Check -->
         </nav>
         
         <!-- ==========================================
@@ -271,9 +312,9 @@ if (password_verify($default_pass, $passworddb) ||
         <aside class="main-sidebar sidebar-dark-primary elevation-4">
             <!-- Brand Logo -->
             <a href="?" class="brand-link d-flex flex-column align-items-center text-center py-3">
-                <img src="images/logo_apk.png" alt="smpn171" class="brand-image img-circle elevation-3 mb-2"
+                <img src="images/logo.png" alt="smpn171" class="brand-image img-circle elevation-3 mb-2"
                     style="opacity: .7; float: none; margin-left: 0;">
-                <span class="brand-text font-weight-light text-wrap" style="line-height: 1.2;">Sistem Arsip Data</span>
+                <span class="brand-text font-weight-light text-wrap" style="line-height: 1.2;">Sistem Arsip Sekolah</span>
             </a>
             
             <!-- Sidebar -->
@@ -314,9 +355,15 @@ if (password_verify($default_pass, $passworddb) ||
                         <!-- Data Siswa (Admin Only) -->
                         <?php if ($lv == "1") { ?>
                         <li class="nav-item">
-                            <a href="?modul=siswa" class="nav-link" data-toggle="mn" id="1">
+                            <a href="?siswa" class="nav-link" data-toggle="mn" id="1">
                                 <i class="nav-icon fas fa-address-card"></i>
                                 <p>Data Siswa</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="../compress" class="nav-link" target="_blank">
+                                <i class=" nav-icon fas fa-tools"></i>
+                                <p>SAD PDF</p>
                             </a>
                         </li>
                         <?php } ?>
@@ -332,19 +379,19 @@ if (password_verify($default_pass, $passworddb) ||
                             </a>
                             <ul class="nav nav-treeview">
                                 <li class="nav-item">
-                                    <a href="?modul=press" class="nav-link" data-toggle="mn" id="3">
+                                    <a href="?press" class="nav-link" data-toggle="mn" id="3">
                                         <i class="nav-icon fas fa-trophy"></i>
                                         <p>Data Prestasi</p>
                                     </a>
                                 </li>
-                                <li class="nav-item">
+                                <!--<li class="nav-item">
                                     <a href="?modul=usulan" class="nav-link" data-toggle="mn" id="4">
                                         <i class="nav-icon fas fa-file"></i>
                                         <p>Data Usulan</p>
                                     </a>
-                                </li>
+                                </li>--->
                                 <li class="nav-item">
-                                    <a href="?modul=legalisir" class="nav-link" data-toggle="mn" id="5">
+                                    <a href="?legalisir" class="nav-link" data-toggle="mn" id="5">
                                         <i class="nav-icon fas fa-stamp"></i>
                                         <p>Legalisir</p>
                                     </a>
@@ -354,11 +401,28 @@ if (password_verify($default_pass, $passworddb) ||
                         
                         <!-- Administrator Section -->
                         <li class="nav-header">ADMINISTRATOR</li>
-                        
+                        <!-- Print Menu -->
+                        <li class="nav-item has-treeview">
+                            <a href="#" class="nav-link" data-toggle="mn" id="6">
+                                <i class="nav-icon fas fa-print"></i>
+                                <p>
+                                    Print
+                                    <i class="right fas fa-angle-left"></i>
+                                </p>
+                            </a>
+                            <ul class="nav nav-treeview">
+                                <li class="nav-item">
+                                    <a href="#" class="nav-link" data-toggle="modal" data-target="#modalDaftarHadir" id="7">
+                                        <i class="nav-icon fas fa-clipboard-list"></i>
+                                        <p>Daftar Hadir</p>
+                                    </a>
+                                </li>
+                                             </ul>
+                        </li>
                         <!-- Management Menu (Admin Only) -->
                         <?php if ($lv == "1") { ?>
                         <li class="nav-item has-treeview">
-                            <a href="#" class="nav-link" data-toggle="mn" id="6">
+                            <a href="#" class="nav-link" data-toggle="mn" id="8">
                                 <i class="nav-icon fas fa-layer-group"></i>
                                 <p>
                                     Management
@@ -367,13 +431,19 @@ if (password_verify($default_pass, $passworddb) ||
                             </a>
                             <ul class="nav nav-treeview">
                                 <li class="nav-item">
-                                    <a href="?modul=user" class="nav-link" data-toggle="mn" id="7">
+                                    <a href="?user" class="nav-link" data-toggle="mn" id="9">
                                         <i class="nav-icon fas fa-users-cog"></i>
                                         <p>User Staff & Admin</p>
                                     </a>
                                 </li>
                                 <li class="nav-item">
-                                    <a href="?modul=settings" class="nav-link" data-toggle="mn" id="8">
+                                    <a href="?datasek" class="nav-link" data-toggle="mn" id="10">
+                                        <i class="nav-icon fas fa-school"></i>
+                                        <p>Data Sekolah</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="?settings" class="nav-link" data-toggle="mn" id="11">
                                         <i class="nav-icon fas fa-cogs"></i>
                                         <p>Settings</p>
                                     </a>
@@ -382,7 +452,7 @@ if (password_verify($default_pass, $passworddb) ||
                                
                                <?php if ($lv == "1" || $lv == "2") { ?>
                                 <li class="nav-item">
-                                    <a href="?modul=profile" class="nav-link" data-toggle="mn" id="9">
+                                    <a href="?profile" class="nav-link" data-toggle="mn" id="12">
                                         <i class="nav-icon fas fa-user-edit"></i>
                                         <p>Profile</p>
                                     </a>
@@ -391,29 +461,24 @@ if (password_verify($default_pass, $passworddb) ||
                                 
                                 <?php if ($lv == "1") { ?>
                                 <li class="nav-item">
-                                    <a href="?modul=uploadsiswa" class="nav-link" data-toggle="mn" id="10">
+                                    <a href="?uploadsiswa" class="nav-link" data-toggle="mn" id="13">
                                         <i class="nav-icon fas fa-file-excel"></i>
                                         <p>Upload Excel Siswa</p>
                                     </a>    
                                 </li>
                                 <li class="nav-item">
-                                    <a href="?modul=uploaduser" class="nav-link" data-toggle="mn" id="11">
+                                    <a href="?modul=uploaduser" class="nav-link" data-toggle="mn" id="14">
                                         <i class="nav-icon fas fa-file-excel"></i>
                                         <p>Upload Data User</p>
                                     </a>
                                 </li>
                                 <li class="nav-item">
-                                    <a href="?modul=uploadfoto" class="nav-link" data-toggle="mn" id="12">
+                                    <a href="?modul=uploadfoto" class="nav-link" data-toggle="mn" id="15">
                                         <i class="nav-icon fas fa-images"></i>
                                         <p>Upload Foto (ZIP)</p>
                                     </a>
                                 </li>
-                                <li class="nav-item">
-                                    <a href="?modul=datasek" class="nav-link" data-toggle="mn" id="13">
-                                        <i class="nav-icon fas fa-school"></i>
-                                        <p>Data Sekolah</p>
-                                    </a>
-                                </li>
+                                
                             </ul>
                         </li>
                         <?php } ?>
@@ -421,7 +486,7 @@ if (password_verify($default_pass, $passworddb) ||
                          <?php if ($lv == "1") { ?>
                         <!-- System Menu (Admin Only) -->
                         <li class="nav-item has-treeview">
-                            <a href="#" class="nav-link">
+                            <a href="#" class="nav-link" data-toggle="mn" id="16">
                                 <i class="nav-icon fas fa-cogs"></i>
                                 <p>
                                     System
@@ -430,19 +495,19 @@ if (password_verify($default_pass, $passworddb) ||
                             </a>
                             <ul class="nav nav-treeview">
                                 <li class="nav-item">
-                                    <a href="?modul=brd" class="nav-link" data-toggle="mn" id="14">
+                                    <a href="?brd" class="nav-link" data-toggle="mn" id="17">
                                         <i class="nav-icon fas fa-database"></i>
                                         <p>Database</p>
                                     </a>
                                 </li>
                                 <li class="nav-item">
-                                    <a href="?modul=checkupdate" class="nav-link" data-toggle="mn" id="15">
+                                    <a href="?checkupdate" class="nav-link" data-toggle="mn" id="18">
                                         <i class="nav-icon fas fa-sync-alt"></i>
                                         <p>Check Update</p>
                                     </a>
                                 </li>
                                 <li class="nav-item">
-                                    <a href="?modul=activity" class="nav-link" data-toggle="mn" id="16">
+                                    <a href="?activity" class="nav-link" data-toggle="mn" id="19">
                                         <i class="fas fa-chart-line nav-icon"></i>
                                         <p>Activity Log</p>
                                     </a>
@@ -473,59 +538,38 @@ if (password_verify($default_pass, $passworddb) ||
         <?php
         if (isset($triggerForceChange) && $triggerForceChange) {
             include "force_change_pass_card.php";
-        } elseif (isset($_REQUEST['modul']) && $_REQUEST['modul'] != "") {
-            $modul = $_REQUEST['modul'];
-            
-            switch ($modul) {
-                case 'press':
-                    include "prestasifix.php";
-                    break;
-                case 'usulan':
-                    include "usulan.php";
-                    break;
-                case 'user':
-                    include "user.php";
-                    break;
-                case 'legalisir':
-                    include "legalisir.php";
-                    break;
-                case 'brd':
-                    include "brd.php";
-                    break;
-                case 'siswa':
-                    include "test.php";
-                    break;
-                case 'uploadsiswa':
-                    include "upload_siswa.php";
-                    break;
-                case 'uploadfoto':
-                    include "upload_foto.php";
-                    break;
-                case 'uploaduser':
-                    include "upload_user.php";
-                    break;
-                case 'profile':
-                    include "profil.php";
-                    break;
-                case 'datasek':
-                    include "datasek.php";
-                    break;
-                case 'settings':
-                    include "setting.php";
-                    break;
-                case 'checkupdate':
-                    include "chckupdate.php";
-                    break;
-                case 'activity':
-                    include "activity_log.php";
-                    break;
-                case 'logout':
-                    include "ceklogout.php";
-                    break;
-                default:
-                    include "load.php";
-                    break;
-            }
+        } else if (isset($_GET['press'])) {
+            include "prestasifix.php";
+        } else if (isset($_GET['usulan'])) {
+            include "usulan.php";
+        } else if (isset($_GET['user'])) {
+            include "user.php";
+        } else if (isset($_GET['legalisir'])) {
+            include "legalisir.php";
+        } else if (isset($_GET['brd'])) {
+            include "brd.php";
+        } else if (isset($_GET['dh'])) {
+            include "daftar_hadir.php";
+        } else if (isset($_GET['siswa'])) {
+            include "siswa.php";
+        } else if (isset($_GET['uploadsiswa'])) {
+            include "upload_siswa.php";
+        } else if (isset($_GET['uploadfoto'])) {
+            include "upload_foto.php";
+        } else if (isset($_GET['uploaduser'])) {
+            include "upload_user.php";
+        } else if (isset($_GET['profile'])) {
+            include "profil.php";
+        } else if (isset($_GET['datasek'])) {
+            include "datasek.php";
+        } else if (isset($_GET['settings'])) {
+            include "setting.php";
+        } else if (isset($_GET['checkupdate'])) {
+            include "chckupdate.php";
+        } else if (isset($_GET['activity'])) {
+            include "activity_log.php";
+        } else if (isset($_GET['logout'])) {
+            include "ceklogout.php";
         } else {
             include "load.php";
         }
@@ -553,74 +597,90 @@ if (password_verify($default_pass, $passworddb) ||
     </script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/4.6.2/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/admin-lte/3.2.0/js/adminlte.min.js"></script>
+    <!-- Chart.js -->
+    <script src="plugins/chart.js/Chart.min.js"></script>
     <!-- Toastr -->
     <script src="plugins/toastr/toastr.min.js"></script>
     
     <!-- ==========================================
          CUSTOM SCRIPTS
          ========================================== -->
-    <?php if($show_tapel_modal): ?>
-      <script>
-        $(document).ready(function(){
-            // Append modal to body to fix backdrop issue
-            $('#modalNewTapel').appendTo('body').modal('show');
-            
-            $('#btnCreateTapel').click(function(){
-                var tapel = '<?php echo $new_tapel; ?>';
-                var smt = '<?php echo $new_smt; ?>';
-                var tahun = '<?php echo $new_tahun; ?>';
-                
-                $.ajax({
-                    type: 'POST',
-                    url: 'create_tapel.php',
-                    data: {tapel: tapel, smt: smt, tahun: tahun},
-                    success: function(response){
-                        if(response.trim() == "success"){
-                            // Gunakan Toastr jika tersedia, fallback ke alert
-                            if(typeof toastr !== 'undefined'){
-                                toastr.success('Tahun Pelajaran Baru Berhasil Dibuat dan Diaktifkan!');
-                            } else {
-                                alert("Tahun Pelajaran Baru Berhasil Dibuat dan Diaktifkan! Silahkan Login Ulang untuk memperbaharui sesi.");
-                            }
-                            
-                            setTimeout(function(){
-                                window.location.href = 'exit.php';
-                            }, 1500);
-                        } else {
-                            alert("Gagal: " + response);
-                        }
-                    },
-                    error: function(){
-                        alert("Terjadi kesalahan koneksi.");
-                    }
-                });
-            });
-        });
-      </script>
-      
-      <!-- Modal New Tapel -->
-      <div class="modal fade" id="modalNewTapel" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
-        <div class="modal-dialog" role="document">
-          <div class="modal-content ">
-            <div class="modal-header bg-info">
-              <h5 class="modal-title" id="exampleModalLabel"><i class="fas fa-calendar-alt"></i> Deteksi Tahun Pelajaran Baru</h5>
-            </div>
-            <div class="modal-body">
-              <p>Sistem mendeteksi bahwa saat ini sudah memasuki periode:</p>
-              <h3>Tahun Pelajaran: <b><?php echo $new_tapel; ?></b></h3>
-              <h3>Semester: <b><?php echo $new_smt == '1' ? '1 (Ganjil)' : '2 (Genap)'; ?></b></h3>
-              <p>Data ini belum ada di database. Apakah Anda ingin membuatnya dan mengaktifkannya sekarang?</p>
-            </div>
-            <div class="modal-footer justify-content-between"> 
-              <!-- User cannot easily close without action, mostly forced or just close if they want to ignore but backdrop static prevents accidental close -->
-              <button type="button" class="btn btn-outline-dark" data-dismiss="modal">Nanti Saja</button>
-              <button type="button" class="btn btn-info" id="btnCreateTapel"><b>Ya, Buat & Aktifkan</b></button>
-            </div>
-          </div>
-        </div>
-      </div>
-    <?php endif; ?>
 
+   <!-- ==========================================
+         MODAL PILIH KELAS - DAFTAR HADIR
+         ========================================== -->
+    <style>
+        #modalDaftarHadir .modal-header { background: linear-gradient(135deg,#2c3e50 0%,#01b2d1 100%); color:#fff; border-radius: 4px 4px 0 0; }
+        #modalDaftarHadir .modal-header .close { color:#fff; opacity:.8; }
+        #modalDaftarHadir .modal-header .close:hover { opacity:1; }
+        #modalDaftarHadir .form-label-sm { font-size:12px; font-weight:600; color:#475569; text-transform:uppercase; letter-spacing:.4px; margin-bottom:4px; display:block; }
+        #modalDaftarHadir .form-control { border-radius:8px; border:1.5px solid #cbd5e1; font-size:13px; }
+        #modalDaftarHadir .form-control:focus { border-color:#01b2d1; box-shadow:0 0 0 3px rgba(1,178,209,.15); }
+        #modalDaftarHadir .btn-buka { background:linear-gradient(135deg,#2c3e50 0%,#01b2d1 100%); color:#fff; border:none; border-radius:8px; padding:10px 24px; font-weight:700; font-size:14px; transition:opacity .2s; }
+        #modalDaftarHadir .btn-buka:hover { opacity:.88; color:#fff; }
+        #modalDaftarHadir .preview-badge { display:inline-flex; align-items:center; gap:5px; background:#f0fdf4; color:#166534; border:1px solid #bbf7d0; border-radius:6px; padding:4px 10px; font-size:11px; font-weight:600; }
+    </style>
+
+    <div class="modal fade" id="modalDaftarHadir" tabindex="-1" role="dialog" aria-labelledby="lblDaftarHadir">
+        <div class="modal-dialog modal-md" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="lblDaftarHadir">
+                        <i class="fas fa-clipboard-list mr-2"></i>Cetak Daftar Hadir Siswa
+                    </h5>
+                    <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+                </div>
+                <div class="modal-body">
+
+                    <!-- Pilih Kelas -->
+                    <div class="form-group mb-3">
+                        <label class="form-label-sm"><i class="fas fa-chalkboard-teacher mr-1"></i>Pilih Kelas</label>
+                        <select id="dhKelasVal" class="form-control">
+                            <option value="">Semua Kelas</option>
+                            <?php foreach ($dh_kelas_list as $kl): ?>
+                            <option value="<?= htmlspecialchars($kl) ?>"><?= htmlspecialchars($kl) ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <!-- Tanggal otomatis hari ini -->
+                    <input type="hidden" id="dhTanggal" value="<?= date('Y-m-d') ?>">
+
+                    <!-- Pilih Jenis Cetakan -->
+                    <div class="form-group">
+                        <label class="form-label-sm"><i class="fas fa-file-alt mr-1"></i>Jenis Cetakan</label>
+                        <select id="dhJenisCetak" class="form-control">
+                            <option value="Daftar Hadir Siswa">Daftar Hadir Siswa</option>
+                            <option value="Tanda Terima Kartu Pelajar RFID">Tanda Terima Kartu Pelajar</option>
+                        </select>
+                    </div>
+                </div><!-- /modal-body -->
+                <div class="modal-footer justify-content-between">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
+                    <button type="button" class="btn btn-primary" id="btnBukaDH">
+                        <i class="fas fa-print mr-1"></i>Tampilkan
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    $(document).ready(function () {
+        // -- Tombol Tampilkan
+        $('#btnBukaDH').on('click', function () {
+            var kelas = $('#dhKelasVal').val();
+            var tgl   = $('#dhTanggal').val() || '<?= date('Y-m-d') ?>';
+            var judul = $('#dhJenisCetak').val();
+
+            var url = 'daftar_hadir.php?kelas=' + encodeURIComponent(kelas)
+                    + '&tanggal=' + encodeURIComponent(tgl)
+                    + '&judul=' + encodeURIComponent(judul);
+
+            window.open(url, '_blank');
+            $('#modalDaftarHadir').modal('hide');
+        });
+    });
+    </script>
     <script>
     $(document).ready(function () {
       $('a[data-toggle="mn"]').click(function () {
@@ -680,13 +740,14 @@ if (password_verify($default_pass, $passworddb) ||
             setInterval(updateTime, 1000);
     </script>
     <script>
-  $(document).ready(function () {
+      $(document).ready(function () {
     $('#pres').DataTable({
       responsive: true,
       autoWidth: true
 
     });
   });
+
    $(document).ready(function () {
     $('#us').DataTable({
       responsive: true,

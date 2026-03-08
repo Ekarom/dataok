@@ -30,7 +30,7 @@ if (isset($_FILES['file_upload']) && isset($_POST['target_column'])) {
 
     $rotation = isset($_POST['rotation']) ? intval($_POST['rotation']) : 0;
 
-    $validColumns = ['logo_sekolah', 'background_login', 'logo_aplikasi'];
+    $validColumns = ['logo_sekolah', 'background_login', 'logo_pemda'];
 
 
 
