@@ -1,46 +1,86 @@
 <?php
-include "cfg/konek.php";
+include_once "cfg/konek.php";
 
-?>  
+?>
+<!-- Global DataTables assets provided by index.php -->
+<!-- Content Wrapper. Contains page content -->
+<div class="content-wrapper">
+    <!-- Content Header (Page header) -->
+    <section class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6">
+                    <h1>Input Data Prestasi</h1>
+                </div>
+                <div class="col-sm-6">
+                    <ol class="breadcrumb float-sm-right">
+                        <li class="breadcrumb-item"><a href="index.php">Home</a></li>
+                        <li class="breadcrumb-item active">Input Data Prestasi</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </section>
+    <!-- Main content -->
+    <section class="content">
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header bg-menu-gradient">
+</div>
 
 <div class="table-responsive">
-    <table id="example3" class="table table-striped table-sm" style="width:100%">
-        <thead>
-            <tr align="center">
+    <table id="example2" class="table table-striped table-hover table-sm shadow-sm" style="width:100%">
+        <thead class="bg-menu-gradient text-white text-center">
+            <tr>
                 <th width="5%">No</th>
-                <th width="10%">KLS</th>
+                <th width="10%">Kelas</th>
                 <th width="15%">NIS</th>
-                <th width="45%">NAMA</th>
-                <th width="15%">AKSI</th>
+                <th width="10%">NISN</th>
+                <th width="40%">Nama Siswa</th>
+                <th width="20%">Aksi</th>
             </tr>
         </thead>
-        <tbody>
+        <tbody class="align-middle">
             <?php
-            $sqlSiswa = mysqli_query($sqlconn, "SELECT pd, nis, kelas, photo, id FROM siswa ORDER BY pd ASC");
-            $noS = 1;
-            while ($ds = mysqli_fetch_array($sqlSiswa)) {
-                $photo_path = !empty($ds['photo']) && file_exists("file/fotopd/" . $ds['photo']) ? "file/fotopd/" . $ds['photo'] : "images/male.png";
-                ?>
-                <tr align="center">
+// Mengambil data siswa diurutkan berdasarkan nama (pd)
+$sqlSiswa = mysqli_query($sqlconn, "SELECT pd, nis,nisn, kelas, id FROM siswa ORDER BY pd ASC");
+$noS = 1;
+while ($ds = mysqli_fetch_array($sqlSiswa)) {
+?>
+                <tr class="text-center">
                     <td><?php echo $noS++; ?></td>
-                    <td><?php echo htmlspecialchars($ds['kelas']); ?></td>
+                    <td><span class="badge badge-secondary px-2 shadow-xs"><?php echo htmlspecialchars($ds['kelas']); ?></span></td>
                     <td><?php echo htmlspecialchars($ds['nis']); ?></td>
+                    <td><?php echo htmlspecialchars($ds['nisn']); ?></td>
                     <td class="text-left font-weight-bold"><?php echo htmlspecialchars($ds['pd']); ?></td>
-                    <td>
-<button type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#inputpres" data-id="<?php echo $ds['id']; ?>" data-dismiss="modal">
-                      <i class="fas fa-check"></i> Pilih
-                    </button>
-                  </td>
-                </tr>
-              <?php } ?>
-            </tbody>
-          </table>
-        </div>
 
-<script>
+                    <td>
+                      <div class="btn-group">
+                        <a href="?input&nis=<?php echo $ds['id']; ?>" class="btn badge badge-success btn-sm">
+                            Input
+                        </a>
+                        <a href="?editpress&urut=<?php echo $ds['id']; ?>" class="btn badge badge-primary btn-sm">
+                            Edit
+                        </a>
+                        <a href="?viewpress&urut=<?php echo $ds['id']; ?>" class="btn badge badge-info btn-sm">
+                            Detail
+                        </a>
+                      </div>
+                    </td>
+                </tr>
+            <?php
+}?>
+        </tbody>
+    </table>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Global scripts provided by index.php -->
+ <script>
   $(document).ready(function () {
-    $('#example3').DataTable({
-       responsive: true
-    });
+    $('#example2').DataTable();
   });
 </script>

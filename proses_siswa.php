@@ -31,18 +31,14 @@ header('Content-Type: application/json');
 // --- Fungsi ---
 
 /**
-
  * Fungsi untuk menghasilkan HTML paginasi (penomoran halaman)
-
  * @param int $currentPage Halaman saat ini
-
  * @param int $totalPages Jumlah total halaman
-
  * @return string HTML untuk navigasi paginasi
-
  */
 
-function buatPaginasi($currentPage, $totalPages) {
+function buatPaginasi($currentPage, $totalPages)
+{
     if ($totalPages <= 1) {
         return '';
     }
@@ -56,7 +52,7 @@ function buatPaginasi($currentPage, $totalPages) {
     $html .= '<a class="page-link" href="javascript:void(0)" data-page="' . $prevPage . '">Previous</a>';
     $html .= '</li>';
 
-    $adjacents = 2; 
+    $adjacents = 2;
 
     if ($totalPages <= 7) {
         for ($i = 1; $i <= $totalPages; $i++) {
@@ -65,22 +61,23 @@ function buatPaginasi($currentPage, $totalPages) {
             $html .= '<a class="page-link" href="javascript:void(0)" data-page="' . $i . '">' . $i . '</a>';
             $html .= '</li>';
         }
-    } else {
+    }
+    else {
         $start = max(1, $currentPage - $adjacents);
         $end = min($totalPages, $currentPage + $adjacents);
-        
+
         if ($currentPage <= $adjacents + 1) {
-            $end = min($totalPages, 1 + 2 * $adjacents); 
+            $end = min($totalPages, 1 + 2 * $adjacents);
         }
         if ($currentPage >= $totalPages - $adjacents) {
-            $start = max(1, $totalPages - 2 * $adjacents); 
+            $start = max(1, $totalPages - 2 * $adjacents);
         }
 
         if ($start > 1) {
-             $html .= '<li class="page-item"><a class="page-link" href="javascript:void(0)" data-page="1">1</a></li>';
-             if ($start > 2) {
-                 $html .= '<li class="page-item disabled"><span class="page-link">...</span></li>';
-             }
+            $html .= '<li class="page-item"><a class="page-link" href="javascript:void(0)" data-page="1">1</a></li>';
+            if ($start > 2) {
+                $html .= '<li class="page-item disabled"><span class="page-link">...</span></li>';
+            }
         }
 
         for ($i = $start; $i <= $end; $i++) {
@@ -91,10 +88,10 @@ function buatPaginasi($currentPage, $totalPages) {
         }
 
         if ($end < $totalPages) {
-             if ($end < $totalPages - 1) {
-                 $html .= '<li class="page-item disabled"><span class="page-link">...</span></li>';
-             }
-             $html .= '<li class="page-item"><a class="page-link" href="javascript:void(0)" data-page="' . $totalPages . '">' . $totalPages . '</a></li>';
+            if ($end < $totalPages - 1) {
+                $html .= '<li class="page-item disabled"><span class="page-link">...</span></li>';
+            }
+            $html .= '<li class="page-item"><a class="page-link" href="javascript:void(0)" data-page="' . $totalPages . '">' . $totalPages . '</a></li>';
         }
     }
 
@@ -141,11 +138,11 @@ switch ($action) {
         // --- Pengaturan Pengurutan (Default) ---
         $params = [];
         $types = '';
-        
+
         $countQuery = "SELECT COUNT(id) as total FROM siswa";
         $dataQuery = "SELECT id, pd, jk, nis, nisn, kelas, photo FROM siswa";
 
-        
+
 
         // Menambahkan kondisi WHERE jika ada kata kunci pencarian
 
@@ -167,7 +164,7 @@ switch ($action) {
 
         }
 
-        
+
 
         // Menghitung total data
 
@@ -197,7 +194,7 @@ switch ($action) {
 
         $types .= 'ii';
 
-        
+
 
         $stmt = $sqlconn->prepare($dataQuery);
 
@@ -228,7 +225,7 @@ switch ($action) {
         // Membangun HTML tabel dari data yang didapat
         $tableHtml = '<div class="table-responsive"><table class="table table-striped align-middle mb-0">';
 
-        
+
 
         // --- Header Tabel Statis ---
         $tableHtml .= '<thead class="table-light"><tr class="text-center">
@@ -242,7 +239,7 @@ switch ($action) {
 
         $tableHtml .= '<th scope="col" style="width: 100px;">Aksi</th></tr></thead><tbody>';
 
-        
+
 
         if ($result->num_rows > 0) {
 
@@ -272,7 +269,8 @@ switch ($action) {
 
             }
 
-        } else {
+        }
+        else {
 
             $tableHtml .= '<tr><td colspan="7">Tidak ada data ditemukan.</td></tr>';
 
@@ -309,7 +307,8 @@ switch ($action) {
 
             echo json_encode(['status' => 'success', 'message' => 'Semua data siswa berhasil dihapus secara permanen.']);
 
-        } else {
+        }
+        else {
 
             echo json_encode(['status' => 'error', 'message' => 'Gagal menghapus semua data: ' . $sqlconn->error]);
 
@@ -339,7 +338,8 @@ switch ($action) {
 
                     echo json_encode(['status' => 'success', 'message' => 'Data siswa berhasil dihapus.']);
 
-                } else {
+                }
+                else {
 
                     echo json_encode(['status' => 'error', 'message' => 'Gagal menghapus data siswa: ' . $stmt->error]);
 
@@ -347,13 +347,15 @@ switch ($action) {
 
                 $stmt->close();
 
-            } else {
+            }
+            else {
 
-                 echo json_encode(['status' => 'error', 'message' => 'Gagal mempersiapkan query: ' . $sqlconn->error]);
+                echo json_encode(['status' => 'error', 'message' => 'Gagal mempersiapkan query: ' . $sqlconn->error]);
 
             }
 
-        } else {
+        }
+        else {
 
             echo json_encode(['status' => 'error', 'message' => 'ID siswa tidak valid atau tidak ditemukan.']);
 
@@ -384,7 +386,7 @@ switch ($action) {
 
     case 'ganti_foto':
         $id = isset($_POST['id']) ? (int)$_POST['id'] : 0;
-        
+
         if ($id <= 0) {
             echo json_encode(['status' => 'error', 'message' => 'ID siswa tidak valid.']);
             break;
@@ -432,14 +434,16 @@ switch ($action) {
             // Update database
             $stmt_upd = $sqlconn->prepare("UPDATE siswa SET photo = ? WHERE id = ?");
             $stmt_upd->bind_param('si', $newFileName, $id);
-            
+
             if ($stmt_upd->execute()) {
                 echo json_encode(['status' => 'success', 'message' => 'Foto berhasil diperbarui.', 'new_photo' => $newFileName]);
-            } else {
+            }
+            else {
                 echo json_encode(['status' => 'error', 'message' => 'Gagal memperbarui database: ' . $stmt_upd->error]);
             }
             $stmt_upd->close();
-        } else {
+        }
+        else {
             echo json_encode(['status' => 'error', 'message' => 'Gagal memindahkan file ke direktori tujuan.']);
         }
         break;

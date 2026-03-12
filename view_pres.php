@@ -1,20 +1,12 @@
 <?php
-include "cfg/konek.php";
-include "cfg/secure.php";
+include_once "cfg/konek.php";
+include_once "cfg/secure.php";
 
-if($_REQUEST['urut']) {
+if ($_REQUEST['urut']) {
+    $id = $_REQUEST['urut'];
 
-        $id = $_REQUEST['urut'];
-
-        // mengambil data berdasarkan id
-
-        // dan menampilkan data ke dalam form modal bootstrap
-
-        //$sql = mysqli_query($sqlconn,"SELECT * FROM data_pd WHERE no_pes = '$id'");
-
-        
-
-        $sql = mysqli_query($sqlconn,"SELECT 
+    // First attempt: try to find achievement by ID (urut)
+    $sql = mysqli_query($sqlconn, "SELECT 
             prestasi.id,
             prestasi.prestasi, 
             prestasi.pd, 
@@ -32,28 +24,59 @@ if($_REQUEST['urut']) {
         LEFT JOIN siswa ON prestasi.pd = siswa.pd AND prestasi.kelas = siswa.kelas
         WHERE prestasi.id = '$id'");
 
-        $r = mysqli_fetch_array($sql);
-        
-        if ($r) {
-            $photo = $r['photo'] ?? '';
-            $nama = $r['pd'] ?? '';
-            $kelas = $r['kelas'] ?? '';
-            $prestasi = $r['prestasi'] ?? '';
-            $tingkat = $r['tingkat'] ?? '';
-            $penyelenggara = $r['penyelenggara'] ?? '';
-            $lokasi = $r['lokasi'] ?? '';
-            $juara = $r['juara'] ?? '';
-            $pdf = $r['pdf'] ?? '';
-            $jenisprestasi = $r['jenisprestasi'] ?? '';
-            $tgl_kegiatan = $r['tgl_kegiatan'] ?? '';
-            $bulan = $r['bulan'] ?? '';
-        } else {
-             // Handle unreachable case usually, or just empty
-             $photo = ''; $nama = ''; $kelas = ''; $prestasi = ''; 
-             $tingkat = ''; $lokasi = ''; $juara = ''; $pdf = '';
-             $jenisprestasi = ''; $tgl_kegiatan = ''; $bulan = '';
-        }
-               
+    $r = mysqli_fetch_array($sql);
+
+    // Second attempt: if not found, it might be a Student ID from dataprestasi.php
+    // Fetch the latest achievement for this student
+    if (!$r) {
+        $sqlSiswa = mysqli_query($sqlconn, "SELECT 
+                prestasi.id,
+                prestasi.prestasi, 
+                siswa.pd, 
+                siswa.kelas, 
+                prestasi.tingkat, 
+                prestasi.penyelenggara, 
+                prestasi.lokasi,
+                prestasi.juara, 
+                prestasi.pdf,
+                prestasi.jenisprestasi,
+                prestasi.tgl_kegiatan,
+                prestasi.bulan,
+                siswa.photo 
+            FROM siswa 
+            LEFT JOIN prestasi ON prestasi.pd = siswa.pd AND prestasi.kelas = siswa.kelas
+            WHERE siswa.id = '$id' 
+            ORDER BY prestasi.id DESC LIMIT 1");
+        $r = mysqli_fetch_array($sqlSiswa);
+    }
+
+    if ($r) {
+        $photo = $r['photo'] ?? '';
+        $nama = $r['pd'] ?? '';
+        $kelas = $r['kelas'] ?? '';
+        $prestasi = $r['prestasi'] ?? '';
+        $tingkat = $r['tingkat'] ?? '';
+        $penyelenggara = $r['penyelenggara'] ?? '';
+        $lokasi = $r['lokasi'] ?? '';
+        $juara = $r['juara'] ?? '';
+        $pdf = $r['pdf'] ?? '';
+        $jenisprestasi = $r['jenisprestasi'] ?? '';
+        $tgl_kegiatan = $r['tgl_kegiatan'] ?? '';
+        $bulan = $r['bulan'] ?? '';
+    }
+    else {
+        $photo = '';
+        $nama = '';
+        $kelas = '';
+        $prestasi = '';
+        $tingkat = '';
+        $lokasi = '';
+        $juara = '';
+        $pdf = '';
+        $jenisprestasi = '';
+        $tgl_kegiatan = '';
+        $bulan = '';
+    }
 ?>
 <style>
     .modal-view-body {
@@ -148,141 +171,158 @@ if($_REQUEST['urut']) {
     .star-center-top { top: -10px; left: 50%; transform: translateX(-50%); font-size: 1.5rem; }
 </style>
 
-<div class="modal-view-body">
-    <form>
-        <input type="hidden" name="id" value="<?php echo $r['id']; ?>">
-            
-        <!-- Section 1: Data Siswa -->
-        <div class="view-section">
-            <center><span class="view-section-title"><i class="fa fa-user-graduate mr-1"></i> Informasi Siswa</span></center>
-           <?php 
+<!-- Content Wrapper. Contains page content -->
+<div class="content-wrapper">
+    <!-- Content Header (Page header) -->
+    <section class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6">
+                    <h1>Detail Prestasi</h1>
+                </div>
+                <div class="col-sm-6">
+                    <ol class="breadcrumb float-sm-right">
+                        <li class="breadcrumb-item"><a href="index.php">Home</a></li>
+                        <li class="breadcrumb-item active">Detail Prestasi</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </section>
 
-                         if($r['photo'] !="")
-
-                         {
-
-                         
-
-                         ?>
-
-                  <center>
-                    <div class="award-frame-wrapper">
-                        <i class="fas fa-star frame-star star-center-top"></i>
-                        <i class="fas fa-star frame-star star-top-left"></i>
-                        <i class="fas fa-star frame-star star-top-right"></i>
-                        <i class="fas fa-star frame-star star-bottom-left"></i>
-                        <i class="fas fa-star frame-star star-bottom-right"></i>
-                        <a href="file/fotopd/<?php echo $r['photo']; ?>" target="_blank" title="Klik untuk melihat foto penuh">
-                            <img class='profile-user-img img-fluid img-circle shadow-sm border-pemenang' style='width: 150px; height: 150px; object-fit: cover; cursor: hand;' src="file/fotopd/<?php echo $r['photo']; ?>">
+    <!-- Main content -->
+    <section class="content">
+        <div class="container-fluid">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-menu-gradient">
+                    <div class="card-tools ml-auto">
+                        <a href="?input" class="btn btn-warning btn-sm rounded-pill px-4 shadow-sm">
+                            <i class="fa fa-arrow-left mr-1"></i> Kembali
                         </a>
                     </div>
-                  </center>
+                </div>
+                <div class="card-body view-form-container" style="background-color: #f8f9fa;">
+                    <form>
+                        <input type="hidden" name="id" value="<?php echo $r['id']; ?>">
+                        
+                        <div class="row">
+                            <!-- Kolom Kiri: Foto & Identitas Singkat -->
+                            <div class="col-md-4 text-center">
+                                <div class="view-section" style="height: 100%;">
+                                    <center><span class="view-section-title"><i class="fa fa-user-graduate mr-1"></i> Informasi Siswa</span></center>
+                                    <center>
+                                        <div class="award-frame-wrapper">
+                                            <i class="fas fa-star frame-star star-center-top"></i>
+                                            <i class="fas fa-star frame-star star-top-left"></i>
+                                            <i class="fas fa-star frame-star star-top-right"></i>
+                                            <i class="fas fa-star frame-star star-bottom-left"></i>
+                                            <i class="fas fa-star frame-star star-bottom-right"></i>
+                                            <?php if (!empty($r['photo'])) { ?>
+                                                <a href="file/fotopd/<?php echo $r['photo']; ?>" target="_blank" title="Klik untuk melihat foto penuh">
+                                                    <img class='profile-user-img img-fluid img-circle shadow-sm border-pemenang' style='width: 150px; height: 150px; object-fit: cover; cursor: pointer;' src="file/fotopd/<?php echo $r['photo']; ?>">
+                                                </a>
+                                            <?php
+    }
+    else { ?>
+                                                <a href="images/default.png" target="_blank" title="Klik untuk melihat foto penuh">
+                                                    <img class="profile-user-img img-fluid img-circle border-pemenang" style='width: 150px; height: 150px; object-fit: cover; cursor: pointer;' src="images/default.png" alt="User profile picture">
+                                                </a>
+                                            <?php
+    }?>
+                                        </div>
+                                    </center>
 
-                   <span id="status2" ></span>
+                                    <div class="mt-4">
+                                        <span style="font-size: 16px; font-weight: bold; text-decoration: underline; color: #495057;">Nama Lengkap</span>
+                                        <div class="mt-1 badge bg-menu-gradient px-3 py-2" style="font-size: 14px; font-weight: bold; width: 100%; white-space: normal;"><?php echo $r['pd']; ?></div>
+                                        
+                                        <hr style="border-top: 1px dashed #ced4da; margin: 15px 0;">
+                                        
+                                        <span style="font-size: 16px; font-weight: bold; text-decoration: underline; color: #495057;">Kelas</span>
+                                        <div class="mt-1 badge bg-menu-gradient px-3 py-2" style="font-size: 14px; font-weight: bold; width: 100%;"><?php echo $r['kelas']; ?></div>
+                                    </div>
+                                </div>
+                            </div>
 
+                            <!-- Kolom Kanan: Detail & Lampiran -->
+                            <div class="col-md-8">
+                                <!-- Section: Detail Prestasi -->
+                                <div class="view-section">
+                                    <center><span class="view-section-title"><i class="fa fa-medal mr-1"></i> Detail Prestasi</span></center>
+                                    <div class="row mt-2">
+                                        <div class="col-md-12 mb-3">
+                                            <label class="view-label">Nama Prestasi / Kegiatan</label>
+                                            <div class="view-value"><i class="fa fa-award view-icon"></i> <?php echo $r['prestasi']; ?></div>
+                                        </div>
+                                        <div class="col-md-12 mb-3">
+                                            <label class="view-label">Jenis Prestasi</label>
+                                            <div class="view-value"><i class="fa fa-list-alt view-icon"></i> <?php echo $r['jenisprestasi']; ?></div>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="view-label">Juara</label>
+                                            <div class="view-value"><i class="fa fa-trophy view-icon" style="color:#ffc107;"></i> <?php echo $r['juara']; ?></div>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="view-label">Tingkat</label>
+                                            <div class="view-value"><i class="fa fa-layer-group view-icon"></i> <?php echo $r['tingkat']; ?></div>
+                                        </div>
+                                    </div>
 
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label class="view-label">Tanggal Pelaksanaan</label>
+                                            <div class="view-value"><i class="fa fa-calendar-check view-icon"></i> <?php echo !empty($r['tgl_kegiatan']) ? date('d-m-Y', strtotime($r['tgl_kegiatan'])) : '-'; ?></div>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="view-label">Bulan</label>
+                                            <div class="view-value"><i class="fa fa-calendar-alt view-icon"></i> <?php echo $r['bulan']; ?></div>
+                                        </div>
+                                        <div class="col-md-12 mb-3">
+                                            <label class="view-label">Penyelenggara</label>
+                                            <div class="view-value"><i class="fa fa-user-tie view-icon" style="color:#dc3545;"></i> <?php echo $r['penyelenggara']; ?></div>
+                                        </div>
+                                        <div class="col-md-12 mb-3">
+                                            <label class="view-label">Lokasi</label>
+                                            <div class="view-value"><i class="fa fa-map-marker-alt view-icon" style="color:#ffc107;"></i> <?php echo $r['lokasi']; ?></div>
+                                        </div>
+                                    </div>
+                                </div>
 
- <?php }
-
- else
-
- {
-
-?>
-
-<center>
-    <div class="award-frame-wrapper">
-        <i class="fas fa-star frame-star star-center-top"></i>
-        <i class="fas fa-star frame-star star-top-left"></i>
-        <i class="fas fa-star frame-star star-top-right"></i>
-        <i class="fas fa-star frame-star star-bottom-left"></i>
-        <i class="fas fa-star frame-star star-bottom-right"></i>
-        <a href="images/default.png" target="_blank" title="Klik untuk melihat foto penuh">
-            <img class="profile-user-img img-fluid img-circle border-pemenang" style='width: 150px; height: 150px; object-fit: cover; cursor: zoom-in;' src="images/default.png" alt="User profile picture">
-        </a>
-    </div>
-</center>
-
-                   <span id="status2" ></span>
-
-                   <?php } ?>
-
-                    <center><span style="font-size: 18px; font-weight: bold; text-decoration: underline;">Nama Siswa</span></center>
-                    <center><span class="badge bg-menu-gradient"style="font-size: 15px; font-weight: bold;"><?php echo $r['pd']; ?></span></center>
-                    <center><span style="font-size: 18px; font-weight: bold; text-decoration: underline;">Kelas</span></center>
-                    <center><span class="badge bg-menu-gradient"style="font-size: 15px; font-weight: bold;"><?php echo $r['kelas']; ?></span></center>
- </div>
-
-        <!-- Attachment Preview -->
-        <div class="view-section">
-            <center><span class="view-section-title"><i class="fa fa-paperclip mr-1"></i> Lampiran Prestasi</span></center>
-            <div class="mt-1">
-                <?php 
-                if (!empty($r['pdf'])) {
-                    $files = explode(',', $r['pdf']);
-                    foreach ($files as $index => $f) {
-                        if (!empty($f)) {
-                            $ext = strtolower(pathinfo($f, PATHINFO_EXTENSION));
-                            $is_image = in_array($ext, ['jpg', 'jpeg', 'png']);                       
-                            if ($is_image) {
-                                echo "<div class='attachment-container mb-3 text-center'><a href='file/prestasi/$f' target='_blank' title='Klik untuk melihat gambar penuh'><img src='file/prestasi/$f' class='attachment-img''></a></div>";
-                            } else {
-                                echo "<div class='attachment-container mb-3'><embed type='application/pdf' src='file/prestasi/$f' width='100%' height='500px' style='border:none;'></div>";
-                            }
-                        }
-                    }
-                } else {
-                    echo "<div class='alert alert-secondary text-center alert-view m-0'><i class='fa fa-info-circle mr-1'></i> Tidak ada lampiran berkas.</div>";
+                                <!-- Section: Lampiran Preview -->
+                                <div class="view-section">
+                                    <center><span class="view-section-title"><i class="fa fa-paperclip mr-1"></i> Lampiran Prestasi</span></center>
+                                    <div class="mt-1">
+                                        <?php
+    if (!empty($r['pdf'])) {
+        $files = explode(',', $r['pdf']);
+        foreach ($files as $index => $f) {
+            if (!empty($f)) {
+                $ext = strtolower(pathinfo($f, PATHINFO_EXTENSION));
+                $is_image = in_array($ext, ['jpg', 'jpeg', 'png']);
+                if ($is_image) {
+                    echo "<div class='attachment-container mb-3 text-center'><a href='file/prestasi/$f' target='_blank' title='Klik untuk melihat gambar penuh'><img src='file/prestasi/$f' class='attachment-img'></a></div>";
                 }
-                ?>
-            </div>
-        </div>
-        <!-- Section 2: Detail Prestasi -->
-        <div class="view-section">
-            <center><span class="view-section-title"><i class="fa fa-medal mr-1"></i> Detail Prestasi</span></center>
-            <div class="row mt-2">
-                <div class="col-md-12 mb-3">
-                    <label class="view-label">Nama Prestasi / Kegiatan</label>
-                    <div class="view-value"><i class="fa fa-award view-icon"></i> <?php echo $r['prestasi']; ?></div>
-                </div>
-                <div class="col-md-12 mb-3">
-                    <label class="view-label">Jenis Prestasi</label>
-                    <div class="view-value"><i class="fa fa-list-alt view-icon"></i> <?php echo $r['jenisprestasi']; ?></div>
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label class="view-label">Juara</label>
-                    <div class="view-value"><i class="fa fa-trophy view-icon" style="color:#ffc107;"></i> <?php echo $r['juara']; ?></div>
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label class="view-label">Tingkat</label>
-                    <div class="view-value"><i class="fa fa-layer-group view-icon"></i> <?php echo $r['tingkat']; ?></div>
-                </div>
-            </div>
-
-            <div class="row">
-                <div class="col-md-6 mb-3">
-                    <label class="view-label">Tanggal Pelaksanaan</label>
-                    <div class="view-value"><i class="fa fa-calendar-check view-icon"></i> <?php echo date('d-m-Y', strtotime($r['tgl_kegiatan'])); ?></div>
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label class="view-label">Bulan</label>
-                    <div class="view-value"><i class="fa fa-calendar-alt view-icon"></i> <?php echo ($r['bulan']); ?></div>
-                </div>
-                <div class="col-md-12">
-                    <label class="view-label">Penyelenggara</label>
-                    <div class="view-value"><i class="fa fa-user-tie view-icon" style="color:#dc3545;"></i> <?php echo $r['penyelenggara']; ?></div>
-                    </div>
-                    <div class="col-md-12">
-                    <label class="view-label">Lokasi</label>
-                    <div class="view-value"><i class="fa fa-map-marker-alt view-icon" style="color:#ffc107;"></i> <?php echo $r['lokasi']; ?></div>
+                else {
+                    echo "<div class='attachment-container mb-3'><embed type='application/pdf' src='file/prestasi/$f' width='100%' height='500px' style='border:none;'></div>";
+                }
+            }
+        }
+    }
+    else {
+        echo "<div class='alert alert-secondary text-center alert-view m-0'><i class='fa fa-info-circle mr-1'></i> Tidak ada lampiran berkas.</div>";
+    }
+?>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>
-
-        <div class="modal-footer px-0 pb-0">
-            <button type="button" class="btn bg-gradient-danger custom" data-dismiss="modal">Batal</button>
-        </div>
-    </form>
+    </section>
 </div>
 
-<?php } ?>
+<?php
+}?>
+

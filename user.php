@@ -12,7 +12,8 @@ if (!isset($sqlconn) || $sqlconn === false) {
 
 // --- FUNGSI BANTUAN ---
 // Fungsi generate string random (dipindahkan ke atas untuk akses global)
-function random_strings($length_of_string) {
+function random_strings($length_of_string)
+{
     $str_result = '0123456789abcdefghijklmnopqrstuvwxyz';
     return substr(str_shuffle($str_result), 0, $length_of_string);
 }
@@ -21,20 +22,22 @@ function random_strings($length_of_string) {
 $lv = isset($level) ? $level : '';
 
 // --- FUNGSI MENAMPILKAN MODAL PESAN KESALAHAN/SUKSES (PENGGANTI ALERT) ---
-function display_notification($type, $message) {
+function display_notification($type, $message)
+{
     // Escape message for JS
     $safe_message = addslashes($message);
-    
+
     // Determine redirection URL
     $redirect = "?modul=user";
-    
+
     // Check if we are already on the correct module (to avoid loops or unnecessary redirects)
     $current_modul = isset($_REQUEST['modul']) ? $_REQUEST['modul'] : '';
-    
+
     // Output JS alert and redirect
     if ($current_modul !== 'user') {
         echo "<script>alert('$safe_message'); location.href = '$redirect';</script>";
-    } else {
+    }
+    else {
         echo "<script>alert('$safe_message'); location.href = '$redirect';</script>";
     }
 }
@@ -42,7 +45,7 @@ function display_notification($type, $message) {
 // --- AKSI: UPDATE STATUS (Aktif/Non-Aktif) ---
 if (isset($_REQUEST['aksi1'])) {
     $id_req = mysqli_real_escape_string($sqlconn, $_REQUEST['id']);
-    
+
     // Menggunakan $id_req alih-alih $id
     $sqlcek = mysqli_query($sqlconn, "SELECT status FROM usera WHERE id = '$id_req'");
     if ($sta = mysqli_fetch_array($sqlcek)) {
@@ -52,7 +55,8 @@ if (isset($_REQUEST['aksi1'])) {
         $st_text = ($ubah == "1") ? "Aktif" : "Non-Aktif";
         write_log("EDIT", "Mengubah status user ID: $id_req menjadi $st_text");
         display_notification('success', 'Status user berhasil diubah.');
-    } else {
+    }
+    else {
         display_notification('danger', 'Gagal menemukan user.');
     }
 }
@@ -61,15 +65,16 @@ if (isset($_REQUEST['aksi1'])) {
 if (isset($_REQUEST['resetp'])) {
     $id_req = mysqli_real_escape_string($sqlconn, $_REQUEST['id']);
     $default_pass = 'smpn171**';
-    
+
     // Hash password default
     $pass = password_hash($default_pass, PASSWORD_DEFAULT);
-    
+
     // Menggunakan $id_req alih-alih $id
-    if(mysqli_query($sqlconn, "UPDATE usera SET password = '$pass' WHERE id = '$id_req'")){
+    if (mysqli_query($sqlconn, "UPDATE usera SET password = '$pass' WHERE id = '$id_req'")) {
         write_log("RESET", "Reset password user ID: $id_req");
-        display_notification('success', 'Password berhasil direset menjadi: ' . $default_pass); 
-    } else {
+        display_notification('success', 'Password berhasil direset menjadi: ' . $default_pass);
+    }
+    else {
         display_notification('danger', 'Gagal mereset password: ' . mysqli_error($sqlconn));
     }
 }
@@ -77,12 +82,13 @@ if (isset($_REQUEST['resetp'])) {
 // --- AKSI: RESET GOOGLE AUTHENTICATOR ---
 if (isset($_REQUEST['resetga'])) {
     $id_req = mysqli_real_escape_string($sqlconn, $_REQUEST['id']);
-    
+
     // Menggunakan placeholder kolom 'googleauth' - silakan sesuaikan jika berbeda
-    if(mysqli_query($sqlconn, "UPDATE usera SET googleauth = NULL WHERE id = '$id_req'")){
+    if (mysqli_query($sqlconn, "UPDATE usera SET googleauth = NULL WHERE id = '$id_req'")) {
         write_log("RESET", "Reset Google Authenticator user ID: $id_req");
-        display_notification('success', 'Google Authenticator berhasil direset.'); 
-    } else {
+        display_notification('success', 'Google Authenticator berhasil direset.');
+    }
+    else {
         display_notification('danger', 'Gagal mereset Google Authenticator: ' . mysqli_error($sqlconn));
     }
 }
@@ -90,49 +96,52 @@ if (isset($_REQUEST['resetga'])) {
 // --- AKSI: TAMBAH user ---
 if (isset($_POST['tambah'])) {
     $userid = mysqli_real_escape_string($sqlconn, $_POST['userid']);
-    $nama     = mysqli_real_escape_string($sqlconn, $_POST['nama']);
+    $nama = mysqli_real_escape_string($sqlconn, $_POST['nama']);
     // NIK diizinkan kosong karena di DB adalah DEFAULT NULL
-    $nik      = !empty($_POST['nik']) ? mysqli_real_escape_string($sqlconn, $_POST['nik']) : NULL;
-    
-    $lv_user  = mysqli_real_escape_string($sqlconn, $_POST['level']);
-    $status   = mysqli_real_escape_string($sqlconn, $_POST['status']);
-    
+    $nik = !empty($_POST['nik']) ? mysqli_real_escape_string($sqlconn, $_POST['nik']) : NULL;
+
+    $lv_user = mysqli_real_escape_string($sqlconn, $_POST['level']);
+    $status = mysqli_real_escape_string($sqlconn, $_POST['status']);
+
     // Ambil password dari form, jika kosong gunakan default
     $raw_pass = !empty($_POST['password']) ? $_POST['password'] : 'smpn171**';
 
     // Data yang wajib diisi (idu dan ip)
-    $idu_user = random_strings(10); 
+    $idu_user = random_strings(10);
     $ip_user = isset($_SERVER['REMOTE_ADDR']) ? mysqli_real_escape_string($sqlconn, $_SERVER['REMOTE_ADDR']) : '';
 
     // Cek username ganda
     $cek_user = mysqli_query($sqlconn, "SELECT id FROM usera WHERE userid = '$userid'");
     $sqlcek = mysqli_num_rows($cek_user);
-    
+
     if ($sqlcek > 0) {
         display_notification('danger', 'user ID SUDAH ADA, silakan ganti yang lain.');
-    } elseif (empty($userid) || empty($raw_pass)) {
+    }
+    elseif (empty($userid) || empty($raw_pass)) {
         display_notification('danger', 'user ID dan Password Harus diisi!');
-    } else {
+    }
+    else {
         // Enkripsi Password
         $password = password_hash($raw_pass, PASSWORD_DEFAULT);
-        
+
         // Perbaiki penanganan nilai NULL untuk NIK
         $nik_value = is_null($nik) ? 'NULL' : "'$nik'";
 
         // QUERY: Menambahkan kolom 'ip' dan 'idu' untuk memenuhi batasan NOT NULL
         $sql = "INSERT INTO usera (userid, password, nama, nik, level, status, ip, idu) 
                 VALUES ('$userid', '$password', '$nama', $nik_value, '$lv_user', '$status', '$ip_user', '$idu_user')";
-                
+
         if (mysqli_query($sqlconn, $sql)) {
             write_log("ADD", "Menambah user baru: $userid ($nama)");
             display_notification('success', 'user Berhasil Ditambahkan');
-        } else {
+        }
+        else {
             // Tampilkan error database yang sebenarnya
             $db_error = mysqli_error($sqlconn);
-            $error_message = empty($db_error) 
-                ? "Gagal menjalankan query INSERT. (Kemungkinan nilai kosong/panjang tidak sesuai/hak akses)." 
+            $error_message = empty($db_error)
+                ? "Gagal menjalankan query INSERT. (Kemungkinan nilai kosong/panjang tidak sesuai/hak akses)."
                 : "Error Database: " . $db_error . ". Query Gagal: " . $sql; // Ditampilkan Query lengkap
-                
+
             display_notification('danger', $error_message);
         }
     }
@@ -140,19 +149,19 @@ if (isset($_POST['tambah'])) {
 
 // --- AKSI: UPDATE user (Simpan Edit) ---
 if (isset($_POST['simpan'])) {
-    $id_req   = mysqli_real_escape_string($sqlconn, $_POST['id']);
+    $id_req = mysqli_real_escape_string($sqlconn, $_POST['id']);
     $userid = mysqli_real_escape_string($sqlconn, $_POST['userid']);
-    $nama     = mysqli_real_escape_string($sqlconn, $_POST['nama']);
+    $nama = mysqli_real_escape_string($sqlconn, $_POST['nama']);
     // NIK diizinkan kosong
-    $nik      = !empty($_POST['nik']) ? mysqli_real_escape_string($sqlconn, $_POST['nik']) : NULL;
-    
+    $nik = !empty($_POST['nik']) ? mysqli_real_escape_string($sqlconn, $_POST['nik']) : NULL;
+
     $level_in = mysqli_real_escape_string($sqlconn, $_POST['level']);
-    $status   = mysqli_real_escape_string($sqlconn, $_POST['status']);
-    
+    $status = mysqli_real_escape_string($sqlconn, $_POST['status']);
+
     // Cek apakah password diisi (jika kosong, jangan update password)
     $raw_pass = isset($_POST['password']) ? $_POST['password'] : '';
     $update_pass_query = "";
-    
+
     if (!empty($raw_pass)) {
         $password = password_hash($raw_pass, PASSWORD_DEFAULT);
         $update_pass_query = ", password = '$password'";
@@ -170,10 +179,11 @@ if (isset($_POST['simpan'])) {
             WHERE id = '$id_req'";
 
     if (mysqli_query($sqlconn, $sql)) {
-         write_log("EDIT", "Update data user ID: $id_req ($userid)");
-         display_notification('success', 'Data user Berhasil Diupdate');
-    } else {
-         display_notification('danger', 'Error Update: ' . mysqli_error($sqlconn) . " (Query: " . $sql . ")");
+        write_log("EDIT", "Update data user ID: $id_req ($userid)");
+        display_notification('success', 'Data user Berhasil Diupdate');
+    }
+    else {
+        display_notification('danger', 'Error Update: ' . mysqli_error($sqlconn) . " (Query: " . $sql . ")");
     }
 }
 
@@ -190,10 +200,11 @@ if (isset($_REQUEST['aksi']) && $_REQUEST['aksi'] == 'hapus') {
         }
     }
 
-    if(mysqli_query($sqlconn, "DELETE FROM usera WHERE id = '$id_req'")) {
+    if (mysqli_query($sqlconn, "DELETE FROM usera WHERE id = '$id_req'")) {
         write_log("DELETE", "Menghapus user ID: $id_req");
         display_notification('success', 'Data user berhasil dihapus!');
-    } else {
+    }
+    else {
         display_notification('danger', 'Gagal menghapus data: ' . mysqli_error($sqlconn));
     }
 }
@@ -217,9 +228,6 @@ if (isset($_REQUEST['aksi']) && $_REQUEST['aksi'] == 'hapus') {
             </div>
         </div>
     </section>
-
-    <!-- Style DataTables -->
-    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/responsive.bootstrap4.css">
     <!-- Konten Utama -->
     <section class="content">
         <div class="row">
@@ -238,7 +246,8 @@ if (isset($_REQUEST['aksi']) && $_REQUEST['aksi'] == 'hapus') {
                                     <i class="fas fa-upload"></i> &nbsp;Upload Data user
                                 </a>
                             </div>
-                        <?php } ?>
+                        <?php
+}?>
                     </div>
                     
                      <div class="card-body text-nowrap">
@@ -260,13 +269,13 @@ if (isset($_REQUEST['aksi']) && $_REQUEST['aksi'] == 'hapus') {
                             </thead>
                             <tbody>
                                 <?php
-                                $sql = mysqli_query($sqlconn, "SELECT * FROM usera ORDER BY id ASC"); 
-                                $no = 0;
-                                while ($s = mysqli_fetch_array($sql)) {
-                                    $stts = $s['status'];
-                                    $login = $s['level'];
-                                    $no++;
-                                ?>
+$sql = mysqli_query($sqlconn, "SELECT * FROM usera ORDER BY id ASC");
+$no = 0;
+while ($s = mysqli_fetch_array($sql)) {
+    $stts = $s['status'];
+    $login = $s['level'];
+    $no++;
+?>
 
                                     <tr>
                                         <td align="center"><?php echo $no; ?></td>
@@ -275,14 +284,16 @@ if (isset($_REQUEST['aksi']) && $_REQUEST['aksi'] == 'hapus') {
                                         <td><?php echo htmlspecialchars($s['nik']); ?></td>
                                         <td align="center">
                                             <?php
-                                            if ($login == "1") {
-                                                echo "<span class='badge bg-menu-gradient'>Admin</span>";
-                                            } elseif ($login == "2") {
-                                                echo "<span class='badge bg-menu-gradient'>Staff</span>";
-                                            } else {
-                                                echo "<span class='badge bg-menu-gradient'>user</span>";
-                                            }
-                                            ?>
+    if ($login == "1") {
+        echo "<span class='badge bg-menu-gradient'>Admin</span>";
+    }
+    elseif ($login == "2") {
+        echo "<span class='badge bg-menu-gradient'>Staff</span>";
+    }
+    else {
+        echo "<span class='badge bg-menu-gradient'>user</span>";
+    }
+?>
                                         </td>
                                         <td><?php echo $s['lastlogin']; ?></td>
                                         <td><?php echo $s['ip']; ?></td>
@@ -293,11 +304,14 @@ if (isset($_REQUEST['aksi']) && $_REQUEST['aksi'] == 'hapus') {
                                                 <button type="button" class="btn btn-sm btn-success" onclick="toggleStatus(<?php echo $s['id']; ?>, 1)" title="Click to deactivate">
                                                     <i class="fas fa-toggle-on"></i> Active
                                                 </button>
-                                            <?php } else { ?>
+                                            <?php
+    }
+    else { ?>
                                                 <button type="button" class="btn btn-sm btn-danger" onclick="toggleStatus(<?php echo $s['id']; ?>, 0)" title="Click to activate">
                                                     <i class="fas fa-toggle-off"></i> Inactive
                                                 </button>
-                                            <?php } ?>
+                                            <?php
+    }?>
                                         </td>
                                         
                                         <!-- Tombol Reset Password -->
@@ -321,15 +335,19 @@ if (isset($_REQUEST['aksi']) && $_REQUEST['aksi'] == 'hapus') {
                                         <td align="center">
                                             <?php if ($lv != '1') { ?>
                                                 <button type="button" class="btn btn-danger btn-sm" onclick="alert('Akses Ditolak. Hubungi Admin.');"><i class="fa fa-trash"></i></button>
-                                            <?php } else { ?>
+                                            <?php
+    }
+    else { ?>
                                                 <a href="?modul=user&aksi=hapus&urut=<?php echo $s['id']; ?>" onclick="if (confirm('Yakin ingin menghapus user ini?')) { window.location.href='?modul=user&aksi=hapus&urut=<?php echo $s['id']; ?>'; } return false;">
                                                     <button type="button" class="btn btn-danger btn-sm"><i class="fa fa-trash"></i></button>
                                                 </a>
-                                            <?php } ?>
+                                            <?php
+    }?>
                                         </td>
                                     </tr>
 
-                                <?php } ?>
+                                <?php
+}?>
                             </tbody>
                         </table>
                     </div>
@@ -547,16 +565,9 @@ if (isset($_REQUEST['aksi']) && $_REQUEST['aksi'] == 'hapus') {
 
 <!-- Bootstrap 4 -->
 <script src="plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
-<!-- DataTables -->
-<script src="plugins/datatables/jquery.dataTables.min.js"></script>
-<script src="plugins/datatables-bs4/js/dataTables.bootstrap4.min.js"></script>
-<script src="plugins/datatables-responsive/js/dataTables.responsive.min.js"></script>
-<script src="plugins/datatables-responsive/js/responsive.bootstrap4.min.js"></script>
+<!-- Global scripts provided by index.php -->
 <script>
   $(document).ready(function () {
-    $('#example2').DataTable({
-      responsive: true,
-      autoWidth: true
-    });
+    $('#example2').DataTable();
   });
 </script>

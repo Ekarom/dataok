@@ -24,9 +24,9 @@ $nuser = $p['userid'] ?? '';
 $nama = $p['nama'] ?? '';
 $passworddb = $p['password'] ?? '';
 
-$sqlp_siswa = mysqli_query($sqlconn, "SELECT * FROM siswa WHERE pd = '$user'");
-$p_siswa = mysqli_fetch_array($sqlp_siswa);
-$photo = $p_siswa['photo'] ?? '';
+$sqlp = mysqli_query($sqlconn, "SELECT * FROM siswa WHERE pd = '$user'");
+$p = mysqli_fetch_array($sqlp);
+$photo = $p['photo'] ?? '';
 
 // Check for default password (smpn171**) OR Username as Password
 $triggerForceChange = false;
@@ -70,10 +70,6 @@ if (password_verify($default_pass, $passworddb) ||
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/admin-lte@3.2.0/dist/css/adminlte.min.css">
     <!-- Toastr -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
-    
-    <!-- DataTables CDN -->
-    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap4.min.css">
-    <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.bootstrap4.min.css">
     
     <!-- jQuery -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
@@ -198,41 +194,64 @@ if (password_verify($default_pass, $passworddb) ||
 <body class="hold-transition sidebar-mini layout-fixed">
  <div class="wrapper">
     <!-- Navbar -->
-    <nav class="main-header navbar navbar-expand bg-menu-gradient">
-        <!-- Left navbar links -->
-        <ul class="navbar-nav">
-            <li class="nav-item">
-                <a class="nav-link" <?php echo !$triggerForceChange ? 'data-widget="pushmenu" href="#" role="button"' : 'style="cursor: default;"'; ?>><i class="fas fa-bars"></i></a>
-            </li>
-            <li class="nav-item d-none d-sm-inline-block">
-                Tahun Pelajaran: <?php echo isset($tapel) ? $tapel : '-'; ?> | Semester: <?php if (isset($semester) && $semester == 1) { echo 'Ganjil'; } else { echo 'Genap'; } ?>
-            </li>
-        </ul>
+<nav class="main-header navbar navbar-expand bg-menu-gradient">
+      <!-- Left navbar links -->
+      <ul class="navbar-nav">
+        <li class="nav-item">
+          <a class="nav-link" <?php echo !$triggerForceChange ? 'data-widget="pushmenu" href="#" role="button"' : 'style="cursor: default;"'; ?>><i class="fas fa-bars"></i></a>
+        </li>
+       </ul>
+      <li class="nav-item d-none d-sm-inline-block">
+            Tahun Pelajaran: <?php echo isset($tapel) ? $tapel : '-'; ?> | Semester: <?php if (isset($semester) && $semester == 1) { echo 'Ganjil'; } else { echo 'Genap'; } ?>
+        </li>
+      </ul>
             
-        <!-- Right navbar links -->
-        <ul class="navbar-nav ml-auto">
-            <li class="nav-item">
-                <span id="date-display"></span>
-                <span id="clock"></span>
-            </li>
-        </ul>
+            <!-- Right navbar links -->
+            <ul class="navbar-nav ml-auto">
+                <li class="nav-item">
+                    <script type='text/javascript'>
+                        var months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+                        var myDays = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+                        var date = new Date();
+                        var day = date.getDate();
+                        var month = date.getMonth();
+                        var thisDay = date.getDay();
+                        thisDay = myDays[thisDay];
+                        var yy = date.getYear();
+                        var year = (yy < 1000) ? yy + 1900 : yy;
+                        document.write(thisDay + ', ' + day + ' ' + months[month] + ' ' + year + ', ');
+                    </script>
+                    <time id="clock"></time>
+                             <script>
+            (function () {
+              var clock = document.getElementById('clock');
+              setInterval(function () {
+                var time = new Date().toString().split(' ')[4];
+                clock.innerHTML = time;
+              }, 13);
+            })();
+          </script>
+                </li>
+            </ul>
             
-        <!-- START: Interactive Tapel Check -->
-        <?php
-        $show_tapel_modal = false;
-        $expected = get_expected_tapel();
-        
-        // Check if this expected tapel/smt exists
-        if (!check_tapel_exists($sqlconn, $expected['tapel'], $expected['smt'])) {
-            $show_tapel_modal = true;
-            $new_tapel = $expected['tapel'];
-            $new_smt = $expected['smt'];
-            $new_tahun = $expected['tahun'];
-        }
-        ?>
-            
-        <?php if($show_tapel_modal): ?>
-        <script>
+      <!-- START: Interactive Tapel Check -->
+      <?php
+
+      
+      $show_tapel_modal = false;
+      $expected = get_expected_tapel();
+      
+      // Check if this expected tapel/smt exists
+      if (!check_tapel_exists($sqlconn, $expected['tapel'], $expected['smt'])) {
+          $show_tapel_modal = true;
+          $new_tapel = $expected['tapel'];
+          $new_smt = $expected['smt'];
+          $new_tahun = $expected['tahun'];
+      }
+      ?>
+      
+      <?php if($show_tapel_modal): ?>
+      <script>
         $(document).ready(function(){
             // Append modal to body to fix backdrop issue
             $('#modalNewTapel').appendTo('body').modal('show');
@@ -260,30 +279,31 @@ if (password_verify($default_pass, $passworddb) ||
                 });
             });
         });
-        </script>
+      </script>
       
-        <!-- Modal New Tapel -->
-        <div class="modal fade" id="modalNewTapel" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
-            <div class="modal-dialog" role="document">
-                <div class="modal-content ">
-                    <div class="modal-header bg-info">
-                        <h5 class="modal-title" id="exampleModalLabel"><i class="fas fa-calendar-alt"></i> Deteksi Tahun Pelajaran Baru</h5>
-                    </div>
-                    <div class="modal-body">
-                        <p>Sistem mendeteksi bahwa saat ini sudah memasuki periode:</p>
-                        <h3>Tahun Pelajaran: <b><?php echo $new_tapel; ?></b></h3>
-                        <h3>Semester: <b><?php echo $new_smt == '1' ? '1 (Ganjil)' : '2 (Genap)'; ?></b></h3>
-                        <p>Data ini belum ada di database. Apakah Anda ingin membuatnya dan mengaktifkannya sekarang?</p>
-                    </div>
-                    <div class="modal-footer justify-content-between"> 
-                        <button type="button" class="btn btn-outline-light" data-dismiss="modal">Nanti Saja</button>
-                        <button type="button" class="btn btn-outline-light" id="btnCreateTapel"><b>Ya, Buat & Aktifkan</b></button>
-                    </div>
-                </div>
+      <!-- Modal New Tapel -->
+      <div class="modal fade" id="modalNewTapel" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
+        <div class="modal-dialog" role="document">
+          <div class="modal-content ">
+            <div class="modal-header bg-info">
+              <h5 class="modal-title" id="exampleModalLabel"><i class="fas fa-calendar-alt"></i> Deteksi Tahun Pelajaran Baru</h5>
             </div>
+            <div class="modal-body">
+              <p>Sistem mendeteksi bahwa saat ini sudah memasuki periode:</p>
+              <h3>Tahun Pelajaran: <b><?php echo $new_tapel; ?></b></h3>
+              <h3>Semester: <b><?php echo $new_smt == '1' ? '1 (Ganjil)' : '2 (Genap)'; ?></b></h3>
+              <p>Data ini belum ada di database. Apakah Anda ingin membuatnya dan mengaktifkannya sekarang?</p>
+            </div>
+            <div class="modal-footer justify-content-between"> 
+               <!-- User cannot easily close without action, mostly forced or just close if they want to ignore but backdrop static prevents accidental close -->
+              <button type="button" class="btn btn-outline-light" data-dismiss="modal">Nanti Saja</button>
+              <button type="button" class="btn btn-outline-light" id="btnCreateTapel"><b>Ya, Buat & Aktifkan</b></button>
+            </div>
+          </div>
         </div>
-        <?php endif; ?>
-        <!-- END: Interactive Tapel Check -->
+      </div>
+      <?php endif; ?>
+      <!-- END: Interactive Tapel Check -->
         </nav>
         
         <!-- ==========================================
@@ -359,9 +379,9 @@ if (password_verify($default_pass, $passworddb) ||
                             </a>
                             <ul class="nav nav-treeview">
                                 <li class="nav-item">
-                                    <a href="?input" class="nav-link" data-toggle="mn" id="3">
+                                    <a href="?press" class="nav-link" data-toggle="mn" id="3">
                                         <i class="nav-icon fas fa-trophy"></i>
-                                        <p>Input Prestasi</p>
+                                        <p>Data Prestasi</p>
                                     </a>
                                 </li>
                                 <!--<li class="nav-item">
@@ -398,7 +418,7 @@ if (password_verify($default_pass, $passworddb) ||
                                     </a>
                                 </li>
                                 <li class="nav-item">
-                                    <a href='?laporan' class="nav-link" data-toggle="mn" id="8">
+                                    <a href='?press&aksi=laporan' class="nav-link" data-toggle="mn" id="8">
                                         <i class="nav-icon fas fa-clipboard-list"></i>
                                         <p>Laporan Prestasi</p>
                                     </a>
@@ -525,11 +545,7 @@ if (password_verify($default_pass, $passworddb) ||
         if (isset($triggerForceChange) && $triggerForceChange) {
             include "force_change_pass_card.php";
         } else if (isset($_GET['press'])) {
-            include "prosespress.php";
-        } else if (isset($_GET['viewpress'])) {
-            include "view_pres.php";
-        } else if (isset($_GET['editpress'])) {
-            include "edit_press.php";
+            include "prestasifix.php";
         } else if (isset($_GET['usulan'])) {
             include "usulan.php";
         } else if (isset($_GET['user'])) {
@@ -540,14 +556,6 @@ if (password_verify($default_pass, $passworddb) ||
             include "brd.php";
         } else if (isset($_GET['dh'])) {
             include "daftar_hadir.php";
-        } else if (isset($_GET['laporan'])) {
-            include "laporanpress.php";
-        } else if (isset($_GET['input'])) {
-            if (isset($_GET['nis'])) {
-                include "inputprestasi.php";
-            } else {
-                include "dataprestasi.php";
-            }
         } else if (isset($_GET['siswa'])) {
             include "siswa.php";
         } else if (isset($_GET['uploadsiswa'])) {
@@ -578,7 +586,7 @@ if (password_verify($default_pass, $passworddb) ||
              ========================================== -->
         <footer class="main-footer">
             <center>
-                <strong>S.A.D - Copyright &copy;2026</strong>
+                <strong>S.A.D <?php echo $ver; ?> - Copyright &copy;2025</strong>
             </center>
             <div class="float-right d-none d-sm-inline-block">
                 <right></right>
@@ -599,12 +607,6 @@ if (password_verify($default_pass, $passworddb) ||
     <script src="plugins/chart.js/Chart.min.js"></script>
     <!-- Toastr -->
     <script src="plugins/toastr/toastr.min.js"></script>
-
-    <!-- DataTables CDN -->
-    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap4.min.js"></script>
-    <script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
-    <script src="https://cdn.datatables.net/responsive/2.5.0/js/responsive.bootstrap4.min.js"></script>
     
     <!-- ==========================================
          CUSTOM SCRIPTS
@@ -709,49 +711,64 @@ if (password_verify($default_pass, $passworddb) ||
     }
     </script>
     <script>
-        // ==========================================
-        // CLOCK & DATE UPDATE
-        // ==========================================
-        function updateTime() {
-            var now = new Date();
+            // ==========================================
+            // CLOCK & DATE UPDATE
+            // ==========================================
+            // Validasi elemen clock sebelum akses
             var clock = document.getElementById('clock');
             var dateDisplay = document.getElementById('date-display');
             
-            // Update Time
-            if(clock) {
-                 var timeString = now.toLocaleTimeString('id-ID', { hour12: false });
-                 clock.textContent = timeString;
+            function updateTime() {
+                var now = new Date();
+                
+                // Update Time
+                if(clock) {
+                     var timeString = now.toTimeString().split(' ')[0];
+                     clock.textContent = timeString;
+                }
+                
+                // Update Date (Replacement for document.write)
+                if(dateDisplay) {
+                     var months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+                     var myDays = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+                     
+                     var dayName = myDays[now.getDay()];
+                     var day = now.getDate();
+                     var monthName = months[now.getMonth()];
+                     var year = now.getFullYear();
+                     
+                     dateDisplay.textContent = dayName + ', ' + day + ' ' + monthName + ' ' + year;
+                }
             }
             
-            // Update Date
-            if(dateDisplay) {
-                 var months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
-                 var myDays = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
-                 
-                 var dayName = myDays[now.getDay()];
-                 var day = now.getDate();
-                 var monthName = months[now.getMonth()];
-                 var year = now.getFullYear();
-                 
-                 dateDisplay.textContent = dayName + ', ' + day + ' ' + monthName + ' ' + year + ' | ';
-            }
-        }
-        
-        // Init and Interval
-        updateTime();
-        setInterval(updateTime, 1000);
+            // Init and Interval
+            updateTime();
+            setInterval(updateTime, 1000);
     </script>
     <script>
-        // Global DataTable defaults (optional, but good for consistency)
-        $.extend(true, $.fn.dataTable.defaults, {
-            responsive: true,
-            autoWidth: false,
-            language: {
-                search: "_INPUT_",
-                searchPlaceholder: "Search..."
-            }
-        });
-    </script>
+      $(document).ready(function () {
+    $('#pres').DataTable({
+      responsive: true,
+      autoWidth: true
+
+    });
+  });
+
+   $(document).ready(function () {
+    $('#us').DataTable({
+      responsive: true,
+      autoWidth: true
+
+    });
+  });
+   $(document).ready(function () {
+    $('#leg').DataTable({
+      responsive: true,
+      autoWidth: true
+
+    });
+  });
+</script>
 </body>
 </html>
 <?php

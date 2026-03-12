@@ -1,6 +1,7 @@
 <?php
 include "cfg/konek.php";
 include "cfg/secure.php";
+include "prosespress.php";
 
 /**
  * Handle AJAX file deletion
@@ -11,31 +12,34 @@ if (isset($_POST['aksi']) && $_POST['aksi'] == 'hapus_file') {
 
     $q = mysqli_query($sqlconn, "SELECT pdf FROM prestasi WHERE id = '$id'");
     $data = mysqli_fetch_array($q);
-    
+
     if ($data) {
         $pdf_arr = explode(',', $data['pdf']);
         $new_pdf_arr = array();
         $deleted = false;
-        
+
         foreach ($pdf_arr as $f) {
             if ($f == $file_to_delete) {
                 if (!empty($f) && file_exists("file/prestasi/" . $f)) {
                     unlink("file/prestasi/" . $f);
                 }
                 $deleted = true;
-            } else if (!empty($f)) {
+            }
+            else if (!empty($f)) {
                 $new_pdf_arr[] = $f;
             }
         }
-        
+
         if ($deleted) {
             $new_pdf_str = implode(',', $new_pdf_arr);
             $update = mysqli_query($sqlconn, "UPDATE prestasi SET pdf = '$new_pdf_str' WHERE id = '$id'");
             echo $update ? "success" : "error: " . mysqli_error($sqlconn);
-        } else {
+        }
+        else {
             echo "error: file not found in record";
         }
-    } else {
+    }
+    else {
         echo "error: data not found";
     }
     exit;
@@ -48,7 +52,22 @@ if (isset($_REQUEST['urut'])) {
     $id = mysqli_real_escape_string($sqlconn, $_REQUEST['urut']);
     $rql = mysqli_query($sqlconn, "SELECT * FROM prestasi WHERE id = '$id'");
     $r = mysqli_fetch_array($rql);
-    
+
+    // Jika tidak ditemukan, coba cari prestasi terbaru untuk siswa jika 'urut' adalah ID siswa
+    if (!$r) {
+        $sql_siswa = mysqli_query($sqlconn, "SELECT pd, kelas, nis FROM siswa WHERE id = '$id'");
+        $d_siswa = mysqli_fetch_array($sql_siswa);
+        if ($d_siswa) {
+            $s_pd = mysqli_real_escape_string($sqlconn, $d_siswa['pd']);
+            $s_kls = mysqli_real_escape_string($sqlconn, $d_siswa['kelas']);
+            $s_nis = mysqli_real_escape_string($sqlconn, $d_siswa['nis']);
+            $rql = mysqli_query($sqlconn, "SELECT * FROM prestasi WHERE pd = '$s_pd' AND kelas = '$s_kls' ORDER BY id DESC LIMIT 1");
+            if ($rql) {
+                $r = mysqli_fetch_array($rql);
+            }
+        }
+    }
+
     if (!$r) {
         echo "<div class='alert alert-danger'>Data tidak ditemukan.</div>";
         exit;
@@ -57,353 +76,291 @@ if (isset($_REQUEST['urut'])) {
     $ting = $r['tingkat'];
     $pd_name = mysqli_real_escape_string($sqlconn, $r['pd']);
     $pd_kelas = mysqli_real_escape_string($sqlconn, $r['kelas']);
-    
-    $sql_pd = mysqli_query($sqlconn, "SELECT photo FROM siswa WHERE pd = '$pd_name' AND kelas = '$pd_kelas'");
+    $sql_pd = mysqli_query($sqlconn, "SELECT photo, nis FROM siswa WHERE pd = '$pd_name' AND kelas = '$pd_kelas'");
     $d_pd = mysqli_fetch_array($sql_pd);
 
-    $photo_src = "images/male.png"; 
+    $photo_src = "images/male.png";
     if ($d_pd && !empty($d_pd['photo']) && file_exists("file/fotopd/" . $d_pd['photo'])) {
         $photo_src = "file/fotopd/" . $d_pd['photo'];
     }
 
+    $nis_view = isset($d_pd['nis']) ? $d_pd['nis'] : '-';
+
     // Helper function for formatting bytes
     if (!function_exists('formatBytesPHP')) {
-        function formatBytesPHP($bytes, $precision = 1) {
-            if ($bytes <= 0) return '0 B';
-            $units = array('B', 'KB', 'MB', 'GB', 'TB'); 
-            $pow = floor(log($bytes, 1024)); 
-            $pow = min($pow, count($units) - 1); 
+        function formatBytesPHP($bytes, $precision = 1)
+        {
+            if ($bytes <= 0)
+                return '0 B';
+            $units = array('B', 'KB', 'MB', 'GB', 'TB');
+            $pow = floor(log($bytes, 1024));
+            $pow = min($pow, count($units) - 1);
             $bytes /= pow(1024, $pow);
-            return round($bytes, $precision) . ' ' . $units[$pow]; 
+            return round($bytes, $precision) . ' ' . $units[$pow];
         }
     }
 ?>
-
-<!-- Modern CSS Styles -->
 <style>
-    :root {
-        --primary: #4e73df;
-        --secondary: #858796;
-        --success: #1cc88a;
-        --info: #36b9cc;
-        --warning: #f6c23e;
-        --danger: #e74a3b;
-        --light: #f8f9fc;
-        --dark: #5a5c69;
+    .form-control.warna {
+        background-color: #01b2d1 !important;
+        color: #fff !important;
+        border: none !important;
+        border-radius: 4px !important;
     }
-
-    .edit-form-container {
-        padding: 10px;
+    .form-control.warna::placeholder {
+        color: rgba(255,255,255,0.7) !important;
     }
-
-    .form-section-title {
-        font-size: 0.9rem;
+    .form-control.warna option {
+        background-color: #fff !important;
+        color: #333 !important;
+    }
+    .card-title {
+        font-weight: 600;
+    }
+    .bg-menu-gradient {
+        background: linear-gradient(135deg, #2c3e50 0%, #01b2d1 100%);
+        color: #fff;
+    }
+    .profile-card {
+        border-top: 3px solid #2c3e50;
+    }
+    .label-custom {
         font-weight: 700;
-        color: var(--primary);
-        margin-bottom: 15px;
-        padding-bottom: 5px;
-        border-bottom: 2px solid #eaecf4;
-        display: flex;
-        align-items: center;
-    }
-
-    .form-section-title i {
-        margin-right: 8px;
-    }
-
-    .form-group label {
-        font-weight: 600;
-        font-size: 0.8rem;
-        color: #4e5e6a;
-        margin-bottom: 5px;
-    }
-
-    .form-control-modern {
-        border-radius: 8px;
-        border: 1px solid #d1d3e2;
-        padding: 0.5rem 0.75rem;
-        font-size: 0.85rem;
-        transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
-    }
-
-    .form-control-modern:focus {
-        border-color: #bac8f3;
-        box-shadow: 0 0 0 0.2rem rgba(78, 115, 223, 0.25);
-    }
-
-    .form-control-modern:required:invalid { border-left: 3px solid var(--danger); }
-    .form-control-modern:required:valid { border-left: 3px solid var(--success); }
-
-    /* File Upload Styling */
-    .file-upload-wrapper-modern {
-        border: 2px dashed #d1d3e2;
-        border-radius: 12px;
-        padding: 20px;
-        text-align: center;
-        background: #fbfbfc;
-        transition: all 0.3s ease;
-        cursor: pointer;
-    }
-
-    .file-upload-wrapper-modern.dragover {
-        background: #f0f3ff;
-        border-color: var(--primary);
-    }
-
-    .upload-icon-modern {
-        font-size: 2rem;
-        color: var(--primary);
-        margin-bottom: 10px;
-        display: block;
-    }
-
-    .file-item-modern {
-        display: flex;
-        align-items: center;
-        padding: 10px;
-        background: #fff;
-        border: 1px solid #eaecf4;
-        border-radius: 8px;
-        margin-top: 10px;
-    }
-
-    .file-icon-modern {
-        font-size: 1.5rem;
-        margin-right: 12px;
-    }
-
-    .file-details-modern {
-        flex-grow: 1;
-        overflow: hidden;
-    }
-
-    .file-name-modern {
-        font-weight: 600;
-        font-size: 0.85rem;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        margin-bottom: 2px;
-    }
-
-    .file-size-modern {
-        font-size: 0.75rem;
-        color: var(--secondary);
-    }
-
-    .btn-delete-file {
-        color: var(--danger);
-        padding: 5px 10px;
-        cursor: pointer;
-        opacity: 0.7;
-        transition: opacity 0.2s;
-    }
-
-    .btn-delete-file:hover {
-        opacity: 1;
-    }
-
-    .modal-footer-custom {
-        border-top: 1px solid #eaecf4;
-        padding-top: 15px;
-        margin-top: 20px;
+        color: #333;
     }
 </style>
-
-<div class="edit-form-container">
-    <form method="post" enctype="multipart/form-data" id="formEditPrestasi">
-        <input type="hidden" name="id" value="<?php echo $r['id']; ?>">
-        <input type="hidden" name="db_year" value="<?php echo isset($_REQUEST['db_year']) ? $_REQUEST['db_year'] : ''; ?>">
-
-        <!-- Section 1: Identitas Siswa -->
-        <div class="form-section-title">
-            <i class="fa fa-id-card"></i> Identitas Siswa
-        </div>
-        <div class="row">
-            <div class="col-md-7">
-                <div class="form-group">
-                    <label>Nama Lengkap</label>
-                    <input class="form-control form-control-modern" name="pd" id="pd" value="<?php echo $r['pd']; ?>" required readonly>
+<div class="content-wrapper">
+    <!-- Content Header (Page header) -->
+    <section class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6">
+                    <h1>Edit Prestasi</h1>
                 </div>
-                <div class="form-group">
-                    <label>Kelas</label>
-                    <input class="form-control form-control-modern" name="kelas" id="kelas" value="<?php echo $r['kelas']; ?>" required readonly>
-                </div>
-            </div>
-            <div class="col-md-5 text-center">
-                <div class="p-2 border rounded bg-light" style="display:inline-block;">
-                    <img src="<?php echo $photo_src; ?>" class="img-fluid rounded" style="max-height: 120px; border: 2px solid #fff; box-shadow: 0 2px 5px rgba(0,0,0,0.1);" alt="Photo">
+                <div class="col-sm-6">
+                    <ol class="breadcrumb float-sm-right">
+                        <li class="breadcrumb-item"><a href="index.php">Home</a></li>
+                        <li class="breadcrumb-item active">Edit Prestasi</li>
+                    </ol>
                 </div>
             </div>
         </div>
+    </section>
 
-        <!-- Section 2: Data Prestasi -->
-        <div class="form-section-title mt-4">
-            <i class="fa fa-trophy"></i> Detail Prestasi
-        </div>
-        <div class="row">
-            <div class="col-md-12">
-                <div class="form-group">
-                    <label>Nama Prestasi / Judul Kegiatan</label>
-                    <input class="form-control form-control-modern" name="prestasi" value="<?php echo $r['prestasi']; ?>" placeholder="Contoh: Juara 1 Lomba Web Design" required>
-                </div>
-            </div>
-        </div>
-
-        <div class="row">
-            <div class="col-md-6">
-                <div class="form-group">
-                    <label>Jenis Prestasi</label>
-                    <select class="form-control form-control-modern" name="jenisprestasi" required>
-                        <option value="Akademik" <?php echo ($r['jenisprestasi'] == 'Akademik') ? 'selected' : ''; ?>>Akademik</option>
-                        <option value="Non-Akademik" <?php echo ($r['jenisprestasi'] == 'Non-Akademik') ? 'selected' : ''; ?>>Non-Akademik</option>
-                    </select>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="form-group">
-                    <label>Juara</label>
-                    <select class="form-control form-control-modern" name="juara" required>
-                        <?php
-                        $juaras = ['1', '2', '3', '4', 'Harapan 1', 'Harapan 2', 'Harapan 3'];
-                        foreach ($juaras as $j) {
-                            $selected = ($r['juara'] == $j) ? 'selected' : '';
-                            $display = (is_numeric($j)) ? "Juara $j" : "Juara $j";
-                            echo "<option value='$j' $selected>$display</option>";
-                        }
-                        ?>
-                    </select>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="form-group">
-                    <label>Tingkat</label>
-                    <select class="form-control form-control-modern" name="tingkat" required>
-                        <?php
-                        $levels = ['Internasional', 'Nasional', 'Provinsi', 'Kabupaten/Kota'];
-                        foreach ($levels as $level) {
-                            $selected = ($ting == $level) ? 'selected' : '';
-                            echo "<option value='$level' $selected>$level</option>";
-                        }
-                        ?>
-                    </select>
-                </div>
-            </div>
-        </div>
-
-        <div class="row">
-            <div class="col-md-12">
-                <div class="form-group">
-                    <label>Nama Kegiatan</label>
-                    <input type="text" name="nama_kegiatan" value="<?php echo $r['nama_kegiatan']; ?>" class="form-control form-control-modern" placeholder="Nama instansi atau event..." required>
-                </div>
-            </div>
-        </div>
-
-        <div class="row">
-            <div class="col-md-6">
-                 <div class="form-group">
-                    <label>Tanggal Pelaksanaan</label>
-                    <input type="date" name="tgl_kegiatan" value="<?php echo $r['tgl_kegiatan']; ?>" class="form-control form-control-modern" required>
-                </div>
-            </div>
-            <div class="col-md-6">
-                <div class="form-group">
-                    <label>Bulan (Rekap)</label>
-                    <select class="form-control form-control-modern" name="bulan" required>
-                        <option value="">- Pilih Bulan -</option>
-                        <?php
-                        $months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
-                        foreach ($months as $m) {
-                            $sel = ($r['bulan'] == $m) ? 'selected' : '';
-                            echo "<option value='$m' $sel>$m</option>";
-                        }
-                        ?>
-                    </select>
-                </div>
-            </div>
-        </div>
-
-        <div class="row">
-            <div class="col-md-6">
-                <div class="form-group">
-                    <label>Penyelenggara</label>
-                    <input type="text" name="penyelenggara" value="<?php echo $r['penyelenggara']; ?>" class="form-control form-control-modern" required>
-                </div>
-            </div>
-            <div class="col-md-6">
-                <div class="form-group">
-                    <label>Lokasi</label>
-                    <input type="text" name="lokasi" value="<?php echo $r['lokasi']; ?>" class="form-control form-control-modern" required>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Section 3: Lampiran -->
-        <div class="form-section-title mt-4">
-            <i class="fa fa-paperclip"></i> Lampiran Berkas
-        </div>
-        <div class="row">
-            <div class="col-md-12">
-                <div class="file-upload-wrapper-modern" id="dropAreaEdit_<?php echo $id; ?>" onclick="document.getElementById('fileInputEdit_<?php echo $id; ?>').click()">
-                    <i class="fa fa-cloud-upload-alt upload-icon-modern"></i>
-                    <div class="font-weight-bold">Klik atau seret file ke sini</div>
-                    <div class="small text-muted mb-2">Hanya berkas PDF, JPG, atau PNG (Maks 2MB)</div>
-                    <input type="file" name="file[]" id="fileInputEdit_<?php echo $id; ?>" class="d-none" accept=".pdf,.jpg,.jpeg,.png" multiple onchange="handleFileSelectEdit(this, '<?php echo $id; ?>')">
-                </div>
-
-                <div id="fileListContainer_<?php echo $id; ?>" class="mt-2">
-                    <!-- Existing Files -->
-                    <div id="existingFileList_<?php echo $id; ?>">
-                        <?php 
-                        $existing_files = explode(',', $r['pdf']);
-                        $total_size_bytes = 0;
-
-                        foreach($existing_files as $idx => $f) {
-                            if(!empty($f)) {
-                                $file_path = 'file/prestasi/' . $f;
-                                $size = file_exists($file_path) ? filesize($file_path) : 0;
-                                $total_size_bytes += $size;
-                                
-                                $ext = strtolower(pathinfo($f, PATHINFO_EXTENSION));
-                                $icon = (in_array($ext, ['jpg', 'jpeg', 'png'])) ? 'fa-file-image text-success' : 'fa-file-pdf text-info';
-                                
-                                echo "
-                                <div class='file-item-modern existing-file-item' id='item_ext_{$id}_{$idx}' data-size='$size'>
-                                    <div class='file-icon-modern'><i class='fa $icon'></i></div>
-                                    <div class='file-details-modern'>
-                                        <div class='file-name-modern'><a href='file/prestasi/$f' target='_blank'>$f</a></div>
-                                        <div class='file-size-modern'>Tersimpan di server (" . formatBytesPHP($size) . ")</div>
-                                    </div>
-                                    <div class='btn-delete-file' onclick='deleteExistingFile(\"{$id}\", \"{$f}\", \"{$idx}\", event)' title='Hapus Lampiran'><i class='fa fa-trash-alt'></i></div>
-                                </div>";
-                            }
-                        }
-                        ?>
+    <!-- Main content -->
+    <section class="content">
+        <div class="container-fluid">
+            <form method="post" enctype="multipart/form-data" id="formEditPrestasi">
+                <div class="row">
+                    <!-- Student Info Column -->
+                    <div class="col-md-4">
+                        <div class="card profile-card">
+                            <div class="card-body box-profile">
+                                <div class="text-center">
+                                    <img class="profile-user-img img-fluid img-circle" src="<?php echo $photo_src; ?>" alt="User profile picture" style="width: 140px; height: 140px; object-fit: cover; border: 4px solid #fff; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+                                </div>
+                                <h3 class="profile-username text-center mt-3" style="font-weight: 800; text-transform: uppercase; color: #444;"><?php echo $pd_name; ?></h3>
+                                <div class="text-center mt-2">
+                                    <small class="font-weight-bold d-block">KELAS</small>
+                                    <span class="badge bg-info px-3 py-1"><?php echo $pd_kelas; ?></span>
+                                </div>
+                                <hr>
+                                <div class="text-center">
+                                    <small class="font-weight-bold d-block">NIS</small>
+                                    <span class="badge bg-info px-3 py-1"><?php echo $nis_view; ?></span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
-                    <!-- New Selected Files -->
-                    <div id="newFileList_<?php echo $id; ?>"></div>
-                </div>
-                
-                <div class="d-flex justify-content-between align-items-center mt-2 px-1">
-                    <span class="small font-weight-bold">Total Ukuran: <span id="totalSizeLabel_<?php echo $id; ?>"><?php echo formatBytesPHP($total_size_bytes); ?></span></span>
-                    <span class="small text-warning italic">*Opsional jika ingin mengganti lampiran</span>
-                </div>
-            </div>
-        </div>
+                    <!-- Input Form Column -->
+                    <div class="col-md-8">
+                        <div class="card h-100">
+                            <div class="card-header bg-menu-gradient d-flex align-items-center">
+                                <h3 class="card-title text-white">Edit Prestasi</h3>
+                                <div class="card-tools ml-auto">
+                                    <a href="?input" class="btn btn-warning btn-sm rounded-pill px-4 shadow-sm">
+                                        <i class="fa fa-arrow-left mr-1"></i> Kembali
+                                    </a>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <input type="hidden" name="id" value="<?php echo $r['id']; ?>">
+                                <input type="hidden" name="pd" value="<?php echo $pd_name; ?>">
+                                <input type="hidden" name="kelas" value="<?php echo $pd_kelas; ?>">
+                                <input type="hidden" name="db_year" value="<?php echo isset($_REQUEST['db_year']) ? $_REQUEST['db_year'] : ''; ?>">
+                                
+                                <div class="form-group row mb-4">
+                                    <label for="prestasi" class="col-sm-4 col-form-label label-custom">Prestasi</label>
+                                    <div class="col-sm-8">
+                                        <input type="text" class="form-control warna" name="prestasi" value="<?php echo $r['prestasi']; ?>" placeholder="Contoh: Juara 1 Lomba Web Design" required>
+                                    </div>
+                                </div>
 
-        <div class="row modal-footer-custom px-2">
-            <div class="col-6">
-                <button type="button" class="btn btn-secondary btn-block rounded-pill" data-dismiss="modal">Batal</button>
-            </div>
-            <div class="col-6">
-                <button type="button" id="btnWait_<?php echo $id; ?>" class="btn btn-light btn-block rounded-pill disabled" style="cursor:not-allowed;">Lengkapi Form</button>
-                <button type="submit" name="update2" id="btnSubmit_<?php echo $id; ?>" class="btn btn-primary btn-block rounded-pill" style="display:none;">Simpan Perubahan</button>
-            </div>
-        </div>
-    </form>
-</div>
+                                <div class="form-group row mb-4">
+                                    <label for="jenisprestasi" class="col-sm-4 col-form-label label-custom">Jenis Prestasi</label>
+                                    <div class="col-sm-8">
+                                        <select class="form-control warna" name="jenisprestasi" required>
+                                            <option value="Akademik" <?php echo($r['jenisprestasi'] == 'Akademik') ? 'selected' : ''; ?>>Akademik</option>
+                                            <option value="Non-Akademik" <?php echo($r['jenisprestasi'] == 'Non-Akademik') ? 'selected' : ''; ?>>Non-Akademik</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="form-group row mb-4">
+                                    <label for="tingkat" class="col-sm-4 col-form-label label-custom">Tingkat</label>
+                                    <div class="col-sm-8">
+                                        <select class="form-control warna" name="tingkat" required>
+                                            <?php
+    $levels = ['Sekolah', 'Kecamatan', 'Kabupaten/Kota', 'Provinsi', 'Nasional', 'Internasional'];
+    foreach ($levels as $level) {
+        $selected = ($ting == $level) ? 'selected' : '';
+        echo "<option value='$level' $selected>$level</option>";
+    }
+?>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="form-group row mb-4">
+                                    <label for="tgl_kegiatan" class="col-sm-4 col-form-label label-custom">Tanggal Kegiatan</label>
+                                    <div class="col-sm-8">
+                                        <input type="date" class="form-control warna" name="tgl_kegiatan" value="<?php echo $r['tgl_kegiatan']; ?>" required>
+                                    </div>
+                                </div>
+                                <div class="form-group row mb-4">
+                                    <label for="nama_kegiatan" class="col-sm-4 col-form-label label-custom">Nama Kegiatan</label>
+                                    <div class="col-sm-8">
+                                        <input type="text" class="form-control warna" name="nama_kegiatan" value="<?php echo $r['nama_kegiatan']; ?>" placeholder="Isi nama kegiatan" required>
+                                    </div>
+                                </div>
+                                <div class="form-group row mb-4">
+                                    <label for="penyelenggara" class="col-sm-4 col-form-label label-custom">Penyelenggara</label>
+                                    <div class="col-sm-8">
+                                        <input type="text" class="form-control warna" name="penyelenggara" value="<?php echo $r['penyelenggara']; ?>" placeholder="Contoh: Dinas Pendidikan" required>
+                                    </div>
+                                </div>
+                                <div class="form-group row mb-4">
+                                    <label for="lokasi" class="col-sm-4 col-form-label label-custom">Lokasi</label>
+                                    <div class="col-sm-8">
+                                        <input type="text" class="form-control warna" name="lokasi" value="<?php echo $r['lokasi']; ?>" placeholder="Isi Lokasi" required>
+                                    </div>
+                                </div>
+
+                                <div class="form-group row mb-4">
+                                    <label for="juara" class="col-sm-4 col-form-label label-custom">Juara Ke-</label>
+                                    <div class="col-sm-8">
+                                        <select class="form-control warna" id="juara" name="juara" required>
+                                            <?php
+    $juaras = ['1' => 'Juara 1', '2' => 'Juara 2', '3' => 'Juara 3', '4' => 'Juara 4', 'Harapan 1' => 'Juara Harapan 1', 'Harapan 2' => 'Juara Harapan 2', 'Harapan 3' => 'Juara Harapan 3'];
+    foreach ($juaras as $val => $label) {
+        $selected = ($r['juara'] == $val) ? 'selected' : '';
+        echo "<option value='$val' $selected>$label</option>";
+    }
+?>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="form-group row mb-4">
+                                    <label for="bulan" class="col-sm-4 col-form-label label-custom">Bulan</label>
+                                    <div class="col-sm-8">
+                                        <select class="form-control warna" id="bulan" name="bulan" required>
+                                            <?php
+    $months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+    foreach ($months as $m) {
+        $sel = ($r['bulan'] == $m) ? 'selected' : '';
+        echo "<option value='$m' $sel>$m</option>";
+    }
+?>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="form-group row mb-4">
+                                    <label for="file" class="col-sm-4 col-form-label label-custom">Upload Lampiran (PDF/Gambar)</label>
+                                    <div class="col-sm-8">
+                                        <div class="file-upload-wrapper" id="dropAreaEdit_<?php echo $id; ?>">
+                                            <div class="file-upload-selector border rounded">
+                                                <div class="upload-area d-flex align-items-center p-2">
+                                                    <div style="flex-shrink: 0;">
+                                                        <button type="button" class="btn btn-sm btn-primary" onclick="document.getElementById('fileInputEdit_<?php echo $id; ?>').click()">Pilih File...</button>
+                                                    </div>
+                                                    <div class="dropzone text-center prevent-select ml-2" style="font-size: 13px; color: #777;">
+                                                        <span class="upload-text"><i class="fa fa-cloud-upload-alt mr-1"></i> atau drag & drop berkas disini.</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            
+                                            <div id="existingFileList_<?php echo $id; ?>" class="mt-2">
+                                                <?php
+    $existing_files = explode(',', $r['pdf']);
+    $total_size_bytes = 0;
+
+    foreach ($existing_files as $idx => $f) {
+        if (!empty($f)) {
+            $file_path = 'file/prestasi/' . $f;
+            $size = file_exists($file_path) ? filesize($file_path) : 0;
+            $total_size_bytes += $size;
+
+            $ext = strtolower(pathinfo($f, PATHINFO_EXTENSION));
+            $icon = (in_array($ext, ['jpg', 'jpeg', 'png'])) ? 'fa-file-image text-success' : 'fa-file-pdf text-info';
+
+            // Shorten display name
+            $display_name = basename($f);
+            if (strlen($display_name) > 40) {
+                $display_name = substr($display_name, 0, 37) . '...';
+            }
+
+            echo "
+                                                <div class='file-item-new existing-file-item file-info-new p-2 border-bottom' id='item_ext_{$id}_{$idx}' data-size='$size' style='display: flex; align-items: center;'>
+                                                    <i class='fa $icon fa-2x' style='margin-right: 12px;'></i>
+                                                    <div class='file-details-new' style='flex-grow: 1; overflow: hidden;'>
+                                                        <div class='file-name-new text-truncate'><a href='file/prestasi/$f' target='_blank' class='text-info text-decoration-none' title='$f'>$display_name</a></div>
+                                                        <div class='file-size-new'>Tersimpan di server (" . formatBytesPHP($size) . ")</div>
+                                                    </div>
+                                                    <div class='delete-btn-new ml-auto' onclick='deleteExistingFile(\"{$id}\", \"{$f}\", \"{$idx}\", event)' title='Hapus Lampiran' style='cursor: pointer;'>
+                                                        <i class='fa fa-trash-alt text-danger'></i>
+                                                    </div>
+                                                </div>";
+        }
+    }
+?>
+                                            </div>
+
+                                            <div id="newFileList_<?php echo $id; ?>" class="file-list-uploaded d-none">
+                                                <!-- File items will be injected here -->
+                                            </div>
+                                            <div class="uploader-footer mt-2">
+                                                <div class="fs-xs"><span class="font-600">Total : </span><span id="totalSizeLabel_<?php echo $id; ?>"><?php echo formatBytesPHP($total_size_bytes); ?></span></div>
+                                                <div class="fs-nano text-muted" style="font-size: 11px;">
+                                                    Lampirkan berkas <span class="font-600">.pdf / .jpg / .png</span> maksimal <span class="font-600">2</span> berkas dan ukuran maksimal <span class="font-600">2.0 MB</span>
+                                                </div>
+                                            </div>
+                                            <input type="file" name="file[]" id="fileInputEdit_<?php echo $id; ?>" class="hidden-file-input" style="display:none;" accept=".pdf,.jpg,.jpeg,.png" multiple onchange="handleFileSelectEdit(this)">
+                                        </div>
+                                        <small class="text-warning mt-2 d-block" style="font-size: 11px;">*Opsional. Upload sertifikat/dokumentasi.</small>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+
+                        <div class="card-footer bg-white border-top-0 p-0 mt-3 d-flex justify-content-end">
+                            <button type="button" id="btnIncomplete_<?php echo $id; ?>" class="btn btn-secondary disabled" style="cursor: not-allowed;"><i class="fa fa-save mr-1"></i> Simpan</button>
+                            <button type="submit" id="btnSubmit_<?php echo $id; ?>" name="update2" class="btn btn-success" style="display: none;"><i class="fa fa-save mr-1"></i> Simpan</button>
+                        </div>
+                    </div> <!-- /.col-md-8 -->
+                        </div> <!-- /.row -->
+                    </div> <!-- /.card-body -->
+                </div> <!-- /.card -->
+                </div>
+                </div>
+                </div>
+            </form>
+        </div> <!-- /.container-fluid -->
+    </section>
+</div> <!-- /.content-wrapper -->
 
 <script>
 /**
@@ -416,28 +373,30 @@ if (isset($_REQUEST['urut'])) {
 
     // Initialize UI
     const form = document.getElementById('formEditPrestasi');
-    const inputFiles = document.getElementById('fileInputEdit_<?php echo $id; ?>');
-    const dropArea = document.getElementById('dropAreaEdit_<?php echo $id; ?>');
-    const btnSubmit = document.getElementById('btnSubmit_<?php echo $id; ?>');
-    const btnWait = document.getElementById('btnWait_<?php echo $id; ?>');
+    const inputFiles = document.getElementById('fileInputEdit_' + ID);
+    const dropArea = document.getElementById('dropAreaEdit_' + ID);
+    const btnSubmit = document.getElementById('btnSubmit_' + ID);
+    const btnIncomplete = document.getElementById('btnIncomplete_' + ID);
 
     // Prevent default drag behaviors
     ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-        dropArea.addEventListener(eventName, e => { e.preventDefault(); e.stopPropagation(); }, false);
+        if (dropArea) dropArea.addEventListener(eventName, e => { e.preventDefault(); e.stopPropagation(); }, false);
     });
 
     ['dragenter', 'dragover'].forEach(eventName => {
-        dropArea.addEventListener(eventName, () => dropArea.classList.add('dragover'), false);
+        if (dropArea) dropArea.addEventListener(eventName, () => dropArea.classList.add('dragover'), false);
     });
 
     ['dragleave', 'drop'].forEach(eventName => {
-        dropArea.addEventListener(eventName, () => dropArea.classList.remove('dragover'), false);
+        if (dropArea) dropArea.addEventListener(eventName, () => dropArea.classList.remove('dragover'), false);
     });
 
-    dropArea.addEventListener('drop', (e) => {
-        const dt = e.dataTransfer;
-        handleFiles(dt.files);
-    }, false);
+    if (dropArea) {
+        dropArea.addEventListener('drop', (e) => {
+            const dt = e.dataTransfer;
+            handleFiles(dt.files);
+        }, false);
+    }
 
     window.handleFileSelectEdit = function(input) {
         handleFiles(input.files);
@@ -471,6 +430,8 @@ if (isset($_REQUEST['urut'])) {
 
     function renderFileList() {
         const container = document.getElementById(`newFileList_${ID}`);
+        if (!container) return;
+        
         container.innerHTML = '';
         let totalSize = 0;
 
@@ -479,20 +440,30 @@ if (isset($_REQUEST['urut'])) {
             totalSize += parseInt($(this).attr('data-size') || 0);
         });
 
+        if (selectedFiles.length > 0) {
+            container.classList.remove('d-none');
+        } else {
+            container.classList.add('d-none');
+        }
+
         selectedFiles.forEach((file, index) => {
             totalSize += file.size;
             const isImage = file.type.startsWith('image/');
-            const icon = isImage ? 'fa-file-image text-success' : 'fa-file-pdf text-info';
+            const iconClass = isImage ? 'fa-file-image text-success' : 'fa-file-pdf text-info';
             
             const div = document.createElement('div');
-            div.className = 'file-item-modern';
+            div.className = 'file-item-new p-2 border-bottom';
             div.innerHTML = `
-                <div class="file-icon-modern"><i class="fa ${icon}"></i></div>
-                <div class="file-details-modern">
-                    <div class="file-name-modern">${file.name}</div>
-                    <div class="file-size-modern">Baru • ${formatBytes(file.size)}</div>
+                <div class="file-info-new" style="display: flex; align-items: center;">
+                    <i class="fa ${iconClass} fa-2x" style="margin-right: 12px;"></i>
+                    <div class="file-details-new" style="flex-grow: 1;">
+                        <div class="file-name-new">${file.name}</div>
+                        <div class="file-size-new mt-1">Ukuran Berkas: ${formatBytes(file.size)}</div>
+                    </div>
+                    <div class="delete-btn-new ml-auto" onclick="removeSelectedFile(${index})" title="Hapus File" style="cursor: pointer;">
+                        <i class="fa fa-trash-alt"></i>
+                    </div>
                 </div>
-                <div class="btn-delete-file" onclick="removeSelectedFile(${index})"><i class="fa fa-trash-alt"></i></div>
             `;
             container.appendChild(div);
         });
@@ -502,11 +473,11 @@ if (isset($_REQUEST['urut'])) {
 
         if (totalSize > MAX_SIZE) {
             toastr.error('Total ukuran berkas melebihi 2MB!');
-            btnSubmit.classList.add('disabled');
-            btnSubmit.style.pointerEvents = 'none';
+            if (btnSubmit) btnSubmit.classList.add('disabled');
+            if (btnSubmit) btnSubmit.style.pointerEvents = 'none';
         } else {
-            btnSubmit.classList.remove('disabled');
-            btnSubmit.style.pointerEvents = 'auto';
+            if (btnSubmit) btnSubmit.classList.remove('disabled');
+            if (btnSubmit) btnSubmit.style.pointerEvents = 'auto';
             checkFormValidity();
         }
     }
@@ -518,6 +489,7 @@ if (isset($_REQUEST['urut'])) {
     };
 
     function updateInputFiles() {
+        if (!inputFiles) return;
         const dt = new DataTransfer();
         selectedFiles.forEach(file => dt.items.add(file));
         inputFiles.files = dt.files;
@@ -537,28 +509,32 @@ if (isset($_REQUEST['urut'])) {
                         $(this).remove();
                         renderFileList(); // Recalculate total size
                     });
-                    toastr.success('Lampiran dihapus');
+                    if (typeof toastr !== 'undefined') toastr.success('Lampiran dihapus');
                 } else {
-                    toastr.error('Gagal hapus: ' + res);
+                    if (typeof toastr !== 'undefined') toastr.error('Gagal hapus: ' + res);
                 }
             },
-            error: () => toastr.error('Server error')
+            error: () => {
+                if (typeof toastr !== 'undefined') toastr.error('Server error');
+            }
         });
     };
 
     function checkFormValidity() {
+        if (!form) return;
         let isValid = true;
-        const required = form.querySelectorAll('[required]');
-        required.forEach(el => {
+        const requiredInputs = form.querySelectorAll('[required]');
+        
+        requiredInputs.forEach(el => {
             if (!el.value.trim()) isValid = false;
         });
 
         if (isValid) {
-            btnWait.style.display = 'none';
-            btnSubmit.style.display = 'block';
+            if (btnIncomplete) btnIncomplete.style.display = 'none';
+            if (btnSubmit) btnSubmit.style.display = 'inline-block';
         } else {
-            btnWait.style.display = 'block';
-            btnSubmit.style.display = 'none';
+            if (btnIncomplete) btnIncomplete.style.display = 'inline-block';
+            if (btnSubmit) btnSubmit.style.display = 'none';
         }
     }
 
@@ -571,8 +547,9 @@ if (isset($_REQUEST['urut'])) {
     }
 
     // Event listeners for form inputs
-    form.addEventListener('input', checkFormValidity);
-    form.addEventListener('change', checkFormValidity);
+    $(form).on('input change', 'input, select, textarea', function() {
+        checkFormValidity();
+    });
     
     // Initial check
     setTimeout(checkFormValidity, 500);
@@ -580,4 +557,5 @@ if (isset($_REQUEST['urut'])) {
 })();
 </script>
 
-<?php } ?>
+<?php
+}?>
