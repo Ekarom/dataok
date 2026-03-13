@@ -65,7 +65,7 @@ if (password_verify($default_pass, $passworddb) ||
     <!-- Ionicons -->
     <link rel="stylesheet" href="https://code.ionicframework.com/ionicons/2.0.1/css/ionicons.min.css">
     <!-- Select2 -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css">
+    <link rel="stylesheet" type="text/css" href="bootstrap/vendors/css/forms/selects/select2.min.css">
     <!-- AdminLTE Theme -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/admin-lte@3.2.0/dist/css/adminlte.min.css">
     <!-- Toastr -->
@@ -204,18 +204,34 @@ if (password_verify($default_pass, $passworddb) ||
             <li class="nav-item">
                 <a class="nav-link" <?php echo !$triggerForceChange ? 'data-widget="pushmenu" href="#" role="button"' : 'style="cursor: default;"'; ?>><i class="fas fa-bars"></i></a>
             </li>
-            <li class="nav-item d-none d-sm-inline-block">
-                Tahun Pelajaran: <?php echo isset($tapel) ? $tapel : '-'; ?> | Semester: <?php if (isset($semester) && $semester == 1) { echo 'Ganjil'; } else { echo 'Genap'; } ?>
+            <li class="nav-item d-none d-sm-inline-block mt-2 text-white">
+                Tahun Pelajaran: <?php echo $tapel?> | Semester: <?php echo $semester == '1' ? 'Ganjil' : ($semester == '2' ? 'Genap' : '-'); ?>
             </li>
         </ul>
-            
         <!-- Right navbar links -->
-        <ul class="navbar-nav ml-auto">
-            <li class="nav-item">
-                <span id="date-display"></span>
-                <span id="clock"></span>
-            </li>
-        </ul>
+            <ul class="navbar-nav ml-auto">
+                 <script type='text/javascript'>
+                        var months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+                        var myDays = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+                        var date = new Date();
+                        var day = date.getDate();
+                        var month = date.getMonth();
+                        var thisDay = date.getDay();
+                        thisDay = myDays[thisDay];
+                        var yy = date.getYear();
+                        var year = (yy < 1000) ? yy + 1900 : yy;
+                        document.write(thisDay + ', ' + day + ' ' + months[month] + ' ' + year + ', ');
+                    </script>
+                    <time id="clock"></time>
+                             <script>
+            (function () {
+              var clock = document.getElementById('clock');
+              setInterval(function () {
+                var time = new Date().toString().split(' ')[4];
+                clock.innerHTML = time;
+              }, 13);
+            })();
+          </script>
             
         <!-- START: Interactive Tapel Check -->
         <?php
@@ -314,7 +330,7 @@ if (password_verify($default_pass, $passworddb) ||
                         <?php
                         if ($nama !== "") {
                             if (!$triggerForceChange) {
-                                echo "<a href='?modul=Profile' class='d-block'>" . $nama . "</a>";
+                                echo "<a href='?profile' class='d-block'>" . $nama . "</a>";
                             } else {
                                 echo "<span class='d-block text-white'>" . $nama . "</span>";
                             }
@@ -365,7 +381,7 @@ if (password_verify($default_pass, $passworddb) ||
                                     </a>
                                 </li>
                                 <!--<li class="nav-item">
-                                    <a href="?modul=usulan" class="nav-link" data-toggle="mn" id="4">
+                                    <a href="?usulan" class="nav-link" data-toggle="mn" id="4">
                                         <i class="nav-icon fas fa-file"></i>
                                         <p>Data Usulan</p>
                                     </a>
@@ -452,13 +468,13 @@ if (password_verify($default_pass, $passworddb) ||
                                     </a>    
                                 </li>
                                 <li class="nav-item">
-                                    <a href="?modul=uploaduser" class="nav-link" data-toggle="mn" id="15">
+                                    <a href="?uploaduser" class="nav-link" data-toggle="mn" id="15">
                                         <i class="nav-icon fas fa-file-excel"></i>
                                         <p>Upload Data User</p>
                                     </a>
                                 </li>
                                 <li class="nav-item">
-                                    <a href="?modul=uploadfoto" class="nav-link" data-toggle="mn" id="16">
+                                    <a href="?uploadfoto" class="nav-link" data-toggle="mn" id="16">
                                         <i class="nav-icon fas fa-images"></i>
                                         <p>Upload Foto (ZIP)</p>
                                     </a>
@@ -524,52 +540,85 @@ if (password_verify($default_pass, $passworddb) ||
         <?php
         if (isset($triggerForceChange) && $triggerForceChange) {
             include "force_change_pass_card.php";
-        } else if (isset($_GET['press'])) {
-            include "prosespress.php";
-        } else if (isset($_GET['viewpress'])) {
-            include "view_pres.php";
-        } else if (isset($_GET['editpress'])) {
-            include "edit_press.php";
-        } else if (isset($_GET['usulan'])) {
-            include "usulan.php";
-        } else if (isset($_GET['user'])) {
-            include "user.php";
-        } else if (isset($_GET['legalisir'])) {
-            include "legalisir.php";
-        } else if (isset($_GET['brd'])) {
-            include "brd.php";
-        } else if (isset($_GET['dh'])) {
-            include "daftar_hadir.php";
-        } else if (isset($_GET['laporan'])) {
-            include "laporanpress.php";
-        } else if (isset($_GET['input'])) {
-            if (isset($_GET['nis'])) {
-                include "inputprestasi.php";
-            } else {
-                include "dataprestasi.php";
-            }
-        } else if (isset($_GET['siswa'])) {
-            include "siswa.php";
-        } else if (isset($_GET['uploadsiswa'])) {
-            include "upload_siswa.php";
-        } else if (isset($_GET['uploadfoto'])) {
-            include "upload_foto.php";
-        } else if (isset($_GET['uploaduser'])) {
-            include "upload_user.php";
-        } else if (isset($_GET['profile'])) {
-            include "profil.php";
-        } else if (isset($_GET['datasek'])) {
-            include "datasek.php";
-        } else if (isset($_GET['settings'])) {
-            include "setting.php";
-        } else if (isset($_GET['checkupdate'])) {
-            include "chckupdate.php";
-        } else if (isset($_GET['activity'])) {
-            include "activity_log.php";
-        } else if (isset($_GET['logout'])) {
-            include "ceklogout.php";
         } else {
-            include "load.php";
+            $route = key($_GET);
+            switch ($route) {
+                case 'press':
+                    include "prosespress.php";
+                    break;
+                case 'viewpress':
+                    include "view_pres.php";
+                    break;
+                case 'editpress':
+                    include "edit_press.php";
+                    break;
+                case 'usulan':
+                    include "usulan.php";
+                    break;
+                case 'user':
+                    include "user.php";
+                    break;
+                case 'legalisir':
+                    include "legalisir.php";
+                    break;
+                case 'brd':
+                    include "brd.php";
+                    break;
+                case 'dh':
+                    include "daftar_hadir.php";
+                    break;
+                case 'laporan':
+                    include "laporanpress.php";
+                    break;
+                case 'input':
+                    if (isset($_GET['nis'])) {
+                        include "inputprestasi.php";
+                    } else {
+                        include "dataprestasi.php";
+                    }
+                    break;
+                case 'siswa':
+                    include "siswa.php";
+                    break;
+                case 'uploadsiswa':
+                    include "upload_siswa.php";
+                    break;
+                case 'uploadfoto':
+                    include "upload_foto.php";
+                    break;
+                case 'uploaduser':
+                    include "upload_user.php";
+                    break;
+                case 'profile':
+                    include "profil.php";
+                    break;
+                case 'datasek':
+                    include "datasek.php";
+                    break;
+                case 'settings':
+                    include "setting.php";
+                    break;
+                case 'checkupdate':
+                    include "chckupdate.php";
+                    break;
+                case 'activity':
+                    include "activity_log.php";
+                    break;
+                case 'logout':
+                    include "ceklogout.php";
+                    break;
+                case 'modul':
+                    $mod = strtolower($_GET['modul'] ?? '');
+                    if ($mod === 'uploaduser') include "upload_user.php";
+                    elseif ($mod === 'uploadfoto') include "upload_foto.php";
+                    elseif ($mod === 'profile') include "profil.php";
+                    elseif ($mod === 'usulan') include "usulan.php";
+                    else include "load.php";
+                    break;
+                default:
+                    include "load.php";
+                    break;
+            }
         }
         ?>
         
@@ -578,7 +627,7 @@ if (password_verify($default_pass, $passworddb) ||
              ========================================== -->
         <footer class="main-footer">
             <center>
-                <strong>S.A.D - Copyright &copy;2026</strong>
+                <strong>S.A.D <?php echo $ver ?> - Copyright &copy;2026</strong>
             </center>
             <div class="float-right d-none d-sm-inline-block">
                 <right></right>
@@ -750,6 +799,16 @@ if (password_verify($default_pass, $passworddb) ||
                 search: "_INPUT_",
                 searchPlaceholder: "Search..."
             }
+        });
+
+        // Initialize Select2
+        $(document).ready(function() {
+            // Apply select2 only to actual select elements to prevent errors on inputs
+            $('select.select2').select2({
+                width: '100%',
+                placeholder: 'Pilih...',
+                allowClear: true
+            });
         });
     </script>
 </body>

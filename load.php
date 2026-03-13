@@ -73,8 +73,8 @@ include "cfg/secure.php";
                     <div class="inner">
                         <?php
 $query = mysqli_query($sqlconn, "SELECT COUNT(*) as total FROM prestasi");
-$row = mysqli_fetch_assoc($query);
-$prestasi = $row['total'];
+$row = $query ? mysqli_fetch_assoc($query) : null;
+$prestasi = $row ? $row['total'] : 0;
 ?>
                         <h3><?php echo $prestasi; ?></h3>
                         <p>Laporan Prestasi</p>
@@ -90,8 +90,8 @@ $prestasi = $row['total'];
                     <div class="inner">
                         <?php
 $query = mysqli_query($sqlconn, "SELECT COUNT(*) as total FROM legalisir");
-$row = mysqli_fetch_assoc($query);
-$legalisir = $row['total'];
+$row = $query ? mysqli_fetch_assoc($query) : null;
+$legalisir = $row ? $row['total'] : 0;
 ?>
                         <h3><?php echo $legalisir; ?></h3>
                         <p>Laporan Legalisir</p>
@@ -107,8 +107,8 @@ $legalisir = $row['total'];
                     <div class="inner">
                         <?php
 $query = mysqli_query($sqlconn, "SELECT COUNT(*) as total FROM siswa");
-$row = mysqli_fetch_assoc($query);
-$siswa = $row['total'];
+$row = $query ? mysqli_fetch_assoc($query) : null;
+$siswa = $row ? $row['total'] : 0;
 ?>
                         <h3><?php echo $siswa; ?></h3>
                         <p>Manajemen PD</p>
@@ -124,8 +124,8 @@ $siswa = $row['total'];
                     <div class="inner">
                         <?php
 $query = mysqli_query($sqlconn, "SELECT COUNT(*) as total FROM usera");
-$row = mysqli_fetch_assoc($query);
-$user = $row['total'];
+$row = $query ? mysqli_fetch_assoc($query) : null;
+$user = $row ? $row['total'] : 0;
 ?>
                         <h3><?php echo $user; ?></h3>
                         <p>Manajemen User</p>
@@ -154,43 +154,47 @@ if ($q_stats) {
         $db_n = $r_s['dbname'];
         $db_t = $r_s['tahun'];
 
-        $c_db = @new mysqli("localhost", "root", "", $db_n);
-        if (!$c_db->connect_error) {
-            $table_check = $c_db->query("SHOW TABLES LIKE 'prestasi'");
-            if ($table_check && $table_check->num_rows > 0) {
-                $tp_labels[] = "TP " . $db_t;
-                $s1 = 0;
-                $s2 = 0;
+        try {
+            $c_db = @new mysqli("localhost", "root", "", $db_n);
+            if (!$c_db->connect_error) {
+                $table_check = $c_db->query("SHOW TABLES LIKE 'prestasi'");
+                if ($table_check && $table_check->num_rows > 0) {
+                    $tp_labels[] = "TP " . $db_t;
+                    $s1 = 0;
+                    $s2 = 0;
 
-                $res_pres = $c_db->query("SELECT juara, tgl_kegiatan, bulan FROM prestasi");
-                if ($res_pres) {
-                    while ($row = $res_pres->fetch_assoc()) {
-                        $total_all_prestasi++;
+                    $res_pres = $c_db->query("SELECT juara, tgl_kegiatan, bulan FROM prestasi");
+                    if ($res_pres) {
+                        while ($row = $res_pres->fetch_assoc()) {
+                            $total_all_prestasi++;
 
-                        $j = $row['juara'];
-                        if (!isset($juara_stats[$j]))
-                            $juara_stats[$j] = 0;
-                        $juara_stats[$j]++;
+                            $j = $row['juara'];
+                            if (!isset($juara_stats[$j]))
+                                $juara_stats[$j] = 0;
+                            $juara_stats[$j]++;
 
-                        $month = 0;
-                        if (!empty($row['tgl_kegiatan']) && $row['tgl_kegiatan'] !== '0000-00-00') {
-                            $month = (int)date('n', strtotime($row['tgl_kegiatan']));
+                            $month = 0;
+                            if (!empty($row['tgl_kegiatan']) && $row['tgl_kegiatan'] !== '0000-00-00') {
+                                $month = (int)date('n', strtotime($row['tgl_kegiatan']));
+                            }
+                            else {
+                                $m_map = ['Januari' => 1, 'Februari' => 2, 'Maret' => 3, 'April' => 4, 'Mei' => 5, 'Juni' => 6,
+                                    'Juli' => 7, 'Agustus' => 8, 'September' => 9, 'Oktober' => 10, 'November' => 11, 'Desember' => 12];
+                                $month = $m_map[$row['bulan']] ?? 0;
+                            }
+                            if ($month >= 7 || $month == 0)
+                                $s1++;
+                            else
+                                $s2++;
                         }
-                        else {
-                            $m_map = ['Januari' => 1, 'Februari' => 2, 'Maret' => 3, 'April' => 4, 'Mei' => 5, 'Juni' => 6,
-                                'Juli' => 7, 'Agustus' => 8, 'September' => 9, 'Oktober' => 10, 'November' => 11, 'Desember' => 12];
-                            $month = $m_map[$row['bulan']] ?? 0;
-                        }
-                        if ($month >= 7 || $month == 0)
-                            $s1++;
-                        else
-                            $s2++;
                     }
+                    $smt1_counts[] = $s1;
+                    $smt2_counts[] = $s2;
                 }
-                $smt1_counts[] = $s1;
-                $smt2_counts[] = $s2;
+                $c_db->close();
             }
-            $c_db->close();
+        } catch (Exception $e) {
+            // Ignore connection errors if database doesn't exist
         }
     }
 }
@@ -307,7 +311,7 @@ $current_time = time();
 
 if (isset($sqlconn) && $sqlconn) {
     $check_col = mysqli_query($sqlconn, "SHOW COLUMNS FROM usera LIKE 'userid'");
-    $user_col = (mysqli_num_rows($check_col) > 0) ? 'userid' : 'username';
+    $user_col = ($check_col && mysqli_num_rows($check_col) > 0) ? 'userid' : 'username';
 
     if (isset($_SESSION['skradm'])) {
         $user_id_txn = $_SESSION['skradm'];

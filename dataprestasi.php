@@ -2,7 +2,6 @@
 include_once "cfg/konek.php";
 
 ?>
-<!-- Global DataTables assets provided by index.php -->
 <!-- Content Wrapper. Contains page content -->
 <div class="content-wrapper">
     <!-- Content Header (Page header) -->
@@ -28,10 +27,9 @@ include_once "cfg/konek.php";
                 <div class="card">
                     <div class="card-header bg-menu-gradient">
 </div>
-
-<div class="table-responsive">
-    <table id="example2" class="table table-striped table-hover table-sm shadow-sm" style="width:100%">
-        <thead class="bg-menu-gradient text-white text-center">
+                     <div class="card-body text-nowrap">
+    <table id="example2" class="table table-striped table-hover table-sm " style="width:100%">
+        <thead>
             <tr>
                 <th width="5%">No</th>
                 <th width="10%">Kelas</th>

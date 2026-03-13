@@ -48,124 +48,129 @@ $monthly_juara = [];
 $available_years = [];
 
 foreach ($db_list as $db) {
-    $c_db = @new mysqli("localhost", "root", "", $db['dbname']);
-    if ($c_db->connect_error) continue;
+    try {
+        $c_db = @new mysqli("localhost", "root", "", $db['dbname']);
+        if ($c_db->connect_error) continue;
 
-    $tbl_check = $c_db->query("SHOW TABLES LIKE 'prestasi'");
-    if (!$tbl_check || $tbl_check->num_rows == 0) { $c_db->close(); continue; }
+        $tbl_check = $c_db->query("SHOW TABLES LIKE 'prestasi'");
+        if (!$tbl_check || $tbl_check->num_rows == 0) { $c_db->close(); continue; }
 
-    $cols = [];
-    $res_cols = $c_db->query("DESCRIBE prestasi");
-    if ($res_cols) { while ($col = $res_cols->fetch_assoc()) $cols[] = $col['Field']; }
+        $cols = [];
+        $res_cols = $c_db->query("DESCRIBE prestasi");
+        if ($res_cols) { while ($col = $res_cols->fetch_assoc()) $cols[] = $col['Field']; }
 
-    $has_tgl   = in_array('tgl_kegiatan', $cols);
-    $has_bulan = in_array('bulan', $cols);
-    $has_juara = in_array('juara', $cols);
-    if (!$has_juara) { $c_db->close(); continue; }
+        $has_tgl   = in_array('tgl_kegiatan', $cols);
+        $has_bulan = in_array('bulan', $cols);
+        $has_juara = in_array('juara', $cols);
+        if (!$has_juara) { $c_db->close(); continue; }
 
-    // Kumpulkan tahun
-    if ($has_tgl) {
-        $q_years = $c_db->query("SELECT DISTINCT YEAR(tgl_kegiatan) as thn FROM prestasi WHERE tgl_kegiatan IS NOT NULL AND tgl_kegiatan != '0000-00-00' AND YEAR(tgl_kegiatan) > 0");
-        if ($q_years) {
-            while ($yr = $q_years->fetch_assoc()) {
-                $y = (int)$yr['thn'];
-                if ($y > 0 && !in_array($y, $available_years)) $available_years[] = $y;
+        // Kumpulkan tahun
+        if ($has_tgl) {
+            $q_years = $c_db->query("SELECT DISTINCT YEAR(tgl_kegiatan) as thn FROM prestasi WHERE tgl_kegiatan IS NOT NULL AND tgl_kegiatan != '0000-00-00' AND YEAR(tgl_kegiatan) > 0");
+            if ($q_years) {
+                while ($yr = $q_years->fetch_assoc()) {
+                    $y = (int)$yr['thn'];
+                    if ($y > 0 && !in_array($y, $available_years)) $available_years[] = $y;
+                }
             }
         }
-    }
 
-    // WHERE filter
-    $where_parts = [];
-    if ($tahun !== '' && $has_tgl) {
-        $where_parts[] = "tgl_kegiatan IS NOT NULL AND tgl_kegiatan != '0000-00-00' AND YEAR(tgl_kegiatan) = " . (int)$tahun;
-    }
-    if ($bulan > 0) {
+        // WHERE filter
+        $where_parts = [];
+        if ($tahun !== '' && $has_tgl) {
+            $where_parts[] = "tgl_kegiatan IS NOT NULL AND tgl_kegiatan != '0000-00-00' AND YEAR(tgl_kegiatan) = " . (int)$tahun;
+        }
+        if ($bulan > 0) {
+            if ($has_tgl && $has_bulan) {
+                $bln_name = $c_db->real_escape_string($no_to_bulan[$bulan] ?? '');
+                $where_parts[] = "((tgl_kegiatan IS NOT NULL AND tgl_kegiatan != '0000-00-00' AND MONTH(tgl_kegiatan) = $bulan) OR ((tgl_kegiatan IS NULL OR tgl_kegiatan = '0000-00-00') AND bulan = '$bln_name'))";
+            } elseif ($has_tgl) {
+                $where_parts[] = "tgl_kegiatan IS NOT NULL AND tgl_kegiatan != '0000-00-00' AND MONTH(tgl_kegiatan) = $bulan";
+            } elseif ($has_bulan) {
+                $bln_name = $c_db->real_escape_string($no_to_bulan[$bulan] ?? '');
+                $where_parts[] = "bulan = '$bln_name'";
+            }
+        } elseif ($semester > 0) {
+            $months = ($semester == 1) ? $smt1_bulan : $smt2_bulan;
+            $in_str = implode(',', $months);
+            if ($has_tgl && $has_bulan) {
+                $bln_list = [];
+                foreach ($months as $m) $bln_list[] = "'" . $c_db->real_escape_string($no_to_bulan[$m] ?? '') . "'";
+                $where_parts[] = "((tgl_kegiatan IS NOT NULL AND tgl_kegiatan != '0000-00-00' AND MONTH(tgl_kegiatan) IN ($in_str)) OR ((tgl_kegiatan IS NULL OR tgl_kegiatan = '0000-00-00') AND bulan IN (" . implode(',', $bln_list) . ")))";
+            } elseif ($has_tgl) {
+                $where_parts[] = "tgl_kegiatan IS NOT NULL AND tgl_kegiatan != '0000-00-00' AND MONTH(tgl_kegiatan) IN ($in_str)";
+            } elseif ($has_bulan) {
+                $bln_list = [];
+                foreach ($months as $m) $bln_list[] = "'" . $c_db->real_escape_string($no_to_bulan[$m] ?? '') . "'";
+                $where_parts[] = "bulan IN (" . implode(',', $bln_list) . ")";
+            }
+        }
+
+        $where_sql = !empty($where_parts) ? "WHERE " . implode(" AND ", $where_parts) : "";
+
+        // Query per bulan per juara
         if ($has_tgl && $has_bulan) {
-            $bln_name = $c_db->real_escape_string($no_to_bulan[$bulan] ?? '');
-            $where_parts[] = "((tgl_kegiatan IS NOT NULL AND tgl_kegiatan != '0000-00-00' AND MONTH(tgl_kegiatan) = $bulan) OR ((tgl_kegiatan IS NULL OR tgl_kegiatan = '0000-00-00') AND bulan = '$bln_name'))";
+            // Punya kedua kolom: gunakan CASE untuk tentukan bulan
+            // agar record dengan tgl_kegiatan NULL/0000 tetap terhitung via kolom bulan
+            $bulan_case = "CASE 
+                WHEN tgl_kegiatan IS NOT NULL AND tgl_kegiatan != '0000-00-00' THEN MONTH(tgl_kegiatan)
+                ELSE CASE bulan 
+                    WHEN 'Januari' THEN 1 WHEN 'Februari' THEN 2 WHEN 'Maret' THEN 3
+                    WHEN 'April' THEN 4 WHEN 'Mei' THEN 5 WHEN 'Juni' THEN 6
+                    WHEN 'Juli' THEN 7 WHEN 'Agustus' THEN 8 WHEN 'September' THEN 9
+                    WHEN 'Oktober' THEN 10 WHEN 'November' THEN 11 WHEN 'Desember' THEN 12
+                    ELSE 0 END
+                END";
+            $sql = "SELECT ($bulan_case) as bln, juara, COUNT(*) as total 
+                    FROM prestasi $where_sql
+                    GROUP BY bln, juara HAVING bln > 0 ORDER BY bln ASC";
+            $res = $c_db->query($sql);
+            if ($res) {
+                while ($row = $res->fetch_assoc()) {
+                    $m = (int)$row['bln'];
+                    $j = trim($row['juara']);
+                    if ($m < 1 || $m > 12 || $j === '') continue;
+                    if (!isset($monthly_juara[$m])) $monthly_juara[$m] = [];
+                    if (!isset($monthly_juara[$m][$j])) $monthly_juara[$m][$j] = 0;
+                    $monthly_juara[$m][$j] += (int)$row['total'];
+                }
+            }
         } elseif ($has_tgl) {
-            $where_parts[] = "tgl_kegiatan IS NOT NULL AND tgl_kegiatan != '0000-00-00' AND MONTH(tgl_kegiatan) = $bulan";
+            // Hanya tgl_kegiatan, filter NULL/0000
+            $sql = "SELECT MONTH(tgl_kegiatan) as bln, juara, COUNT(*) as total 
+                    FROM prestasi " . ($where_sql ? "$where_sql AND" : "WHERE") . " tgl_kegiatan IS NOT NULL AND tgl_kegiatan != '0000-00-00'
+                    GROUP BY bln, juara ORDER BY bln ASC";
+            $res = $c_db->query($sql);
+            if ($res) {
+                while ($row = $res->fetch_assoc()) {
+                    $m = (int)$row['bln'];
+                    $j = trim($row['juara']);
+                    if ($m < 1 || $m > 12 || $j === '') continue;
+                    if (!isset($monthly_juara[$m])) $monthly_juara[$m] = [];
+                    if (!isset($monthly_juara[$m][$j])) $monthly_juara[$m][$j] = 0;
+                    $monthly_juara[$m][$j] += (int)$row['total'];
+                }
+            }
         } elseif ($has_bulan) {
-            $bln_name = $c_db->real_escape_string($no_to_bulan[$bulan] ?? '');
-            $where_parts[] = "bulan = '$bln_name'";
+            $sql = "SELECT bulan as bln_nama, juara, COUNT(*) as total FROM prestasi $where_sql GROUP BY bln_nama, juara";
+            $res = $c_db->query($sql);
+            if ($res) {
+                while ($row = $res->fetch_assoc()) {
+                    $m = $nama_bulan_map[trim($row['bln_nama'])] ?? 0;
+                    $j = trim($row['juara']);
+                    if ($m < 1 || $m > 12 || $j === '') continue;
+                    if (!isset($monthly_juara[$m])) $monthly_juara[$m] = [];
+                    if (!isset($monthly_juara[$m][$j])) $monthly_juara[$m][$j] = 0;
+                    $monthly_juara[$m][$j] += (int)$row['total'];
+                }
+            }
         }
-    } elseif ($semester > 0) {
-        $months = ($semester == 1) ? $smt1_bulan : $smt2_bulan;
-        $in_str = implode(',', $months);
-        if ($has_tgl && $has_bulan) {
-            $bln_list = [];
-            foreach ($months as $m) $bln_list[] = "'" . $c_db->real_escape_string($no_to_bulan[$m] ?? '') . "'";
-            $where_parts[] = "((tgl_kegiatan IS NOT NULL AND tgl_kegiatan != '0000-00-00' AND MONTH(tgl_kegiatan) IN ($in_str)) OR ((tgl_kegiatan IS NULL OR tgl_kegiatan = '0000-00-00') AND bulan IN (" . implode(',', $bln_list) . ")))";
-        } elseif ($has_tgl) {
-            $where_parts[] = "tgl_kegiatan IS NOT NULL AND tgl_kegiatan != '0000-00-00' AND MONTH(tgl_kegiatan) IN ($in_str)";
-        } elseif ($has_bulan) {
-            $bln_list = [];
-            foreach ($months as $m) $bln_list[] = "'" . $c_db->real_escape_string($no_to_bulan[$m] ?? '') . "'";
-            $where_parts[] = "bulan IN (" . implode(',', $bln_list) . ")";
-        }
+
+        $c_db->close();
+    } catch (Exception $e) {
+        // Ignore connection errors if database doesn't exist
+        continue;
     }
-
-    $where_sql = !empty($where_parts) ? "WHERE " . implode(" AND ", $where_parts) : "";
-
-    // Query per bulan per juara
-    if ($has_tgl && $has_bulan) {
-        // Punya kedua kolom: gunakan CASE untuk tentukan bulan
-        // agar record dengan tgl_kegiatan NULL/0000 tetap terhitung via kolom bulan
-        $bulan_case = "CASE 
-            WHEN tgl_kegiatan IS NOT NULL AND tgl_kegiatan != '0000-00-00' THEN MONTH(tgl_kegiatan)
-            ELSE CASE bulan 
-                WHEN 'Januari' THEN 1 WHEN 'Februari' THEN 2 WHEN 'Maret' THEN 3
-                WHEN 'April' THEN 4 WHEN 'Mei' THEN 5 WHEN 'Juni' THEN 6
-                WHEN 'Juli' THEN 7 WHEN 'Agustus' THEN 8 WHEN 'September' THEN 9
-                WHEN 'Oktober' THEN 10 WHEN 'November' THEN 11 WHEN 'Desember' THEN 12
-                ELSE 0 END
-            END";
-        $sql = "SELECT ($bulan_case) as bln, juara, COUNT(*) as total 
-                FROM prestasi $where_sql
-                GROUP BY bln, juara HAVING bln > 0 ORDER BY bln ASC";
-        $res = $c_db->query($sql);
-        if ($res) {
-            while ($row = $res->fetch_assoc()) {
-                $m = (int)$row['bln'];
-                $j = trim($row['juara']);
-                if ($m < 1 || $m > 12 || $j === '') continue;
-                if (!isset($monthly_juara[$m])) $monthly_juara[$m] = [];
-                if (!isset($monthly_juara[$m][$j])) $monthly_juara[$m][$j] = 0;
-                $monthly_juara[$m][$j] += (int)$row['total'];
-            }
-        }
-    } elseif ($has_tgl) {
-        // Hanya tgl_kegiatan, filter NULL/0000
-        $sql = "SELECT MONTH(tgl_kegiatan) as bln, juara, COUNT(*) as total 
-                FROM prestasi " . ($where_sql ? "$where_sql AND" : "WHERE") . " tgl_kegiatan IS NOT NULL AND tgl_kegiatan != '0000-00-00'
-                GROUP BY bln, juara ORDER BY bln ASC";
-        $res = $c_db->query($sql);
-        if ($res) {
-            while ($row = $res->fetch_assoc()) {
-                $m = (int)$row['bln'];
-                $j = trim($row['juara']);
-                if ($m < 1 || $m > 12 || $j === '') continue;
-                if (!isset($monthly_juara[$m])) $monthly_juara[$m] = [];
-                if (!isset($monthly_juara[$m][$j])) $monthly_juara[$m][$j] = 0;
-                $monthly_juara[$m][$j] += (int)$row['total'];
-            }
-        }
-    } elseif ($has_bulan) {
-        $sql = "SELECT bulan as bln_nama, juara, COUNT(*) as total FROM prestasi $where_sql GROUP BY bln_nama, juara";
-        $res = $c_db->query($sql);
-        if ($res) {
-            while ($row = $res->fetch_assoc()) {
-                $m = $nama_bulan_map[trim($row['bln_nama'])] ?? 0;
-                $j = trim($row['juara']);
-                if ($m < 1 || $m > 12 || $j === '') continue;
-                if (!isset($monthly_juara[$m])) $monthly_juara[$m] = [];
-                if (!isset($monthly_juara[$m][$j])) $monthly_juara[$m][$j] = 0;
-                $monthly_juara[$m][$j] += (int)$row['total'];
-            }
-        }
-    }
-
-    $c_db->close();
 }
 
 sort($available_years);

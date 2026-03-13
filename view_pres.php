@@ -2,7 +2,7 @@
 include_once "cfg/konek.php";
 include_once "cfg/secure.php";
 
-if ($_REQUEST['urut']) {
+if (isset($_REQUEST['urut']) && $_REQUEST['urut']) {
     $id = $_REQUEST['urut'];
 
     // First attempt: try to find achievement by ID (urut)
@@ -79,60 +79,31 @@ if ($_REQUEST['urut']) {
     }
 ?>
 <style>
-    .modal-view-body {
+    .form-control:disabled, .form-control[readonly] {
         background-color: #f8f9fa;
-        padding: 20px;
-        border-radius: 0 0 10px 10px;
+        opacity: 1;
+        cursor: not-allowed;
     }
-    .view-section {
-        background: #fff;
-        padding: 15px;
-        border-radius: 12px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-        margin-bottom: 20px;
-        border: 1px solid #eef0f2;
-    }
-    .view-section-title {
-        font-size: 0.9rem;
-        font-weight: 700;
-        color: #495057;
-        margin-bottom: 15px;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        border-bottom: 2px solid #007bff;
-        display: inline-block;
-        padding-bottom: 3px;
-    }
-    .view-label {
-        font-size: 0.75rem;
+    .card-title {
         font-weight: 600;
-        color: #6c757d;
-        margin-bottom: 4px;
-        display: block;
     }
-    .view-value {
-        font-size: 0.9rem;
-        color: #212529;
-        font-weight: 500;
-        padding: 8px 12px;
-        background: #f1f3f5;
-        border-radius: 8px;
-        min-height: 38px;
-        display: flex;
-        align-items: center;
-        border: 1px solid #e9ecef;
+    .bg-menu-gradient {
+        background: linear-gradient(135deg, #2c3e50 0%, #01b2d1 100%);
+        color: #fff;
     }
-    .view-icon {
-        width: 20px;
-        margin-right: 8px;
-        color: #007bff;
-        text-align: center;
+    .profile-card {
+        border-top: 3px solid #01b2d1;
+    }
+    .label-custom {
+        font-weight: 700;
+        color: #333;
     }
     .attachment-container {
         border-radius: 12px;
         overflow: hidden;
         border: 1px solid #dee2e6;
         background: #fff;
+        padding: 5px;
     }
     .attachment-img {
         max-width: 100%;
@@ -169,6 +140,26 @@ if ($_REQUEST['urut']) {
     .star-bottom-left { bottom: 0; left: 0; font-size: 1.2rem; }
     .star-bottom-right { bottom: 0; right: 0; font-size: 1.2rem; }
     .star-center-top { top: -10px; left: 50%; transform: translateX(-50%); font-size: 1.5rem; }
+
+    .view-section {
+        background: #fff;
+        padding: 15px;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        margin-bottom: 20px;
+        border: 1px solid #eef0f2;
+    }
+    .view-section-title {
+        font-size: 0.9rem;
+        font-weight: 700;
+        color: #495057;
+        margin-bottom: 20px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        border-bottom: 2px solid #007bff;
+        display: inline-block;
+        padding-bottom: 3px;
+    }
 </style>
 
 <!-- Content Wrapper. Contains page content -->
@@ -196,14 +187,14 @@ if ($_REQUEST['urut']) {
             <div class="card shadow-sm border-0">
                 <div class="card-header bg-menu-gradient">
                     <div class="card-tools ml-auto">
-                        <a href="?input" class="btn btn-warning btn-sm rounded-pill px-4 shadow-sm">
+                        <a href="?input" class="btn btn-warning btn-sm">
                             <i class="fa fa-arrow-left mr-1"></i> Kembali
                         </a>
                     </div>
                 </div>
                 <div class="card-body view-form-container" style="background-color: #f8f9fa;">
                     <form>
-                        <input type="hidden" name="id" value="<?php echo $r['id']; ?>">
+                        <input type="hidden" name="id" value="<?php echo $r['id'] ?? ''; ?>">
                         
                         <div class="row">
                             <!-- Kolom Kiri: Foto & Identitas Singkat -->
@@ -217,9 +208,9 @@ if ($_REQUEST['urut']) {
                                             <i class="fas fa-star frame-star star-top-right"></i>
                                             <i class="fas fa-star frame-star star-bottom-left"></i>
                                             <i class="fas fa-star frame-star star-bottom-right"></i>
-                                            <?php if (!empty($r['photo'])) { ?>
-                                                <a href="file/fotopd/<?php echo $r['photo']; ?>" target="_blank" title="Klik untuk melihat foto penuh">
-                                                    <img class='profile-user-img img-fluid img-circle shadow-sm border-pemenang' style='width: 150px; height: 150px; object-fit: cover; cursor: pointer;' src="file/fotopd/<?php echo $r['photo']; ?>">
+                                            <?php if (!empty($photo) && file_exists('file/fotopd/' . $photo)) { ?>
+                                                <a href="file/fotopd/<?php echo $photo; ?>" target="_blank" title="Klik untuk melihat foto penuh">
+                                                    <img class='profile-user-img img-fluid img-circle shadow-sm border-pemenang' style='width: 150px; height: 150px; object-fit: cover; cursor: pointer;' src="file/fotopd/<?php echo $photo; ?>">
                                                 </a>
                                             <?php
     }
@@ -231,70 +222,103 @@ if ($_REQUEST['urut']) {
     }?>
                                         </div>
                                     </center>
-
                                     <div class="mt-4">
                                         <span style="font-size: 16px; font-weight: bold; text-decoration: underline; color: #495057;">Nama Lengkap</span>
-                                        <div class="mt-1 badge bg-menu-gradient px-3 py-2" style="font-size: 14px; font-weight: bold; width: 100%; white-space: normal;"><?php echo $r['pd']; ?></div>
+                                        <div class="mt-1 badge bg-menu-gradient px-3 py-2" style="font-size: 14px; font-weight: bold; width: 100%; white-space: normal;"><?php echo $nama; ?></div>
                                         
                                         <hr style="border-top: 1px dashed #ced4da; margin: 15px 0;">
                                         
                                         <span style="font-size: 16px; font-weight: bold; text-decoration: underline; color: #495057;">Kelas</span>
-                                        <div class="mt-1 badge bg-menu-gradient px-3 py-2" style="font-size: 14px; font-weight: bold; width: 100%;"><?php echo $r['kelas']; ?></div>
+                                        <div class="mt-1 badge bg-menu-gradient px-3 py-2" style="font-size: 14px; font-weight: bold; width: 100%;"><?php echo $kelas; ?></div>
                                     </div>
                                 </div>
                             </div>
 
                             <!-- Kolom Kanan: Detail & Lampiran -->
                             <div class="col-md-8">
-                                <!-- Section: Detail Prestasi -->
                                 <div class="view-section">
                                     <center><span class="view-section-title"><i class="fa fa-medal mr-1"></i> Detail Prestasi</span></center>
-                                    <div class="row mt-2">
-                                        <div class="col-md-12 mb-3">
-                                            <label class="view-label">Nama Prestasi / Kegiatan</label>
-                                            <div class="view-value"><i class="fa fa-award view-icon"></i> <?php echo $r['prestasi']; ?></div>
+                                    
+                                    <div class="mt-2">
+                                        <div class="form-group row mb-4">
+                                            <label class="col-sm-4 col-form-label label-custom">Prestasi</label>
+                                            <div class="col-sm-8">
+                                                <input type="text" class="form-control form-control-sm" value="<?php echo $prestasi; ?>" readonly>
+                                            </div>
                                         </div>
-                                        <div class="col-md-12 mb-3">
-                                            <label class="view-label">Jenis Prestasi</label>
-                                            <div class="view-value"><i class="fa fa-list-alt view-icon"></i> <?php echo $r['jenisprestasi']; ?></div>
-                                        </div>
-                                        <div class="col-md-6 mb-3">
-                                            <label class="view-label">Juara</label>
-                                            <div class="view-value"><i class="fa fa-trophy view-icon" style="color:#ffc107;"></i> <?php echo $r['juara']; ?></div>
-                                        </div>
-                                        <div class="col-md-6 mb-3">
-                                            <label class="view-label">Tingkat</label>
-                                            <div class="view-value"><i class="fa fa-layer-group view-icon"></i> <?php echo $r['tingkat']; ?></div>
-                                        </div>
-                                    </div>
 
-                                    <div class="row">
-                                        <div class="col-md-6 mb-3">
-                                            <label class="view-label">Tanggal Pelaksanaan</label>
-                                            <div class="view-value"><i class="fa fa-calendar-check view-icon"></i> <?php echo !empty($r['tgl_kegiatan']) ? date('d-m-Y', strtotime($r['tgl_kegiatan'])) : '-'; ?></div>
+                                        <div class="form-group row mb-4">
+                                            <label class="col-sm-4 col-form-label label-custom">Jenis Prestasi</label>
+                                            <div class="col-sm-8">
+                                                <input type="text" class="form-control form-control-sm" value="<?php echo $jenisprestasi; ?>" readonly>
+                                            </div>
                                         </div>
-                                        <div class="col-md-6 mb-3">
-                                            <label class="view-label">Bulan</label>
-                                            <div class="view-value"><i class="fa fa-calendar-alt view-icon"></i> <?php echo $r['bulan']; ?></div>
-                                        </div>
-                                        <div class="col-md-12 mb-3">
-                                            <label class="view-label">Penyelenggara</label>
-                                            <div class="view-value"><i class="fa fa-user-tie view-icon" style="color:#dc3545;"></i> <?php echo $r['penyelenggara']; ?></div>
-                                        </div>
-                                        <div class="col-md-12 mb-3">
-                                            <label class="view-label">Lokasi</label>
-                                            <div class="view-value"><i class="fa fa-map-marker-alt view-icon" style="color:#ffc107;"></i> <?php echo $r['lokasi']; ?></div>
-                                        </div>
-                                    </div>
-                                </div>
 
-                                <!-- Section: Lampiran Preview -->
-                                <div class="view-section">
-                                    <center><span class="view-section-title"><i class="fa fa-paperclip mr-1"></i> Lampiran Prestasi</span></center>
-                                    <div class="mt-1">
-                                        <?php
-    if (!empty($r['pdf'])) {
-        $files = explode(',', $r['pdf']);
+                                        <div class="form-group row mb-4">
+                                            <label class="col-sm-4 col-form-label label-custom">Tingkat</label>
+                                            <div class="col-sm-8">
+                                                <input type="text" class="form-control form-control-sm" value="<?php echo $tingkat; ?>" readonly>
+                                            </div>
+                                        </div>
+
+                                        <div class="form-group row mb-4">
+                                            <label class="col-sm-4 col-form-label label-custom">Tanggal Kegiatan</label>
+                                            <div class="col-sm-8">
+                                                <input type="text" class="form-control form-control-sm" value="<?php echo !empty($tgl_kegiatan) ? date('m/d/Y', strtotime($tgl_kegiatan)) : '-'; ?>" readonly>
+                                            </div>
+                                        </div>
+
+                                        <div class="form-group row mb-4">
+                                            <label class="col-sm-4 col-form-label label-custom">Nama Kegiatan</label>
+                                            <div class="col-sm-8">
+                                                <input type="text" class="form-control form-control-sm" value="<?php echo htmlspecialchars($r['nama_kegiatan'] ?? '-'); ?>" readonly>
+                                            </div>
+                                        </div>
+
+                                        <div class="form-group row mb-4">
+                                            <label class="col-sm-4 col-form-label label-custom">Penyelenggara</label>
+                                            <div class="col-sm-8">
+                                                <input type="text" class="form-control form-control-sm" value="<?php echo $penyelenggara; ?>" readonly>
+                                            </div>
+                                        </div>
+
+                                        <div class="form-group row mb-4">
+                                            <label class="col-sm-4 col-form-label label-custom">Lokasi</label>
+                                            <div class="col-sm-8">
+                                                <input type="text" class="form-control form-control-sm" value="<?php echo $lokasi; ?>" readonly>
+                                            </div>
+                                        </div>
+
+                                        <div class="form-group row mb-4">
+                                            <label class="col-sm-4 col-form-label label-custom">Juara Ke-</label>
+                                            <div class="col-sm-8">
+                                                <input type="text" class="form-control form-control-sm" value="<?php
+    if (in_array($juara, ['1', '2', '3', '4'])) {
+        echo 'Juara ' . $juara;
+    }
+    else if (in_array($juara, ['Harapan 1', 'Harapan 2', 'Harapan 3'])) {
+        echo 'Juara ' . $juara;
+    }
+    else {
+        echo $juara;
+    }
+?>" readonly>
+                                            </div>
+                                        </div>
+
+                                        <div class="form-group row mb-4">
+                                            <label class="col-sm-4 col-form-label label-custom">Bulan</label>
+                                            <div class="col-sm-8">
+                                                <input type="text" class="form-control form-control-sm" value="<?php echo $bulan; ?>" readonly>
+                                            </div>
+                                        </div>
+
+                                        <div class="form-group row mb-4">
+                                            <label class="col-sm-4 col-form-label label-custom">Lampiran</label>
+                                            <div class="col-sm-8">
+                                                <?php
+    if (!empty($pdf)) {
+        $files = explode(',', $pdf);
         foreach ($files as $index => $f) {
             if (!empty($f)) {
                 $ext = strtolower(pathinfo($f, PATHINFO_EXTENSION));
@@ -312,9 +336,11 @@ if ($_REQUEST['urut']) {
         echo "<div class='alert alert-secondary text-center alert-view m-0'><i class='fa fa-info-circle mr-1'></i> Tidak ada lampiran berkas.</div>";
     }
 ?>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
+                            </div> <!-- /.col-md-8 -->
                         </div>
                     </form>
                 </div>

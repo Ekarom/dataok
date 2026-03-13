@@ -128,6 +128,27 @@ if (isset($_REQUEST['urut'])) {
         font-weight: 700;
         color: #333;
     }
+    /* Select2 Standard Form Control Styling */
+    .select2-container .select2-selection--single {
+        height: 38px !important;
+        padding: 0.375rem 0.75rem !important;
+        font-size: 1rem !important;
+        line-height: 1.5 !important;
+        border-radius: 0.25rem !important;
+        border: 1px solid #ced4da;
+    }
+    .select2-container--default .select2-selection--single .select2-selection__rendered {
+        line-height: 24px !important;
+        padding-left: 0 !important;
+    }
+    .select2-container--default .select2-selection--single .select2-selection__arrow {
+        height: 36px !important;
+    }
+    /* Hover / Active highlight color specifically matching the image reference */
+    .select2-container--default .select2-results__option--highlighted[aria-selected] {
+        background-color: #007bff !important;
+        color: white !important;
+    }
 </style>
 <div class="content-wrapper">
     <!-- Content Header (Page header) -->
@@ -179,7 +200,7 @@ if (isset($_REQUEST['urut'])) {
                             <div class="card-header bg-menu-gradient d-flex align-items-center">
                                 <h3 class="card-title text-white">Edit Prestasi</h3>
                                 <div class="card-tools ml-auto">
-                                    <a href="?input" class="btn btn-warning btn-sm rounded-pill px-4 shadow-sm">
+                                    <a href="?input" class="btn btn-warning btn-sm">
                                         <i class="fa fa-arrow-left mr-1"></i> Kembali
                                     </a>
                                 </div>
@@ -193,14 +214,15 @@ if (isset($_REQUEST['urut'])) {
                                 <div class="form-group row mb-4">
                                     <label for="prestasi" class="col-sm-4 col-form-label label-custom">Prestasi</label>
                                     <div class="col-sm-8">
-                                        <input type="text" class="form-control warna" name="prestasi" value="<?php echo $r['prestasi']; ?>" placeholder="Contoh: Juara 1 Lomba Web Design" required>
+                                        <input type="text" class="form-control" name="prestasi" value="<?php echo $r['prestasi']; ?>" placeholder="Contoh: Juara 1 Lomba Web Design" required>
                                     </div>
                                 </div>
 
                                 <div class="form-group row mb-4">
                                     <label for="jenisprestasi" class="col-sm-4 col-form-label label-custom">Jenis Prestasi</label>
                                     <div class="col-sm-8">
-                                        <select class="form-control warna" name="jenisprestasi" required>
+                                        <select class="form-control select2" name="jenisprestasi" required>
+                                            <option value="">- Pilih Jenis -</option>
                                             <option value="Akademik" <?php echo($r['jenisprestasi'] == 'Akademik') ? 'selected' : ''; ?>>Akademik</option>
                                             <option value="Non-Akademik" <?php echo($r['jenisprestasi'] == 'Non-Akademik') ? 'selected' : ''; ?>>Non-Akademik</option>
                                         </select>
@@ -210,7 +232,8 @@ if (isset($_REQUEST['urut'])) {
                                 <div class="form-group row mb-4">
                                     <label for="tingkat" class="col-sm-4 col-form-label label-custom">Tingkat</label>
                                     <div class="col-sm-8">
-                                        <select class="form-control warna" name="tingkat" required>
+                                        <select class="form-control select2" name="tingkat" required>
+                                            <option value="">- Pilih Tingkat -</option>
                                             <?php
     $levels = ['Sekolah', 'Kecamatan', 'Kabupaten/Kota', 'Provinsi', 'Nasional', 'Internasional'];
     foreach ($levels as $level) {
@@ -225,32 +248,33 @@ if (isset($_REQUEST['urut'])) {
                                 <div class="form-group row mb-4">
                                     <label for="tgl_kegiatan" class="col-sm-4 col-form-label label-custom">Tanggal Kegiatan</label>
                                     <div class="col-sm-8">
-                                        <input type="date" class="form-control warna" name="tgl_kegiatan" value="<?php echo $r['tgl_kegiatan']; ?>" required>
+                                        <input type="date" class="form-control" name="tgl_kegiatan" value="<?php echo $r['tgl_kegiatan']; ?>" required>
                                     </div>
                                 </div>
                                 <div class="form-group row mb-4">
                                     <label for="nama_kegiatan" class="col-sm-4 col-form-label label-custom">Nama Kegiatan</label>
                                     <div class="col-sm-8">
-                                        <input type="text" class="form-control warna" name="nama_kegiatan" value="<?php echo $r['nama_kegiatan']; ?>" placeholder="Isi nama kegiatan" required>
+                                        <input type="text" class="form-control" name="nama_kegiatan" value="<?php echo $r['nama_kegiatan']; ?>" placeholder="Isi nama kegiatan" required>
                                     </div>
                                 </div>
                                 <div class="form-group row mb-4">
                                     <label for="penyelenggara" class="col-sm-4 col-form-label label-custom">Penyelenggara</label>
                                     <div class="col-sm-8">
-                                        <input type="text" class="form-control warna" name="penyelenggara" value="<?php echo $r['penyelenggara']; ?>" placeholder="Contoh: Dinas Pendidikan" required>
+                                        <input type="text" class="form-control" name="penyelenggara" value="<?php echo $r['penyelenggara']; ?>" placeholder="Contoh: Dinas Pendidikan" required>
                                     </div>
                                 </div>
                                 <div class="form-group row mb-4">
                                     <label for="lokasi" class="col-sm-4 col-form-label label-custom">Lokasi</label>
                                     <div class="col-sm-8">
-                                        <input type="text" class="form-control warna" name="lokasi" value="<?php echo $r['lokasi']; ?>" placeholder="Isi Lokasi" required>
+                                        <input type="text" class="form-control " name="lokasi" value="<?php echo $r['lokasi']; ?>" placeholder="Isi Lokasi" required>
                                     </div>
                                 </div>
 
                                 <div class="form-group row mb-4">
                                     <label for="juara" class="col-sm-4 col-form-label label-custom">Juara Ke-</label>
                                     <div class="col-sm-8">
-                                        <select class="form-control warna" id="juara" name="juara" required>
+                                        <select class="form-control select2" id="juara" name="juara" required>
+                                            <option value="">- Pilih Juara -</option>
                                             <?php
     $juaras = ['1' => 'Juara 1', '2' => 'Juara 2', '3' => 'Juara 3', '4' => 'Juara 4', 'Harapan 1' => 'Juara Harapan 1', 'Harapan 2' => 'Juara Harapan 2', 'Harapan 3' => 'Juara Harapan 3'];
     foreach ($juaras as $val => $label) {
@@ -265,7 +289,8 @@ if (isset($_REQUEST['urut'])) {
                                 <div class="form-group row mb-4">
                                     <label for="bulan" class="col-sm-4 col-form-label label-custom">Bulan</label>
                                     <div class="col-sm-8">
-                                        <select class="form-control warna" id="bulan" name="bulan" required>
+                                        <select class="form-control select2" id="bulan" name="bulan" required>
+                                            <option value="">- Pilih Bulan -</option>
                                             <?php
     $months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
     foreach ($months as $m) {
@@ -343,12 +368,11 @@ if (isset($_REQUEST['urut'])) {
                                     </div>
                                 </div>
 
-                            </div>
-                        </div>
+                    
 
                         <div class="card-footer bg-white border-top-0 p-0 mt-3 d-flex justify-content-end">
-                            <button type="button" id="btnIncomplete_<?php echo $id; ?>" class="btn btn-secondary disabled" style="cursor: not-allowed;"><i class="fa fa-save mr-1"></i> Simpan</button>
-                            <button type="submit" id="btnSubmit_<?php echo $id; ?>" name="update2" class="btn btn-success" style="display: none;"><i class="fa fa-save mr-1"></i> Simpan</button>
+                            <button type="button" id="btnIncomplete_<?php echo $id; ?>" class="btn btn-secondary" onclick="showFormErrors()">Lengkapi</button>
+                            <button type="submit" id="btnSubmit_<?php echo $id; ?>" name="update2" class="btn btn-success" style="display: none;"><i class="fa fa-save mr-1"></i> Simpan Perubahan</button>
                         </div>
                     </div> <!-- /.col-md-8 -->
                         </div> <!-- /.row -->
@@ -523,10 +547,18 @@ if (isset($_REQUEST['urut'])) {
     function checkFormValidity() {
         if (!form) return;
         let isValid = true;
+        
+        // Remove old error highlights
+        $(form).find('.is-invalid').removeClass('is-invalid');
+        $(form).find('.select2-selection').removeClass('border-danger');
+
         const requiredInputs = form.querySelectorAll('[required]');
         
         requiredInputs.forEach(el => {
-            if (!el.value.trim()) isValid = false;
+            const val = $(el).val();
+            if (!val || val.toString().trim() === '') {
+                isValid = false;
+            }
         });
 
         if (isValid) {
@@ -538,6 +570,27 @@ if (isset($_REQUEST['urut'])) {
         }
     }
 
+    window.showFormErrors = function() {
+        const requiredInputs = form.querySelectorAll('[required]');
+        let firstInvalid = null;
+        
+        requiredInputs.forEach(el => {
+            const val = $(el).val();
+            if (!val || val.toString().trim() === '') {
+                $(el).addClass('is-invalid');
+                if ($(el).hasClass('select2')) {
+                    $(el).next('.select2-container').find('.select2-selection').addClass('border-danger');
+                }
+                if (!firstInvalid) firstInvalid = el;
+            }
+        });
+
+        if (firstInvalid) {
+            toastr.error('Mohon lengkapi semua field yang wajib diisi!');
+            firstInvalid.focus();
+        }
+    };
+
     function formatBytes(bytes, decimals = 1) {
         if (bytes === 0) return '0 B';
         const k = 1024, dm = decimals < 0 ? 0 : decimals;
@@ -548,6 +601,13 @@ if (isset($_REQUEST['urut'])) {
 
     // Event listeners for form inputs
     $(form).on('input change', 'input, select, textarea', function() {
+        const el = $(this);
+        if (el.val() && el.val().toString().trim() !== '') {
+            el.removeClass('is-invalid');
+            if (el.hasClass('select2')) {
+                el.next('.select2-container').find('.select2-selection').removeClass('border-danger');
+            }
+        }
         checkFormValidity();
     });
     

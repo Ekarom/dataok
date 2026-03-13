@@ -28,11 +28,11 @@
                 <div class="col-12">
                     
                     <!-- Filter Section -->
-                    <div class="card card-outline card-primary">
-                        <div class="card-header">
+                    <div class="card">
+                        <div class="card-header bg-menu-gradient">
                             <h3 class="card-title text-bold"><i class="fas fa-filter mr-1"></i> Rekap Prestasi</h3>
                         </div>
-                        <div class="card-body">
+                                          <div class="card-body text-nowrap">
                             <div class="row">
                                 <div class="col-md-2 mb-2">
                                     <select id="rekap_triwulan" class="form-control" onchange="updateMonthsByQuarter(this.value)">
@@ -82,11 +82,11 @@
                                     <select id="rekap_kejuaraan" class="form-control">
                                         <option value="">- Semua Kejuaraan -</option>
                                         <?php
-                                        $q_kej = mysqli_query($sqlconn, "SELECT DISTINCT prestasi FROM prestasi WHERE prestasi != '' ORDER BY prestasi ASC");
-                                        while ($rk = mysqli_fetch_array($q_kej)) {
-                                            echo "<option value='" . htmlspecialchars($rk['prestasi'], ENT_QUOTES) . "'>" . $rk['prestasi'] . "</option>";
-                                        }
-                                        ?>
+$q_kej = mysqli_query($sqlconn, "SELECT DISTINCT prestasi FROM prestasi WHERE prestasi != '' ORDER BY prestasi ASC");
+while ($rk = mysqli_fetch_array($q_kej)) {
+    echo "<option value='" . htmlspecialchars($rk['prestasi'], ENT_QUOTES) . "'>" . $rk['prestasi'] . "</option>";
+}
+?>
                                     </select>
                                 </div>
                                 <div class="col-md-1 mb-2">
@@ -97,16 +97,10 @@
                                         <i class="fa fa-print"></i>
                                     </button>
                                 </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Table Section -->
-                    <div class="card">
-                        <div class="card-body p-0">
-                            <div class="table-responsive">
-                                <table id="pres" class="table table-striped table-hover mb-0" style="width:100%">
-                                    <thead class="bg-primary text-white text-center">
+                     <div class="card-body text-nowrap">
+<div class="table-responsive">
+                                   <table id="example2" class="table table-striped table-hover table-sm" style="width:100%">
+                                    <thead>
                                         <tr>
                                             <th width="3%">No</th>
                                             <th width="15%">Nama Peserta Didik</th>
@@ -124,13 +118,13 @@
                                     </thead>
                                     <tbody class="align-middle">
                                         <?php
-                                        $sql = mysqli_query($sqlconn, "SELECT * FROM prestasi ORDER BY id DESC");
-                                        if ($sql) {
-                                            $no = 0;
-                                            while ($s = mysqli_fetch_array($sql)) {
-                                                $no++;
-                                                $tgl_fmt = (!empty($s['tgl_kegiatan']) && $s['tgl_kegiatan'] != '0000-00-00') ? date('d-m-Y', strtotime($s['tgl_kegiatan'])) : '-';
-                                        ?>
+$sql = mysqli_query($sqlconn, "SELECT * FROM prestasi ORDER BY id DESC");
+if ($sql) {
+    $no = 0;
+    while ($s = mysqli_fetch_array($sql)) {
+        $no++;
+        $tgl_fmt = (!empty($s['tgl_kegiatan']) && $s['tgl_kegiatan'] != '0000-00-00') ? date('d-m-Y', strtotime($s['tgl_kegiatan'])) : '-';
+?>
                                                 <tr class="text-center">
                                                     <td><?php echo $no; ?></td>
                                                     <td class="text-left font-weight-bold"><?php echo htmlspecialchars($s['pd']); ?></td>
@@ -152,9 +146,9 @@
                                                     <td class="small text-muted"><?php echo $s['date']; ?></td>
                                                 </tr>
                                         <?php
-                                            }
-                                        }
-                                        ?>
+    }
+}
+?>
                                     </tbody>
                                 </table>
                             </div>
@@ -168,12 +162,8 @@
 
 <script>
 $(document).ready(function() {
-    $('#pres').DataTable({
+    $('#example2').DataTable({
         responsive: true,
-        autoWidth: false,
-        language: {
-            searchPlaceholder: "Cari Data Laporan..."
-        }
     });
 });
 
