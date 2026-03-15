@@ -1,84 +1,128 @@
 <?php
 include_once "cfg/konek.php";
-
 ?>
-<!-- Content Wrapper. Contains page content -->
-<div class="content-wrapper">
-    <!-- Content Header (Page header) -->
-    <section class="content-header">
-        <div class="container-fluid">
-            <div class="row mb-2">
-                <div class="col-sm-6">
-                    <h1>Input Data Prestasi</h1>
+<style>
+    /* Styling headers to match screenshot */
+    #example2 thead th {
+        background-color: #5c6771 !important;
+        color: #ffffff !important;
+        text-transform: uppercase;
+        font-size: 0.85rem;
+        font-weight: 700;
+        border: 1px solid #dee2e6;
+        vertical-align: middle;
+        text-align: center;
+    }
+
+    /* Styling cells */
+    #example2 tbody td {
+        vertical-align: middle;
+        font-size: 0.9rem;
+    }
+
+    /* Style for action buttons to match screenshot boxes */
+    .btn-action-container {
+        display: flex;
+        justify-content: center;
+        gap: 3px;
+    }
+
+    .btn-action {
+        padding: 2px 6px !important;
+        font-size: 10px !important;
+        font-weight: 600;
+        text-transform: capitalize;
+        border-radius: 2px !important;
+        min-width: 40px;
+    }
+</style>
+
+<!-- Main content -->
+<section class="content">
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-none">
+                <div class="card-header box-shadow-0 bg-gradient-x-warning">
+                    <h5 class="card-title text-white">Input Data Prestasi</h5>
                 </div>
-                <div class="col-sm-6">
-                    <ol class="breadcrumb float-sm-right">
-                        <li class="breadcrumb-item"><a href="index.php">Home</a></li>
-                        <li class="breadcrumb-item active">Input Data Prestasi</li>
-                    </ol>
+                <div class="card-body p-0">
+                    <div class="card-body">
+                        <div class="table-responsive text-nowrap">
+                            <table id="example2" class="table table-bordered table-striped table-hover "
+                                style="width:100%">
+                                <thead align="center">
+                                    <tr>
+                                        <th width="30px">No</th>
+                                        <th width="100px">NIS</th>
+                                        <th>Nama Siswa</th>
+                                        <th width="120px">Status</th>
+                                        <th width="160px">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php
+                                    // Mengambil data siswa diurutkan berdasarkan nama (pd)
+                                    // Menggunakan subquery untuk cek status apakah sudah upload prestasi
+                                    $sqlSiswa = mysqli_query($sqlconn, "SELECT pd, nis, nisn, kelas, id, (SELECT COUNT(*) FROM prestasi WHERE prestasi.pd = siswa.pd AND prestasi.kelas = siswa.kelas) as jml_p FROM siswa ORDER BY pd ASC");
+                                    $noS = 1;
+                                    while ($ds = mysqli_fetch_array($sqlSiswa)) {
+                                        $has_prestasi = ($ds['jml_p'] > 0);
+                                        $status_badge = $has_prestasi
+                                            ? '<span class="badge bg-success">Sudah Upload</span>'
+                                            : '<span class="badge bg-danger">Belum Upload</span>';
+                                        ?>
+                                        <tr>
+                                            <td class="text-center"><?php echo $noS++; ?></td>
+                                            <td class="text-center"><?php echo htmlspecialchars($ds['nis']); ?></td>
+                                            <td class="text-left px-3"><?php echo htmlspecialchars($ds['pd']); ?></td>
+                                            <td class="text-center"><?php echo $status_badge; ?></td>
+
+                                            <td class="text-center">
+                                                <div class="btn-group">
+
+                                                    <a href="viewpress?urut=<?php echo $ds['id']; ?>"
+                                                        class="btn badge bg-success flat" title="Detail Prestasi">
+                                                        Detail
+                                                    </a>
+                                                    <a href="arsipdata/inputprestasi?nis=<?php echo $ds['id']; ?>"
+                                                        class="btn badge bg-primary flat" title="Input Prestasi">
+                                                        Input
+                                                    </a>
+                                                    <a href="editpress?urut=<?php echo $ds['id']; ?>"
+                                                        class="btn badge bg-warning flat" title="Edit Prestasi">
+                                                        Edit
+                                                    </a>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <?php
+                                    } ?>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-    </section>
-    <!-- Main content -->
-    <section class="content">
-        <div class="row">
-            <div class="col-12">
-                <div class="card">
-                    <div class="card-header bg-menu-gradient">
-</div>
-                     <div class="card-body text-nowrap">
-    <table id="example2" class="table table-striped table-hover table-sm " style="width:100%">
-        <thead>
-            <tr>
-                <th width="5%">No</th>
-                <th width="10%">Kelas</th>
-                <th width="15%">NIS</th>
-                <th width="10%">NISN</th>
-                <th width="40%">Nama Siswa</th>
-                <th width="20%">Aksi</th>
-            </tr>
-        </thead>
-        <tbody class="align-middle">
-            <?php
-// Mengambil data siswa diurutkan berdasarkan nama (pd)
-$sqlSiswa = mysqli_query($sqlconn, "SELECT pd, nis,nisn, kelas, id FROM siswa ORDER BY pd ASC");
-$noS = 1;
-while ($ds = mysqli_fetch_array($sqlSiswa)) {
-?>
-                <tr class="text-center">
-                    <td><?php echo $noS++; ?></td>
-                    <td><span class="badge badge-secondary px-2 shadow-xs"><?php echo htmlspecialchars($ds['kelas']); ?></span></td>
-                    <td><?php echo htmlspecialchars($ds['nis']); ?></td>
-                    <td><?php echo htmlspecialchars($ds['nisn']); ?></td>
-                    <td class="text-left font-weight-bold"><?php echo htmlspecialchars($ds['pd']); ?></td>
-
-                    <td>
-                      <div class="btn-group">
-                        <a href="?input&nis=<?php echo $ds['id']; ?>" class="btn badge badge-success btn-sm">
-                            Input
-                        </a>
-                        <a href="?editpress&urut=<?php echo $ds['id']; ?>" class="btn badge badge-primary btn-sm">
-                            Edit
-                        </a>
-                        <a href="?viewpress&urut=<?php echo $ds['id']; ?>" class="btn badge badge-info btn-sm">
-                            Detail
-                        </a>
-                      </div>
-                    </td>
-                </tr>
-            <?php
-}?>
-        </tbody>
-    </table>
-</div>
-</div>
-</div>
-</div>
-</div>
-<!-- Global scripts provided by index.php -->
- <script>
-  $(document).ready(function () {
-    $('#example2').DataTable();
-  });
-</script>
+    </div>
+    <!-- Global scripts provided by index.php -->
+    <script>
+        $(document).ready(function () {
+            $('#example2').DataTable({
+                "paging": false,
+                "scrollY": "450px",
+                "scrollCollapse": true,
+                "lengthChange": false,
+                "searching": true,
+                "ordering": true,
+                "info": true,
+                "autoWidth": false,
+                "responsive": true,
+                "language": {
+                    "search": "Search:",
+                    "paginate": {
+                    }
+                }
+            });
+        });
+    </script>

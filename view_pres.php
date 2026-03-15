@@ -2,15 +2,50 @@
 include_once "cfg/konek.php";
 include_once "cfg/secure.php";
 
-if (isset($_REQUEST['urut']) && $_REQUEST['urut']) {
-    $id = $_REQUEST['urut'];
+if (!isset($_REQUEST['urut']) || empty($_REQUEST['urut'])) {
+    echo '<script>
+        $(function() {
+            toastr.warning("Tidak ada detail prestasi pada peserta didik yang dipilih");
+            setTimeout(function() {
+                window.location.href = "arsipdata/inputprestasi";
+            }, 2000);
+        });
+    </script>';
+    return;
+}
 
-    // First attempt: try to find achievement by ID (urut)
-    $sql = mysqli_query($sqlconn, "SELECT 
+$id = $_REQUEST['urut'];
+
+// First attempt: try to find achievement by ID (urut)
+$sql = mysqli_query($sqlconn, "SELECT 
+        prestasi.id,
+        prestasi.prestasi, 
+        prestasi.pd, 
+        prestasi.kelas, 
+        prestasi.tingkat, 
+        prestasi.penyelenggara, 
+        prestasi.lokasi,
+        prestasi.juara, 
+        prestasi.pdf,
+        prestasi.jenisprestasi,
+        prestasi.tgl_kegiatan,
+        prestasi.bulan,
+        prestasi.nama_kegiatan,
+        siswa.photo 
+    FROM prestasi 
+    LEFT JOIN siswa ON prestasi.pd = siswa.pd AND prestasi.kelas = siswa.kelas
+    WHERE prestasi.id = '$id'");
+
+$r = mysqli_fetch_array($sql);
+
+// Second attempt: if not found, it might be a Student ID from dataprestasi.php
+// Fetch the latest achievement for this student
+if (!$r) {
+    $sqlSiswa = mysqli_query($sqlconn, "SELECT 
             prestasi.id,
             prestasi.prestasi, 
-            prestasi.pd, 
-            prestasi.kelas, 
+            siswa.pd, 
+            siswa.kelas, 
             prestasi.tingkat, 
             prestasi.penyelenggara, 
             prestasi.lokasi,
@@ -19,64 +54,40 @@ if (isset($_REQUEST['urut']) && $_REQUEST['urut']) {
             prestasi.jenisprestasi,
             prestasi.tgl_kegiatan,
             prestasi.bulan,
+            prestasi.nama_kegiatan,
             siswa.photo 
-        FROM prestasi 
-        LEFT JOIN siswa ON prestasi.pd = siswa.pd AND prestasi.kelas = siswa.kelas
-        WHERE prestasi.id = '$id'");
+        FROM siswa 
+        LEFT JOIN prestasi ON prestasi.pd = siswa.pd AND prestasi.kelas = siswa.kelas
+        WHERE siswa.id = '$id' 
+        ORDER BY prestasi.id DESC LIMIT 1");
+    $r = mysqli_fetch_array($sqlSiswa);
+}
 
-    $r = mysqli_fetch_array($sql);
+// Redirect if no achievement data found (or if student doesn't exist)
+if (!$r || empty($r['id'])) {
+    echo '<script>
+        $(function() {
+            toastr.warning("Tidak ada detail prestasi pada peserta didik yang dipilih!");
+            setTimeout(function() {
+                window.location.href = "arsipdata/inputprestasi";
+            }, 2000);
+        });
+    </script>';
+    return;
+}
 
-    // Second attempt: if not found, it might be a Student ID from dataprestasi.php
-    // Fetch the latest achievement for this student
-    if (!$r) {
-        $sqlSiswa = mysqli_query($sqlconn, "SELECT 
-                prestasi.id,
-                prestasi.prestasi, 
-                siswa.pd, 
-                siswa.kelas, 
-                prestasi.tingkat, 
-                prestasi.penyelenggara, 
-                prestasi.lokasi,
-                prestasi.juara, 
-                prestasi.pdf,
-                prestasi.jenisprestasi,
-                prestasi.tgl_kegiatan,
-                prestasi.bulan,
-                siswa.photo 
-            FROM siswa 
-            LEFT JOIN prestasi ON prestasi.pd = siswa.pd AND prestasi.kelas = siswa.kelas
-            WHERE siswa.id = '$id' 
-            ORDER BY prestasi.id DESC LIMIT 1");
-        $r = mysqli_fetch_array($sqlSiswa);
-    }
-
-    if ($r) {
-        $photo = $r['photo'] ?? '';
-        $nama = $r['pd'] ?? '';
-        $kelas = $r['kelas'] ?? '';
-        $prestasi = $r['prestasi'] ?? '';
-        $tingkat = $r['tingkat'] ?? '';
-        $penyelenggara = $r['penyelenggara'] ?? '';
-        $lokasi = $r['lokasi'] ?? '';
-        $juara = $r['juara'] ?? '';
-        $pdf = $r['pdf'] ?? '';
-        $jenisprestasi = $r['jenisprestasi'] ?? '';
-        $tgl_kegiatan = $r['tgl_kegiatan'] ?? '';
-        $bulan = $r['bulan'] ?? '';
-    }
-    else {
-        $photo = '';
-        $nama = '';
-        $kelas = '';
-        $prestasi = '';
-        $tingkat = '';
-        $lokasi = '';
-        $juara = '';
-        $pdf = '';
-        $jenisprestasi = '';
-        $tgl_kegiatan = '';
-        $bulan = '';
-    }
+$photo = $r['photo'] ?? '';
+$nama = $r['pd'] ?? '';
+$kelas = $r['kelas'] ?? '';
+$prestasi = $r['prestasi'] ?? '';
+$tingkat = $r['tingkat'] ?? '';
+$penyelenggara = $r['penyelenggara'] ?? '';
+$lokasi = $r['lokasi'] ?? '';
+$juara = $r['juara'] ?? '';
+$pdf = $r['pdf'] ?? '';
+$jenisprestasi = $r['jenisprestasi'] ?? '';
+$tgl_kegiatan = $r['tgl_kegiatan'] ?? '';
+$bulan = $r['bulan'] ?? '';
 ?>
 <style>
     .form-control:disabled, .form-control[readonly] {
@@ -162,24 +173,6 @@ if (isset($_REQUEST['urut']) && $_REQUEST['urut']) {
     }
 </style>
 
-<!-- Content Wrapper. Contains page content -->
-<div class="content-wrapper">
-    <!-- Content Header (Page header) -->
-    <section class="content-header">
-        <div class="container-fluid">
-            <div class="row mb-2">
-                <div class="col-sm-6">
-                    <h1>Detail Prestasi</h1>
-                </div>
-                <div class="col-sm-6">
-                    <ol class="breadcrumb float-sm-right">
-                        <li class="breadcrumb-item"><a href="index.php">Home</a></li>
-                        <li class="breadcrumb-item active">Detail Prestasi</li>
-                    </ol>
-                </div>
-            </div>
-        </div>
-    </section>
 
     <!-- Main content -->
     <section class="content">
@@ -187,7 +180,7 @@ if (isset($_REQUEST['urut']) && $_REQUEST['urut']) {
             <div class="card shadow-sm border-0">
                 <div class="card-header bg-menu-gradient">
                     <div class="card-tools ml-auto">
-                        <a href="?input" class="btn btn-warning btn-sm">
+                        <a href="arsipdata/inputprestasi" class="btn btn-warning btn-sm rounded-pill">
                             <i class="fa fa-arrow-left mr-1"></i> Kembali
                         </a>
                     </div>
@@ -213,13 +206,13 @@ if (isset($_REQUEST['urut']) && $_REQUEST['urut']) {
                                                     <img class='profile-user-img img-fluid img-circle shadow-sm border-pemenang' style='width: 150px; height: 150px; object-fit: cover; cursor: pointer;' src="file/fotopd/<?php echo $photo; ?>">
                                                 </a>
                                             <?php
-    }
-    else { ?>
+}
+else { ?>
                                                 <a href="images/default.png" target="_blank" title="Klik untuk melihat foto penuh">
                                                     <img class="profile-user-img img-fluid img-circle border-pemenang" style='width: 150px; height: 150px; object-fit: cover; cursor: pointer;' src="images/default.png" alt="User profile picture">
                                                 </a>
                                             <?php
-    }?>
+}?>
                                         </div>
                                     </center>
                                     <div class="mt-4">
@@ -293,15 +286,15 @@ if (isset($_REQUEST['urut']) && $_REQUEST['urut']) {
                                             <label class="col-sm-4 col-form-label label-custom">Juara Ke-</label>
                                             <div class="col-sm-8">
                                                 <input type="text" class="form-control form-control-sm" value="<?php
-    if (in_array($juara, ['1', '2', '3', '4'])) {
-        echo 'Juara ' . $juara;
-    }
-    else if (in_array($juara, ['Harapan 1', 'Harapan 2', 'Harapan 3'])) {
-        echo 'Juara ' . $juara;
-    }
-    else {
-        echo $juara;
-    }
+if (in_array($juara, ['1', '2', '3', '4'])) {
+    echo 'Juara ' . $juara;
+}
+else if (in_array($juara, ['Harapan 1', 'Harapan 2', 'Harapan 3'])) {
+    echo 'Juara ' . $juara;
+}
+else {
+    echo $juara;
+}
 ?>" readonly>
                                             </div>
                                         </div>
@@ -317,24 +310,24 @@ if (isset($_REQUEST['urut']) && $_REQUEST['urut']) {
                                             <label class="col-sm-4 col-form-label label-custom">Lampiran</label>
                                             <div class="col-sm-8">
                                                 <?php
-    if (!empty($pdf)) {
-        $files = explode(',', $pdf);
-        foreach ($files as $index => $f) {
-            if (!empty($f)) {
-                $ext = strtolower(pathinfo($f, PATHINFO_EXTENSION));
-                $is_image = in_array($ext, ['jpg', 'jpeg', 'png']);
-                if ($is_image) {
-                    echo "<div class='attachment-container mb-3 text-center'><a href='file/prestasi/$f' target='_blank' title='Klik untuk melihat gambar penuh'><img src='file/prestasi/$f' class='attachment-img'></a></div>";
-                }
-                else {
-                    echo "<div class='attachment-container mb-3'><embed type='application/pdf' src='file/prestasi/$f' width='100%' height='500px' style='border:none;'></div>";
-                }
+if (!empty($pdf)) {
+    $files = explode(',', $pdf);
+    foreach ($files as $index => $f) {
+        if (!empty($f)) {
+            $ext = strtolower(pathinfo($f, PATHINFO_EXTENSION));
+            $is_image = in_array($ext, ['jpg', 'jpeg', 'png']);
+            if ($is_image) {
+                echo "<div class='attachment-container mb-3 text-center'><a href='file/prestasi/$f' target='_blank' title='Klik untuk melihat gambar penuh'><img src='file/prestasi/$f' class='attachment-img'></a></div>";
+            }
+            else {
+                echo "<div class='attachment-container mb-3'><embed type='application/pdf' src='file/prestasi/$f' width='100%' height='500px' style='border:none;'></div>";
             }
         }
     }
-    else {
-        echo "<div class='alert alert-secondary text-center alert-view m-0'><i class='fa fa-info-circle mr-1'></i> Tidak ada lampiran berkas.</div>";
-    }
+}
+else {
+    echo "<div class='alert alert-secondary text-center alert-view m-0'><i class='fa fa-info-circle mr-1'></i> Tidak ada lampiran berkas.</div>";
+}
 ?>
                                             </div>
                                         </div>
@@ -349,6 +342,4 @@ if (isset($_REQUEST['urut']) && $_REQUEST['urut']) {
     </section>
 </div>
 
-<?php
-}?>
 

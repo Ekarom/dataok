@@ -65,7 +65,7 @@
 <div class="content-wrapper d-flex justify-content-center align-items-center" style="min-height: 80vh;">
     <div class="card card-danger card-outline w-50 shadow-lg">
         <div class="card-header text-center">
-            <h1 class="card-title" style="float: none; font-size: 1.5rem;"><i class="fas fa-exclamation-triangle mr-2"></i><b>Change Password</b></h1>
+            <h1 class="card-title text-center" style="float: none; font-size: 1.5rem; width: 100%;"><i class="fas fa-exclamation-triangle me-2"></i><b>Change Password</b></h1>
         </div>
         <div class="card-body">
             <div class="security-gradient-alert">
@@ -91,12 +91,10 @@
                 ?>
                 <input type="hidden" id="cardPassL" name="passL" value="<?php echo htmlspecialchars($valPassL); ?>">
                 
-                <div class="form-group">
+                <div class="mb-3">
                     <label for="cardPassB">Password Baru</label>
                     <div class="input-group">
-                        <div class="input-group-prepend">
-                            <span class="input-group-text"><i class="fas fa-key"></i></span>
-                        </div>
+                        <span class="input-group-text"><i class="fas fa-key"></i></span>
                         <input type="password" class="form-control" id="cardPassB" name="passB" required placeholder="Minimal 6 karakter">
                     </div>
                     <!-- Password Strength Indicator -->
@@ -106,21 +104,19 @@
                     <small class="password-strength-text" id="cardStrengthText"></small>
                 </div>
                 
-                <div class="form-group">
+                <div class="mb-3">
                     <label for="cardPassK">Konfirmasi Password Baru</label>
                     <div class="input-group">
-                        <div class="input-group-prepend">
-                            <span class="input-group-text"><i class="fas fa-check-circle"></i></span>
-                        </div>
+                        <span class="input-group-text"><i class="fas fa-check-circle"></i></span>
                         <input type="password" class="form-control" id="cardPassK" name="passK" required placeholder="Ulangi password baru">
                     </div>
                     <small id="cardMatchText" class="mt-1 d-block" style="font-weight: bold;"></small>
                 </div>
 
                 <div class="row mt-4">
-                    <div class="col-12">
-                        <button type="button" class="btn btn-danger btn-block btn-lg" id="btnCardSimpanPass" disabled>
-                            <i class="fas fa-save mr-2"></i> Simpan
+                    <div class="col-12 d-grid">
+                        <button type="button" class="btn btn-danger btn-lg" id="btnCardSimpanPass" disabled>
+                            <i class="fas fa-save me-2"></i> Simpan
                         </button>
                     </div>
                 </div>

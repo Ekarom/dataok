@@ -12,7 +12,7 @@ if($_REQUEST['urut']) {
     $log = $r['level'];
 ?>
 
-<form action="?modul=User" method="post">
+<form action="usermanagement" method="post">
     <input type="hidden" name="simpan" value="yes">
     <input type="hidden" name="id" value="<?php echo $r['id']; ?>">
     <div class="card card-outline card-primary shadow-sm">

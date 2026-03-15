@@ -2,11 +2,14 @@
 include "cfg/konek.php";
 
 $s = []; // Initialize to prevent undefined variable errors
+
+// Handle Database Year Selection
 if (isset($_POST['db_year']) && !empty($_POST['db_year'])) {
     $target_db = mysqli_real_escape_string($sqlconn, $_POST['db_year']);
     mysqli_select_db($sqlconn, $target_db);
 }
 
+// Handle Student Data Retrieval
 if (isset($_POST['nis']) || isset($_GET['nis'])) {
     $nis = isset($_POST['nis']) ? $_POST['nis'] : $_GET['nis'];
     $sql = mysqli_query($sqlconn, "SELECT * FROM siswa WHERE id='$nis'");
@@ -15,295 +18,431 @@ if (isset($_POST['nis']) || isset($_GET['nis'])) {
     }
 }
 
-// Photo path handling
-$foto_path = "images/default.png"; // Default
+// Student Photo Handling
+$foto_path = "images/default.png"; // Default fallback
 if (isset($s['photo']) && $s['photo'] != "" && file_exists("file/fotopd/" . $s['photo'])) {
     $foto_path = "file/fotopd/" . $s['photo'];
 }
 ?>
 
 <style>
-    .form-control:required:invalid { border-color: #ffcccc; }
-    .form-control:required:valid { border-color: #cceeff; }
-    .is-invalid { border-color: #e74c3c !important; }
-    /* PRESTASI PREMIUM UI STYLES */
-    .modal-input-prestasi .modal-content { border-radius: 12px; border: none; overflow: hidden; }
-    .modal-input-prestasi .modal-header { background: linear-gradient(90deg, #1e3c72 0%, #2a5298 100%); color: #fff; border: none; padding: 12px 20px; }
-    .modal-input-prestasi .modal-title { font-size: 1.1rem; font-weight: 700; letter-spacing: 0.5px; }
-    
-    .profile-card-prestasi { background: #ffffffff; border: 1px solid #e9ecef; border-top: 3px solid #007bff; border-radius: 8px; padding: 25px 15px; height: 100%; box-shadow: 0 4px 12px rgba(0,0,0,0.05); text-align: center; }
-    .profile-img-prestasi { width: 140px; height: 140px; border-radius: 50%; object-fit: cover; border: 4px solid #fff; box-shadow: 0 5px 15px rgba(0,0,0,0.1); margin-bottom: 20px; }
-    .profile-name-prestasi { font-size: 1.2rem; font-weight: 800; color: #2d3436; line-height: 1.2; margin-bottom: 15px; text-transform: uppercase; }
-    .profile-divider { border-top: 1px solid #f1f1f1; margin: 15px 0; }
-    .profile-nis-label { font-weight: 700; color: #333; font-size: 0.95rem; }
-    .profile-nis-value { color: #0984e3; font-weight: 700; font-size: 0.95rem; }
-    
-    .form-prestasi-premium label { font-weight: 700; color: #333; margin-bottom: 5px; font-size: 0.95rem; display: flex; align-items: center; }
-    .form-prestasi-premium .form-control { border-radius: 4px; border: 1px solid #ced4da; padding: 8px 12px; font-size: 0.9rem; }
-    .form-prestasi-premium .form-control:focus { box-shadow: 0 0 0 0.2rem rgba(9, 132, 227, 0.15); border-color: #0984e3; }
-    
-    .input-group-premium .form-control { border-right: none; }
-    .input-group-premium .btn { border-left: none; background: #f8f9fa; color: #636e72; border: 1px solid #ced4da; font-weight: 600; cursor: pointer; border-radius: 0 4px 4px 0 !important; }
-    .input-group-premium .btn:hover { background: #e9ecef; }
-    
-    .premium-form-row { margin-bottom: 18px; }
-    .premium-form-left-col { width: 33%; padding-top: 8px; }
-    .premium-form-right-col { width: 67%; }
+    /* ==========================================
+       FILE UPLOADER PREMIUM UI STYLES
+       ========================================== */
+    .file-upload-wrapper {
+        width: 100%;
+        margin-bottom: 20px;
+    }
 
-    .modal-footer-premium { background: #fbfbfb; border-top: 1px solid #f1f1f1; padding: 15px 25px; }
-    
-    .hover-grow { transition: transform 0.2s ease; }
-    .hover-grow:hover { transform: scale(1.03); }
-      /* File Uploader Premium UI Styles */
-    .file-upload-wrapper { width: 100%; margin-bottom: 20px; }
-    .file-upload-selector { background: #f8f9fa; display: flex; align-items: center; border: 1px solid #ced4da; border-radius: 4px 4px 0 0; }
-    .upload-area { display: flex; align-items: center; width: 100%; padding: 8px 12px; }
-    .btn-light-info { background-color: #e3f2fd; color: #0288d1; border: 1px solid #b3e5fc; font-weight: 600; font-size: 13px; padding: 5px 12px; white-space: nowrap; border-radius: 4px; transition: all 0.2s; }
-    .btn-light-info:hover { background-color: #b3e5fc; color: #01579b; }
-    .dropzone { flex-grow: 1; text-align: center; color: #6c757d; font-size: 13px; border-left: 1px solid #dee2e6; margin-left: 10px; padding-left: 10px; cursor: pointer; }
-    .file-list-uploaded { border: 1px solid #ced4da; border-top: none; background: #fff; max-height: 200px; overflow-y: auto; }
-    .file-item-new { display: flex; align-items: center; padding: 10px 15px; border-bottom: 1px solid #f1f1f1; transition: background 0.2s; }
-    .file-item-new:hover { background-color: #fcfcfc; }
-    .file-info-new { display: flex; align-items: center; flex-grow: 1; min-width: 0; }
-    .file-details-new { margin-left: 12px; overflow: hidden; }
-    .file-name-new { font-size: 13px; font-weight: 600; color: #333; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; }
-    .file-size-new { font-size: 11px; color: #888; display: block; }
-    .delete-btn-new { color: #dc3545; cursor: pointer; font-size: 16px; padding: 5px; margin-left: 10px; transition: color 0.2s; }
-    .delete-btn-new:hover { color: #bd2130; }
-    .uploader-footer { padding: 8px 12px; background: #f8f9fa; border: 1px solid #ced4da; border-top: none; border-radius: 0 0 4px 4px; font-size: 12px; line-height: 1.5; }
-    .font-600 { font-weight: 600; }
-    .text-blck { color: #333; }
-    .hidden-file-input { display: none; }
-    .file-upload-selector.dragover { background-color: #e8f0fe; border-color: #4285f4; }
-    .fs-xs { font-size: 13px; }
-    .fs-nano { font-size: 11px; }
-    .mt-1 { margin-top: 0.25rem !important; }
+    .file-upload-selector {
+        background: #f8f9fa;
+        display: flex;
+        align-items: center;
+        border: 1px solid #ced4da;
+        border-radius: 4px 4px 0 0;
+    }
 
+    .upload-area {
+        display: flex;
+        align-items: center;
+        width: 100%;
+        padding: 8px 12px;
+    }
+
+    .btn-light-info {
+        background-color: #e3f2fd;
+        color: #0288d1;
+        border: 1px solid #b3e5fc;
+        font-weight: 600;
+        font-size: 13px;
+        padding: 5px 12px;
+        white-space: nowrap;
+        border-radius: 4px;
+        transition: all 0.2s;
+    }
+
+    .btn-light-info:hover {
+        background-color: #b3e5fc;
+        color: #01579b;
+    }
+
+    .dropzone {
+        flex-grow: 1;
+        text-align: center;
+        color: #6c757d;
+        font-size: 13px;
+        border-left: 1px solid #dee2e6;
+        margin-left: 10px;
+        padding-left: 10px;
+        cursor: pointer;
+    }
+
+    .file-list-uploaded {
+        border: 1px solid #ced4da;
+        border-top: none;
+        background: #fff;
+        max-height: 200px;
+        overflow-y: auto;
+    }
+
+    .file-item-new {
+        display: flex;
+        align-items: center;
+        padding: 10px 15px;
+        border-bottom: 1px solid #f1f1f1;
+        transition: background 0.2s;
+    }
+
+    .file-item-new:hover {
+        background-color: #fcfcfc;
+    }
+
+    .file-info-new {
+        display: flex;
+        align-items: center;
+        flex-grow: 1;
+        min-width: 0;
+    }
+
+    .file-details-new {
+        margin-left: 12px;
+        overflow: hidden;
+    }
+
+    .file-name-new {
+        font-size: 13px;
+        font-weight: 600;
+        color: #333;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        display: block;
+    }
+
+    .file-size-new {
+        font-size: 11px;
+        color: #888;
+        display: block;
+    }
+
+    .delete-btn-new {
+        color: #dc3545;
+        cursor: pointer;
+        font-size: 16px;
+        padding: 5px;
+        margin-left: 10px;
+        transition: color 0.2s;
+    }
+
+    .delete-btn-new:hover {
+        color: #bd2130;
+    }
+
+    .uploader-footer {
+        padding: 8px 12px;
+        background: #f8f9fa;
+        border: 1px solid #ced4da;
+        border-top: none;
+        border-radius: 0 0 4px 4px;
+        font-size: 12px;
+        line-height: 1.5;
+    }
+
+    .font-600 {
+        font-weight: 600;
+    }
+
+    .text-black {
+        color: #333;
+    }
+
+    .hidden-file-input {
+        display: none;
+    }
+
+    .file-upload-selector.dragover {
+        background-color: #e8f0fe;
+        border-color: #4285f4;
+    }
+
+    .fs-xs {
+        font-size: 13px;
+    }
+
+    .fs-nano {
+        font-size: 11px;
+    }
+
+    .mt-1 {
+        margin-top: 0.25rem !important;
+    }
+
+    /* ==========================================
+       CUSTOM SELECT2 SEARCH STYLING
+       ========================================== */
+    .select2-container .select2-selection--single {
+        height: 38px !important;
+        border: 1px solid #ced4da !important;
+        border-radius: 4px !important;
+    }
+
+    .select2-container--default .select2-selection--single .select2-selection__rendered {
+        line-height: 36px !important;
+        padding-left: 12px !important;
+    }
+
+    .select2-container--default .select2-selection--single .select2-selection__arrow {
+        height: 36px !important;
+    }
+
+    .select2-search--dropdown .select2-search__field {
+        border: 2px solid #000 !important;
+        border-radius: 8px !important;
+        padding: 5px 12px !important;
+        margin: 6px 4px !important;
+        outline: none !important;
+        font-weight: 600 !important;
+        font-size: 0.60rem !important;
+        width: calc(100% - 8px) !important;
+    }
+
+    .select2-container--default .select2-results__option--highlighted[aria-selected] {
+        background-color: #6f42c1 !important;
+        color: #fff !important;
+    }
+
+    .select2-results__option {
+        padding: 8px 12px !important;
+        font-size: 13px !important;
+    }
 </style>
-<!-- Content Wrapper. Contains page content -->
-<div class="content-wrapper">
-    <!-- Content Header (Page header) -->
-    <section class="content-header">
-        <div class="container-fluid">
-            <div class="row mb-2">
-                <div class="col-sm-6">
-                    <h1>Input Prestasi</h1>
+<link rel="stylesheet" href="plugins/css/select2.min.css" />
+
+<!-- Main content -->
+<section class="content">
+    <form action="press" method="POST" enctype="multipart/form-data" id="inputpresForm">
+        <div class="row">
+            <!-- Student Info Column -->
+            <div class="col-md-4">
+                <div class="card card-navy card-outline">
+                    <div class="card-body box-profile">
+                        <div class="text-center">
+                            <img class="profile-user-img img-fluid img-circle" src="<?php echo $foto_path; ?>"
+                                alt="User profile picture" style="width: 150px; height: 150px; object-fit: cover;">
+                        </div>
+                        <h3 class="profile-username text-center mt-3">
+                            <?php echo isset($s['pd']) ? $s['pd'] : '-'; ?>
+                        </h3>
+                        <div class="text-center">
+                            <b>KELAS</b>
+                            <p class="text-muted badge bg-menu-gradient d-block mx-auto"
+                                style="max-width: fit-content;">
+                                <?php echo isset($s['kelas']) ? $s['kelas'] : '-'; ?>
+                            </p>
+                        </div>
+
+                        <ul class="list-group list-group-unbordered mb-3">
+                            <li class="list-group-item text-center">
+                                <b>NIS</b><br>
+                                <b class="badge bg-menu-gradient mt-1"><?php echo isset($s['nis']) ? $s['nis'] : '-'; ?></b>
+                            </li>
+                        </ul>
+                    </div>
                 </div>
-                <div class="col-sm-6">
-                    <ol class="breadcrumb float-sm-right">
-                        <li class="breadcrumb-item"><a href="index.php">Home</a></li>
-                        <li class="breadcrumb-item active">Input Prestasi</li>
-                    </ol>
+            </div>
+
+            <!-- Input Form Column -->
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header bg-menu-gradient d-flex align-items-center">
+                        <h3 class="card-title text-white">Form Input Prestasi</h3>
+                        <div class="card-tools ml-auto">
+                            <a href="arsipdata/inputprestasi" class="btn btn-primary btn-sm">
+                                Kembali
+                            </a>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <input type="hidden" name="pd" value="<?php echo isset($s['pd']) ? $s['pd'] : ''; ?>">
+                        <input type="hidden" name="kelas" value="<?php echo isset($s['kelas']) ? $s['kelas'] : ''; ?>">
+                        <input type="hidden" name="urut" value="<?php echo isset($nis) ? $nis : ''; ?>">
+                        <input type="hidden" name="db_year" value="<?php echo isset($_POST['db_year']) ? $_POST['db_year'] : (isset($_GET['db_year']) ? $_GET['db_year'] : ''); ?>">
+
+                        <div class="form-group row">
+                            <label for="prestasi" class="col-sm-4 col-form-label">Prestasi</label>
+                            <div class="col-sm-8">
+                                <input type="text" class="form-control warna" name="prestasi"
+                                    placeholder="Contoh: Juara 1 Lomba Web Design" required>
+                            </div>
+                        </div>
+
+                        <div class="form-group row">
+                            <label for="jenisprestasi" class="col-sm-4 col-form-label">Jenis Prestasi</label>
+                            <div class="col-sm-8">
+                                <select class="form-control warna select2" name="jenisprestasi" required>
+                                    <option value="">- Pilih Jenis -</option>
+                                    <option value="Akademik">Akademik</option>
+                                    <option value="Non-Akademik">Non-Akademik</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-group row">
+                            <label for="tingkat" class="col-sm-4 col-form-label">Tingkat</label>
+                            <div class="col-sm-8">
+                                <select class="form-control warna select2" name="tingkat" required>
+                                    <option value="">- Pilih Tingkat -</option>
+                                    <option value="Sekolah">Sekolah</option>
+                                    <option value="Kecamatan">Kecamatan</option>
+                                    <option value="Kabupaten/Kota">Kabupaten/Kota</option>
+                                    <option value="Provinsi">Provinsi</option>
+                                    <option value="Nasional">Nasional</option>
+                                    <option value="Internasional">Internasional</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-group row">
+                            <label for="tgl_kegiatan" class="col-sm-4 col-form-label">Tanggal Kegiatan</label>
+                            <div class="col-sm-8">
+                                <input type="date" class="form-control warna" name="tgl_kegiatan" required>
+                            </div>
+                        </div>
+
+                        <div class="form-group row">
+                            <label for="nama_kegiatan" class="col-sm-4 col-form-label">Nama Kegiatan</label>
+                            <div class="col-sm-8">
+                                <input type="text" class="form-control warna" name="nama_kegiatan"
+                                    placeholder="Isi nama kegiatan" required>
+                            </div>
+                        </div>
+
+                        <div class="form-group row">
+                            <label for="penyelenggara" class="col-sm-4 col-form-label">Penyelenggara</label>
+                            <div class="col-sm-8">
+                                <input type="text" class="form-control warna" name="penyelenggara"
+                                    placeholder="Contoh: Dinas Pendidikan" required>
+                            </div>
+                        </div>
+
+                        <div class="form-group row">
+                            <label for="lokasi" class="col-sm-4 col-form-label">Lokasi</label>
+                            <div class="col-sm-8">
+                                <input type="text" class="form-control warna" name="lokasi" placeholder="Isi Lokasi"
+                                    required>
+                            </div>
+                        </div>
+
+                        <div class="form-group row">
+                            <label for="juara" class="col-sm-4 col-form-label">Juara Ke-</label>
+                            <div class="col-sm-8">
+                                <select class="form-control warna select2" id="juara" name="juara" required>
+                                    <option value="">- Pilih Juara -</option>
+                                    <option value="1">Juara 1</option>
+                                    <option value="2">Juara 2</option>
+                                    <option value="3">Juara 3</option>
+                                    <option value="4">Juara 4</option>
+                                    <option value="Harapan 1">Juara Harapan 1</option>
+                                    <option value="Harapan 2">Juara Harapan 2</option>
+                                    <option value="Harapan 3">Juara Harapan 3</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-group row">
+                            <label for="bulan" class="col-sm-4 col-form-label">Bulan</label>
+                            <div class="col-sm-8">
+                                <select class="form-control warna select2" id="bulan" name="bulan" required>
+                                    <option value="">- Pilih Bulan -</option>
+                                    <option value="Januari">Januari</option>
+                                    <option value="Februari">Februari</option>
+                                    <option value="Maret">Maret</option>
+                                    <option value="April">April</option>
+                                    <option value="Mei">Mei</option>
+                                    <option value="Juni">Juni</option>
+                                    <option value="Juli">Juli</option>
+                                    <option value="Agustus">Agustus</option>
+                                    <option value="September">September</option>
+                                    <option value="Oktober">Oktober</option>
+                                    <option value="November">November</option>
+                                    <option value="Desember">Desember</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-group row">
+                            <label for="file" class="col-sm-4 col-form-label">Upload Lampiran (PDF/Gambar)</label>
+                            <div class="col-sm-8">
+                                <div class="file-upload-wrapper" id="drop-area">
+                                    <div class="file-upload-selector border rounded-top">
+                                        <div class="upload-area d-flex align-items-center">
+                                            <div style="flex-shrink: 0;">
+                                                <button type="button" class="btn btn-sm btn-light-info"
+                                                    onclick="document.getElementById('fileInput').click()">Pilih
+                                                    File...</button>
+                                            </div>
+                                            <div class="dropzone text-center prevent-select">
+                                                <span class="upload-text"><i class="fa fa-cloud-upload-alt mr-1"></i>
+                                                    atau drag & drop berkas disini.</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div id="file-list-display" class="file-list-uploaded d-none">
+                                        <!-- File items will be injected here -->
+                                    </div>
+                                    <div class="uploader-footer border rounded-bottom p-2 border-top-0">
+                                        <div class="fs-xs"><span class="font-600 text-black">Total : </span><span id="total-size-display">0 B</span></div>
+                                        <div class="fs-nano text-muted">
+                                            Lampirkan berkas <span class="font-600 text-black">.pdf / .jpg / .png</span> maksimal <span class="font-600 text-black">2</span> berkas dan ukuran maksimal <span class="font-600 text-black">2.0 MB</span>
+                                        </div>
+                                    </div>
+                                    <input type="file" name="file[]" id="fileInput" class="hidden-file-input"
+                                        accept=".pdf,.jpg,.jpeg,.png" multiple onchange="handleFileSelect(this)">
+                                </div>
+                                <small class="text-warning">*Opsional. Upload sertifikat/dokumentasi.</small>
+                            </div>
+                        </div>
+
+                        <div class="form-group row mt-2" id="preview-area" style="display:none;">
+                            <div class="col-sm-4"></div>
+                            <div class="col-sm-8">
+                                <img id="img-preview" src=""
+                                    style="max-width: 100%; max-height: 200px; display:none; border: 1px solid #ddd; padding: 5px;">
+                                <p id="pdf-preview" style="display:none;"><i class="fa fa-file-pdf"></i> PDF Selected
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card-footer text-right">
+                        <button type="button" id="btnIncomplete" class="btn btn-secondary disabled"
+                            style="cursor: ;">Lengkapi Data</button>
+                        <button type="submit" id="btnSave" name="save" class="btn btn-success" style="display: none;"><i
+                                class="fa fa-save"></i> Simpan Perubahan</button>
+                    </div>
                 </div>
             </div>
         </div>
-    </section>
-
-    <!-- Main content -->
-    <section class="content">
-        <form action="?laporan" method="POST" enctype="multipart/form-data" id="inputpresForm">
-            <div class="row">
-                <!-- Student Info Column -->
-                <div class="col-md-4">
-                    <div class="card card-navy card-outline">
-                        <div class="card-body box-profile">
-                            <div class="text-center">
-                                <img class="profile-user-img img-fluid img-circle" src="<?php echo $foto_path; ?>" alt="User profile picture" style="width: 150px; height: 150px; object-fit: cover;">
-                            </div>
-                            <h3 class="profile-username text-center mt-3"><?php echo isset($s['pd']) ? $s['pd'] : '-'; ?></h3>
-                            <div class="text-center">
-                                <b>KELAS</b>
-                                <p class="text-muted badge bg-menu-gradient d-block mx-auto" style="max-width: fit-content;"><?php echo isset($s['kelas']) ? $s['kelas'] : '-'; ?></p>
-                            </div>
-                            
-                            <ul class="list-group list-group-unbordered mb-3">
-                                <li class="list-group-item text-center">
-                                    <b>NIS</b><br>
-                                    <b class="badge bg-menu-gradient mt-1"><?php echo isset($s['nis']) ? $s['nis'] : '-'; ?></b>
-                                </li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Input Form Column -->
-                <div class="col-md-8">
-                    <div class="card">
-                        <div class="card-header bg-menu-gradient d-flex align-items-center">
-                            <h3 class="card-title text-white">Form Input Prestasi</h3>
-                            <div class="card-tools ml-auto">
-                                <a href="?input" class="btn btn-warning btn-sm rounded-pill px-4 shadow-sm">
-                                    <i class="fa fa-arrow-left mr-1"></i> Kembali
-                                </a>
-                            </div>
-                        </div>
-                        <div class="card-body">
-                            <input type="hidden" name="pd" value="<?php echo isset($s['pd']) ? $s['pd'] : ''; ?>">
-                            <input type="hidden" name="kelas" value="<?php echo isset($s['kelas']) ? $s['kelas'] : ''; ?>">
-                            <input type="hidden" name="db_year" value="<?php echo isset($_POST['db_year']) ? $_POST['db_year'] : (isset($_GET['db_year']) ? $_GET['db_year'] : ''); ?>">
-                            
-                            <div class="form-group row">
-                                <label for="prestasi" class="col-sm-4 col-form-label">Prestasi</label>
-                                <div class="col-sm-8">
-                                    <input type="text" class="form-control warna" name="prestasi" placeholder="Contoh: Juara 1 Lomba Web Design" required>
-                                </div>
-                            </div>
-
-                            <div class="form-group row">
-                                <label for="jenisprestasi" class="col-sm-4 col-form-label">Jenis Prestasi</label>
-                                <div class="col-sm-8">
-                                    <select class="form-control warna" name="jenisprestasi" required>
-                                        <option value="">- Pilih Jenis -</option>
-                                        <option value="Akademik">Akademik</option>
-                                        <option value="Non-Akademik">Non-Akademik</option>
-                                    </select>
-                                </div>
-                            </div>
-
-                            <div class="form-group row">
-                                <label for="tingkat" class="col-sm-4 col-form-label">Tingkat</label>
-                                <div class="col-sm-8">
-                                    <select class="form-control warna" name="tingkat" required>
-                                        <option value="">- Pilih Tingkat -</option>
-                                        <option value="Sekolah">Sekolah</option>
-                                        <option value="Kecamatan">Kecamatan</option>
-                                        <option value="Kabupaten/Kota">Kabupaten/Kota</option>
-                                        <option value="Provinsi">Provinsi</option>
-                                        <option value="Nasional">Nasional</option>
-                                        <option value="Internasional">Internasional</option>
-                                    </select>
-                                </div>
-                            </div>
-
-                            <div class="form-group row">
-                                <label for="tgl_kegiatan" class="col-sm-4 col-form-label">Tanggal Kegiatan</label>
-                                <div class="col-sm-8">
-                                    <input type="date" class="form-control warna" name="tgl_kegiatan" required>
-                                </div>
-                            </div>
-
-                            <div class="form-group row">
-                                <label for="nama_kegiatan" class="col-sm-4 col-form-label">Nama Kegiatan</label>
-                                <div class="col-sm-8">
-                                    <input type="text" class="form-control warna" name="nama_kegiatan" placeholder="Isi nama kegiatan" required>
-                                </div>
-                            </div>
-
-                            <div class="form-group row">
-                                <label for="penyelenggara" class="col-sm-4 col-form-label">Penyelenggara</label>
-                                <div class="col-sm-8">
-                                    <input type="text" class="form-control warna" name="penyelenggara" placeholder="Contoh: Dinas Pendidikan" required>
-                                </div>
-                            </div>
-
-                            <div class="form-group row">
-                                <label for="lokasi" class="col-sm-4 col-form-label">Lokasi</label>
-                                <div class="col-sm-8">
-                                    <input type="text" class="form-control warna" name="lokasi" placeholder="Isi Lokasi" required>
-                                </div>
-                            </div>
-
-                            <div class="form-group row">
-                                <label for="juara" class="col-sm-4 col-form-label">Juara Ke-</label>
-                                <div class="col-sm-8">
-                                    <select class="form-control warna" id="juara" name="juara" required>
-                                        <option value="">- Pilih Juara -</option>
-                                        <option value="1">Juara 1</option>
-                                        <option value="2">Juara 2</option>
-                                        <option value="3">Juara 3</option>
-                                        <option value="4">Juara 4</option>
-                                        <option value="Harapan 1">Juara Harapan 1</option>
-                                        <option value="Harapan 2">Juara Harapan 2</option>
-                                        <option value="Harapan 3">Juara Harapan 3</option>
-                                    </select>
-                                </div>
-                            </div>
-
-                            <div class="form-group row">
-                                <label for="bulan" class="col-sm-4 col-form-label">Bulan</label>
-                                <div class="col-sm-8">
-                                    <select class="form-control warna" id="bulan" name="bulan" required>
-                                        <option value="">- Pilih Bulan -</option>
-                                        <option value="Januari">Januari</option>
-                                        <option value="Februari">Februari</option>
-                                        <option value="Maret">Maret</option>
-                                        <option value="April">April</option>
-                                        <option value="Mei">Mei</option>
-                                        <option value="Juni">Juni</option>
-                                        <option value="Juli">Juli</option>
-                                        <option value="Agustus">Agustus</option>
-                                        <option value="September">September</option>
-                                        <option value="Oktober">Oktober</option>
-                                        <option value="November">November</option>
-                                        <option value="Desember">Desember</option>
-                                    </select>
-                                </div>
-                            </div>
-
-                            <div class="form-group row">
-                                <label for="file" class="col-sm-4 col-form-label">Upload Lampiran (PDF/Gambar)</label>
-                                <div class="col-sm-8">
-                                    <div class="file-upload-wrapper" id="drop-area">
-                                        <div class="file-upload-selector border rounded-top">
-                                            <div class="upload-area d-flex align-items-center">
-                                                <div style="flex-shrink: 0;">
-                                                    <button type="button" class="btn btn-sm btn-light-info" onclick="document.getElementById('fileInput').click()">Pilih File...</button>
-                                                </div>
-                                                <div class="dropzone text-center prevent-select">
-                                                    <span class="upload-text"><i class="fa fa-cloud-upload-alt mr-1"></i> atau drag & drop berkas disini.</span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div id="file-list-display" class="file-list-uploaded d-none">
-                                            <!-- File items will be injected here -->
-                                        </div>
-                                        <div class="uploader-footer border rounded-bottom p-2 border-top-0">
-                                            <div class="fs-xs"><span class="font-600 text-black">Total : </span><span id="total-size-display">0 B</span></div>
-                                            <div class="fs-nano text-muted">
-                                                Lampirkan berkas <span class="font-600 text-black">.pdf / .jpg / .png</span> maksimal <span class="font-600 text-black">2</span> berkas dan ukuran maksimal <span class="font-600 text-black">2.0 MB</span>
-                                            </div>
-                                        </div>
-                                        <input type="file" name="file[]" id="fileInput" class="hidden-file-input" accept=".pdf,.jpg,.jpeg,.png" multiple onchange="handleFileSelect(this)">
-                                    </div>
-                                    <small class="text-warning">*Opsional. Upload sertifikat/dokumentasi.</small>
-                                </div>
-                            </div>
-
-                            <div class="form-group row mt-2" id="preview-area" style="display:none;">
-                                <div class="col-sm-4"></div>
-                                <div class="col-sm-8">
-                                    <img id="img-preview" src="" style="max-width: 100%; max-height: 200px; display:none; border: 1px solid #ddd; padding: 5px;">
-                                    <p id="pdf-preview" style="display:none;"><i class="fa fa-file-pdf"></i> PDF Selected</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="card-footer text-right">
-                            <button type="button" id="btnIncomplete" class="btn btn-secondary disabled" style="cursor: not-allowed;">Lengkapi</button>
-                            <button type="submit" id="btnSave" name="save" class="btn btn-success" style="display: none;"><i class="fa fa-save"></i> Simpan</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </form>
-    </section>
-</div>
+    </form>
+</section>
 
 <script>
     /**
-     * Form validation and UI handling
+     * ==========================================
+     * FORM VALIDATION & UI HANDLING
+     * ==========================================
      */
     function validateInputForm() {
         const form = document.getElementById('inputpresForm');
         if (!form) return;
-        
+
         const btnIncomplete = document.getElementById('btnIncomplete');
         const btnSave = document.getElementById('btnSave');
-        
+
         // Get all required inputs
         const requiredInputs = form.querySelectorAll('[required]');
         let isComplete = true;
-        
+
         requiredInputs.forEach(input => {
             if (!input.value.trim()) {
                 isComplete = false;
@@ -320,11 +459,15 @@ if (isset($s['photo']) && $s['photo'] != "" && file_exists("file/fotopd/" . $s['
     }
 
     /**
-     * File handling functions
+     * ==========================================
+     * FILE HANDLING UTILITIES
+     * ==========================================
      */
     function formatBytes(bytes, decimals = 1) {
         if (bytes === 0) return '0 B';
-        const k = 1024, dm = decimals < 0 ? 0 : decimals, units = ['B', 'KB', 'MB', 'GB', 'TB'];
+        const k = 1024,
+            dm = decimals < 0 ? 0 : decimals,
+            units = ['B', 'KB', 'MB', 'GB', 'TB'];
         const i = Math.floor(Math.log(bytes) / Math.log(k));
         return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + units[i];
     }
@@ -336,9 +479,11 @@ if (isset($s['photo']) && $s['photo'] != "" && file_exists("file/fotopd/" . $s['
         const newFiles = Array.from(input.files);
         const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png'];
         const validFiles = newFiles.filter(f => allowedTypes.includes(f.type));
-        
+
         if (newFiles.length > 0 && validFiles.length === 0) {
-            if (typeof toastr !== 'undefined') toastr.error('Hanya berkas PDF atau Gambar (JPG/PNG) yang diperbolehkan!');
+            if (typeof toastr !== 'undefined') {
+                toastr.error('Hanya berkas PDF atau Gambar (JPG/PNG) yang diperbolehkan!');
+            }
         }
 
         // Add new valid files to the existing selection (additive)
@@ -350,11 +495,11 @@ if (isset($s['photo']) && $s['photo'] != "" && file_exists("file/fotopd/" . $s['
                 }
             }
         });
-        
+
         if (window.selectedFiles.length > 2) {
             if (typeof toastr !== 'undefined') toastr.warning('Maksimal 2 berkas diperbolehkan.');
         }
-        
+
         updateInputFiles();
         renderFileList();
     }
@@ -363,10 +508,10 @@ if (isset($s['photo']) && $s['photo'] != "" && file_exists("file/fotopd/" . $s['
         const listContainer = document.getElementById('file-list-display');
         const totalDisplay = document.getElementById('total-size-display');
         if (!listContainer) return;
-        
+
         listContainer.innerHTML = '';
         let totalSize = 0;
-        
+
         if (window.selectedFiles.length > 0) {
             listContainer.classList.remove('d-none');
         } else {
@@ -375,7 +520,7 @@ if (isset($s['photo']) && $s['photo'] != "" && file_exists("file/fotopd/" . $s['
 
         window.selectedFiles.forEach((file, index) => {
             totalSize += file.size;
-            
+
             if (file.size > 2 * 1024 * 1024) {
                 if (typeof toastr !== 'undefined') toastr.error('Ukuran berkas ' + file.name + ' melebihi 2MB!');
                 window.selectedFiles.splice(index, 1);
@@ -386,7 +531,7 @@ if (isset($s['photo']) && $s['photo'] != "" && file_exists("file/fotopd/" . $s['
 
             const isImage = file.type.startsWith('image/');
             const iconClass = isImage ? 'fa-file-image text-success' : 'fa-file-pdf text-info';
-            
+
             const item = document.createElement('div');
             item.className = 'file-item-new';
             item.id = `file-item-${index}`;
@@ -411,12 +556,14 @@ if (isset($s['photo']) && $s['photo'] != "" && file_exists("file/fotopd/" . $s['
             setTimeout(() => {
                 const statusEl = document.getElementById(`status-${index}`);
                 const nameEl = item.querySelector('.file-name-new');
-                if (statusEl) { statusEl.remove(); }
+                if (statusEl) {
+                    statusEl.remove();
+                }
                 if (nameEl) {
                     const fileUrl = URL.createObjectURL(file);
                     nameEl.innerHTML = `<a href="${fileUrl}" target="_blank" class="text-info text-decoration-none">${file.name} <i class="fa fa-external-link-alt ml-1 fs-nano"></i></a>`;
                 }
-            }, 1500); 
+            }, 1000);
         });
 
         if (totalDisplay) totalDisplay.textContent = formatBytes(totalSize);
@@ -437,37 +584,96 @@ if (isset($s['photo']) && $s['photo'] != "" && file_exists("file/fotopd/" . $s['
     }
 
     /**
-     * Main initialization
+     * ==========================================
+     * MAIN INITIALIZATION
+     * ==========================================
      */
-    $(document).ready(function() {
+    $(document).ready(function () {
+        // Initialize Select2 with Search Always Active
+        $('.select2').select2({
+            theme: 'default',
+            width: '100%',
+            allowClear: true,
+            minimumResultsForSearch: 0 // Always show search box
+        });
+
         // Form field changes listener
-        $('#inputpresForm').on('input change', 'input, select, textarea', function() {
+        $('#inputpresForm').on('input change', 'input, select, textarea', function () {
             validateInputForm();
         });
-        
+
+        // AJAX Handling for Input Form
+        $('#inputpresForm').on('submit', function (e) {
+            e.preventDefault();
+
+            // Ensure files are synced from our array to the input
+            if (typeof updateInputFiles === 'function') {
+                updateInputFiles();
+            }
+
+            var formData = new FormData(this);
+            formData.append('save', 'true');
+            formData.append('is_ajax', 'true');
+
+            $.ajax({
+                url: 'prosespress.php',
+                type: 'POST',
+                data: formData,
+                contentType: false,
+                processData: false,
+                success: function (response) {
+                    if (response.trim() == 'success') {
+                        if (typeof toastr !== 'undefined') {
+                            toastr.success("Data Berhasil Ditambahkan");
+                        } else {
+                            alert("Data Berhasil Ditambahkan");
+                        }
+                        setTimeout(function () {
+                            window.location.href = "?press";
+                        }, 1000);
+                    } else {
+                        if (typeof toastr !== 'undefined') {
+                            toastr.error("Gagal Menyimpan: " + response);
+                        } else {
+                            alert("Gagal Menyimpan: " + response);
+                        }
+                    }
+                },
+                error: function () {
+                    if (typeof toastr !== 'undefined') {
+                        toastr.error("Terjadi kesalahan server");
+                    } else {
+                        alert("Terjadi kesalahan server");
+                    }
+                }
+            });
+        });
+
         // Drag & Drop Handling
         var dropArea = $('#drop-area');
         if (dropArea.length) {
-            dropArea.on('dragenter dragover', function(e) {
+            dropArea.on('dragenter dragover', function (e) {
                 e.preventDefault();
                 e.stopPropagation();
                 dropArea.addClass('dragover');
             });
 
-            dropArea.on('dragleave drop', function(e) {
+            dropArea.on('dragleave drop', function (e) {
                 e.preventDefault();
                 e.stopPropagation();
                 dropArea.removeClass('dragover');
             });
 
-            dropArea.on('drop', function(e) {
+            dropArea.on('drop', function (e) {
                 var files = e.originalEvent.dataTransfer.files;
-                if(files.length > 0) {
-                    handleFileSelect({ files: files });
+                if (files.length > 0) {
+                    handleFileSelect({
+                        files: files
+                    });
                 }
             });
         }
-        
+
         // Initial check
         validateInputForm();
     });

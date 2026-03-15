@@ -26,14 +26,6 @@ if (!empty($end_date)) {
 $where_sql = count($where_clauses) > 0 ? "WHERE " . implode(" AND ", $where_clauses) : "";
 ?>
 
-<!-- Content Wrapper -->
-<div class="content-wrapper bg-light">
-    <!-- Header -->
-    <section class="content-header p-3">
-        <div class="container-fluid">
-            <h1 class="text-dark" style="font-weight: 400;">User Activity Log</h1>
-        </div>
-    </section>
 
     <!-- Filter Section -->
     <section class="content px-3">

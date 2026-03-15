@@ -1,361 +1,324 @@
 <?php
-include "cfg/konek.php";
-include "cfg/secure.php";
+include_once "cfg/konek.php";
+include_once "cfg/secure.php";
 
-if(isset($_REQUEST['urut'])) {
-    $id = mysqli_real_escape_string($sqlconn, $_REQUEST['urut']);
-    $rql = mysqli_query($sqlconn,"SELECT * FROM legalisir WHERE id = '$id'");
+if (isset($_GET['urut'])) {
+    $id = mysqli_real_escape_string($sqlconn, $_GET['urut']);
+    $rql = mysqli_query($sqlconn, "SELECT * FROM legalisir WHERE id = '$id'");
     $r = mysqli_fetch_array($rql);
-?>
+    if ($r) {
+        ?>
+        <!-- CSS Styles -->
+        <style>
+            .card-legalisir-edit {
+                border-radius: 12px;
+                overflow: hidden;
+                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+                border: none;
+            }
 
-<form id="form-edit-legalisir-<?php echo $id; ?>" method="post" enctype="multipart/form-data">
-    <input type="hidden" name="id" value="<?php echo $r['id']; ?>">
-    
-    <!-- Modal body -->
-    <div class="modal-body">
-        <!-- Section 1: No Surat & Tanggal -->
-        <div class="row">
-            <div class="col-md-6">
-                <div class="form-group">
-                    <label><i class="fa fa-file-alt"></i> No. Surat</label>
-                    <input type="text" name="no_surat" value="<?php echo $r['no_surat']; ?>" class="form-control form-control-sm warna" required>
-                </div>
-            </div>
-            <div class="col-md-6">
-                <div class="form-group">
-                    <label><i class="fa fa-calendar-alt"></i> Tanggal Surat</label>
-                    <input type="date" name="tgl_dokumen" value="<?php echo $r['tgl_dokumen']; ?>" class="form-control form-control-sm warna" required>
-                </div>
-            </div>
-        </div>
+            .form-section-title {
+                font-size: 14px;
+                font-weight: 700;
+                color: #2c3e50;
+                margin-bottom: 15px;
+                padding-bottom: 5px;
+                border-bottom: 2px solid #eee;
+            }
 
-        <!-- Section 2: Ditujukan Kepada & Pembuat -->
-        <div class="row">
-            <div class="col-md-6">
-                <div class="form-group">
-                    <label><i class="fa fa-paper-plane"></i> Ditujukan Kepada</label>
-                    <input type="text" name="ditujukan" value="<?php echo $r['ditujukan']; ?>" class="form-control form-control-sm warna" required>
-                </div>
-            </div>
-            <div class="col-md-6">
-                <div class="form-group">
-                    <label><i class="fa fa-user-edit"></i> Pembuat</label>
-                    <input type="text" name="pembuat" value="<?php echo $r['pembuat']; ?>" class="form-control form-control-sm warna" required>
-                </div>
-            </div>
-        </div>
+            .warna:valid {
+                background-color: #e8f0fe !important;
+                border-color: #01b2d1 !important;
+            }
 
-        <!-- Section 3: Perihal -->
-        <div class="row">
-            <div class="col-md-12">
-                <div class="form-group">
-                    <label><i class="fa fa-heading"></i> Perihal</label>
-                    <textarea name="perihal" rows="3" class="form-control warna" required><?php echo $r['perihal']; ?></textarea>
-                </div>
-            </div>
-        </div>
-
-        <!-- Section 4: Lampiran -->
-        <div class="file-upload-wrapper" id="drop-area-edit-<?php echo $id; ?>">
-            <div class="file-upload-selector border rounded-top">
-                <div class="upload-area d-flex align-items-center">
-                    <div style="flex-shrink: 0;">
-                        <button type="button" class="btn btn-sm btn-light-info" onclick="document.getElementById('fileInputEdit-<?php echo $id; ?>').click()">Pilih File...</button>
-                    </div>
-                    <div class="dropzone text-center prevent-select">
-                        <span class="upload-text"><i class="fa fa-cloud-upload-alt mr-1"></i> atau drag & drop berkas disini.</span>
+            .custom {
+                min-width: 140px;
+                border-radius: 50px !important;
+                font-weight: 600;
+            }
+        </style>
+        <div class="container-fluid">
+            <div class="card card-legalisir-edit mb-4">
+                <div class="card-header bg-menu-gradient">
+                    <h3 class="card-title mb-0 font-weight-bold">
+                        <i class="fas fa-edit mr-2"></i> Edit Dokumen Legalisir
+                    </h3>
+                    <div class="card-tools ml-auto">
+                        <a href="print/laporanlegalisir" class="btn btn-warning btn-sm rounded-pill">
+                            <i class="fas fa-arrow-left mr-1"></i> Kembali
+                        </a>
                     </div>
                 </div>
-            </div>
-            
-            <div id="file-list-display-edit-<?php echo $id; ?>" class="file-list-uploaded <?php echo empty($r['pdf']) ? 'd-none' : ''; ?> text-left">
-                <?php 
-                $existing_files = explode(',', $r['pdf']);
-                $initial_total_size = 0;
-                foreach($existing_files as $idx => $f) {
-                    if(!empty($f)) {
-                        $file_path = "file/legalisir/" . $f;
-                        $size_text = "Berkas Terlampir (Server)";
-                        $size_bytes = 0;
-                        if (file_exists($file_path)) {
-                            $size_bytes = filesize($file_path);
-                            $initial_total_size += $size_bytes;
-                            // Helper to format bytes for PHP output
-                            $units = array('B', 'KB', 'MB', 'GB', 'TB');
-                            $i = $size_bytes ? floor(log($size_bytes, 1024)) : 0;
-                            $size_formatted = number_format($size_bytes / pow(1024, $i), 1) . ' ' . $units[$i];
-                            $size_text = "Ukuran: " . $size_formatted;
-                        }
-                        echo "
-                        <div class='file-item-new existing-file-item' id='existing-file-{$id}-{$idx}' data-size='$size_bytes'>
-                            <div class='file-info-new'>
-                                <i class='fa fa-file-pdf fa-2x text-info'></i>
-                                <div class='file-details-new'>
-                                    <div class='file-name-new'>$f</div>
-                                    <div class='file-size-new'>$size_text</div>
+
+                <form id="form-edit-legalisir-<?php echo $id; ?>" method="post" enctype="multipart/form-data">
+                    <input type="hidden" name="id" value="<?php echo $r['id']; ?>">
+
+                    <div class="card-body p-4">
+                        <div class="form-section-title mb-4">
+                            <i class="fas fa-info-circle mr-1 text-info"></i> Informasi Dokumen
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <div class="form-group">
+                                    <label class="font-600 fs-xs text-muted mb-1">
+                                        <i class="fa fa-file-alt mr-1"></i> No. Surat
+                                    </label>
+                                    <input type="text" name="no_surat" value="<?php echo htmlspecialchars($r['no_surat']); ?>"
+                                        class="form-control form-control-sm warna" required placeholder="Contoh: 001/LEG/2026">
                                 </div>
                             </div>
-                            <div class='delete-btn-new ml-auto' onclick='deleteFileLegalisir(\"$id\", \"$f\", \"$idx\")' title='Hapus Lampiran'><i class='fa fa-trash-alt'></i></div>
-                        </div>";
-                    }
-                }
-                ?>
-            </div>
+                            <div class="col-md-6 mb-3">
+                                <div class="form-group">
+                                    <label class="font-600 fs-xs text-muted mb-1">
+                                        <i class="fa fa-calendar-alt mr-1"></i> Tanggal Surat
+                                    </label>
+                                    <input type="date" name="tgl_dokumen" value="<?php echo $r['tgl_dokumen']; ?>"
+                                        class="form-control form-control-sm warna" required>
+                                </div>
+                            </div>
+                        </div>
 
-            <div id="new-file-list-display-edit-<?php echo $id; ?>" class="file-list-uploaded d-none text-left">
-                <!-- New file items will be injected here -->
-            </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <div class="form-group">
+                                    <label class="font-600 fs-xs text-muted mb-1">
+                                        <i class="fa fa-paper-plane mr-1"></i> Ditujukan Kepada
+                                    </label>
+                                    <input type="text" name="ditujukan" value="<?php echo htmlspecialchars($r['ditujukan']); ?>"
+                                        class="form-control form-control-sm warna" required placeholder="Instansi Penerima">
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <div class="form-group">
+                                    <label class="font-600 fs-xs text-muted mb-1">
+                                        <i class="fa fa-user-edit mr-1"></i> Pembuat
+                                    </label>
+                                    <input type="text" name="pembuat" value="<?php echo htmlspecialchars($r['pembuat']); ?>"
+                                        class="form-control form-control-sm warna" required placeholder="Nama Pembuat">
+                                </div>
+                            </div>
+                        </div>
 
-            <div class="uploader-footer border rounded-bottom p-2 border-top-0">
-                <div class="fs-xs"><span class="font-600 text-blck">Total : <span id="total-size-display-edit-<?php echo $id; ?>"><?php 
-                    $units = array('B', 'KB', 'MB', 'GB', 'TB');
-                    $i = $initial_total_size ? floor(log($initial_total_size, 1024)) : 0;
-                    echo number_format($initial_total_size / pow(1024, $i), 1) . ' ' . $units[$i];
-                ?></span></span></div>
-                <div class="fs-nano text-muted">Lampirkan berkas <span class="font-600 text-blck">.pdf</span> maksimal <span class="font-600 text-blck">1</span> berkas dan ukuran maksimal <span class="font-600 text-blck">2.0 MB</span></div>
-            </div>
-            <input type="file" name="file[]" id="fileInputEdit-<?php echo $id; ?>" class="hidden-file-input" accept=".pdf" multiple onchange="handleFileSelectEdit(this, '<?php echo $id; ?>')">
-        </div>
-    </div>
+                        <div class="row">
+                            <div class="col-md-12 mb-4">
+                                <div class="form-group">
+                                    <label class="font-600 fs-xs text-muted mb-1">
+                                        <i class="fa fa-heading mr-1"></i> Perihal
+                                    </label>
+                                    <textarea name="perihal" rows="3" class="form-control warna" required
+                                        placeholder="Deskripsi singkat..."><?php echo htmlspecialchars($r['perihal']); ?></textarea>
+                                </div>
+                            </div>
+                        </div>
 
-    <script>
-    (function() {
-        var dropArea = document.getElementById('drop-area-edit-<?php echo $id; ?>');
-        var fileInput = document.getElementById('fileInputEdit-<?php echo $id; ?>');
+                        <div class="form-section-title mb-4">
+                            <i class="fas fa-paperclip mr-1 text-info"></i> Lampiran Berkas
+                        </div>
 
-        if (dropArea) {
-            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-                dropArea.addEventListener(eventName, preventDefaults, false);
-            });
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    <div class="file-upload-wrapper" id="drop-area-edit-<?php echo $id; ?>">
+                                        <div class="file-upload-selector border rounded-top bg-light">
+                                            <div class="upload-area d-flex align-items-center p-2">
+                                                <div style="flex-shrink: 0;">
+                                                    <button type="button" class="btn btn-sm btn-info shadow-sm"
+                                                        onclick="document.getElementById('fileInputEdit-<?php echo $id; ?>').click()">
+                                                        <i class="fas fa-folder-open mr-1"></i> Pilih File Baru...
+                                                    </button>
+                                                </div>
+                                                <div class="dropzone text-center prevent-select ml-3">
+                                                    <span class="upload-text text-muted fs-nano">
+                                                        <i class="fa fa-cloud-upload-alt mr-1"></i> Ganti lampiran dengan drag &
+                                                        drop disini.
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
 
-            function preventDefaults(e) { e.preventDefault(); e.stopPropagation(); }
+                                        <div id="file-list-display-edit-<?php echo $id; ?>"
+                                            class="file-list-uploaded <?php echo empty($r['pdf']) ? 'd-none' : ''; ?> p-3 border-left border-right bg-white">
+                                            <?php
+                                            if (!empty($r['pdf'])) {
+                                                $f = $r['pdf'];
+                                                $file_path = "file/legalisir/" . $f;
+                                                $size_text = "Berkas Terlampir";
+                                                $size_bytes = 0;
+                                                if (file_exists($file_path)) {
+                                                    $size_bytes = filesize($file_path);
+                                                    $units = array('B', 'KB', 'MB', 'GB', 'TB');
+                                                    $exp = $size_bytes ? floor(log($size_bytes, 1024)) : 0;
+                                                    $size_formatted = number_format($size_bytes / pow(1024, $exp), 1) . ' ' . $units[$exp];
+                                                    $size_text = "Ukuran: " . $size_formatted;
+                                                }
+                                                echo "
+                                            <div class='file-item-new existing-file-item d-flex align-items-center' id='existing-file-{$id}' data-size='$size_bytes'>
+                                                <i class='fa fa-file-pdf fa-2x text-danger mr-3'></i>
+                                                <div class='file-details-new'>
+                                                    <div class='file-name-new font-weight-700 text-dark mb-0' style='font-size:13px;'>$f</div>
+                                                    <div class='file-size-new text-muted fs-xs'>$size_text</div>
+                                                </div>
+                                            </div>";
+                                            }
+                                            ?>
+                                        </div>
 
-            ['dragenter', 'dragover'].forEach(eventName => { 
-                dropArea.addEventListener(eventName, () => dropArea.classList.add('dragover'), false); 
-            });
-            ['dragleave', 'drop'].forEach(eventName => { 
-                dropArea.addEventListener(eventName, () => dropArea.classList.remove('dragover'), false); 
-            });
+                                        <div id="new-file-list-display-edit-<?php echo $id; ?>"
+                                            class="file-list-uploaded d-none p-3 border-left border-right bg-white shadow-inner">
+                                            <!-- New file items will be injected here -->
+                                        </div>
 
-            dropArea.addEventListener('drop', handleDrop, false);
-
-            function handleDrop(e) {
-                var files = e.dataTransfer.files;
-                if(files.length > 0) {
-                    const dataTransfer = new DataTransfer();
-                    Array.from(fileInput.files).forEach(file => dataTransfer.items.add(file));
-                    Array.from(files).forEach(file => dataTransfer.items.add(file));
-                    fileInput.files = dataTransfer.files;
-                    handleFileSelectEdit(fileInput, '<?php echo $id; ?>');
-                }
-            }
-        }
-    })();
-
-    if (typeof window.selectedFilesEdit === 'undefined') { window.selectedFilesEdit = {}; }
-    
-    // JS Helper to display bytes
-    if (typeof window.formatBytes === 'undefined') {
-        window.formatBytes = function(bytes, decimals = 1) {
-            if (bytes === 0) return '0 B';
-            const k = 1024;
-            const dm = decimals < 0 ? 0 : decimals;
-            const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
-            const i = Math.floor(Math.log(bytes) / Math.log(k));
-            return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
-        }
-    }
-
-    window.deleteFileLegalisir = function(id, fileName, idx) {
-        if (confirm('Apakah Anda yakin ingin menghapus lampiran ini?')) {
-            $.ajax({
-                url: 'legalisir.php',
-                type: 'POST',
-                data: {
-                    aksi: 'hapus_file',
-                    id: id,
-                    file: fileName
-                },
-                success: function(response) {
-                    if (response.trim() === 'success') {
-                        $('#existing-file-' + id + '-' + idx).fadeOut(300, function() {
-                            $(this).remove();
-                            // Update total if no new file is selected
-                            if (!(window.selectedFilesEdit[id] && window.selectedFilesEdit[id].length > 0)) {
-                                updateInitialTotalDisplay(id);
-                            }
-                        });
-                        toastr.success('Lampiran berhasil dihapus');
-                    } else {
-                        toastr.error('Gagal menghapus lampiran: ' + response);
-                    }
-                },
-                error: function() {
-                    toastr.error('Terjadi kesalahan server saat menghapus lampiran');
-                }
-            });
-        }
-    };
-
-    function updateInitialTotalDisplay(id) {
-        let total = 0;
-        $('#file-list-display-edit-' + id + ' .existing-file-item').each(function() {
-            total += parseInt($(this).attr('data-size') || 0);
-        });
-        
-        // If there are new files, they will override the display via renderFileListEdit
-        if (!(window.selectedFilesEdit[id] && window.selectedFilesEdit[id].length > 0)) {
-            $('#total-size-display-edit-' + id).text(window.formatBytes(total));
-        }
-    }
-
-    function handleFileSelectEdit(input, id) {
-        const files = Array.from(input.files);
-        const pdfFiles = files.filter(f => f.type === 'application/pdf');
-        
-        if (files.length !== pdfFiles.length) {
-            toastr.error('Hanya berkas PDF yang diperbolehkan!');
-        }
-        
-        window.selectedFilesEdit[id] = pdfFiles;
-        updateInputFilesEdit(id);
-        renderFileListEdit(id);
-    }
-
-    function renderFileListEdit(id) {
-        const listContainer = document.getElementById('new-file-list-display-edit-' + id);
-        const existingContainer = document.getElementById('file-list-display-edit-' + id);
-        const totalDisplay = document.getElementById('total-size-display-edit-' + id);
-        if (!listContainer) return;
-        
-        let files = window.selectedFilesEdit[id] || [];
-        const maxFiles = 1;
-        const maxSizeTotal = 2 * 1024 * 1024; // 2MB
-
-        if (files.length > maxFiles) {
-            alert(`Maksimal ${maxFiles} berkas yang dapat diunggah!`);
-            files = files.slice(0, maxFiles);
-            window.selectedFilesEdit[id] = files;
-            updateInputFilesEdit(id);
-        }
-
-        listContainer.innerHTML = '';
-        let totalSize = 0;
-        
-        if (files.length > 0) { 
-            listContainer.classList.remove('d-none');
-            // Hide existing files if new one is selected (since only 1 is allowed)
-            if (existingContainer) existingContainer.classList.add('d-none');
-        } else { 
-            listContainer.classList.add('d-none');
-            if (existingContainer) {
-                // Check if there are still existing files
-                if (existingContainer.querySelectorAll('.existing-file-item').length > 0) {
-                    existingContainer.classList.remove('d-none');
-                }
-            }
-        }
-
-        files.forEach((file, index) => {
-            totalSize += file.size;
-            const item = document.createElement('div');
-            item.className = 'file-item-new';
-            item.innerHTML = `
-                <div class="file-info-new">
-                    <i class="fa fa-file-pdf fa-2x text-info"></i>
-                    <div class="file-details-new">
-                        <div class="file-name-new">${file.name}</div>
-                        <div class="file-size-new">Ukuran Berkas: ${window.formatBytes(file.size)}</div>
-                        <div class="upload-status" id="status-edit-${id}-${index}">
-                            <div class="fs-nano mt-1" style="color: #27ae60;"><i class="fa fa-circle-notch fa-spin mr-1"></i> Sedang disiapkan...</div>
+                                        <div class="uploader-footer border rounded-bottom p-2 border-top-0 bg-light">
+                                            <div class="fs-xs d-flex justify-content-between">
+                                                <span><span class="font-600 text-dark">Total Berkas : </span><span
+                                                        id="total-size-display-edit-<?php echo $id; ?>"><?php
+                                                           if (!empty($r['pdf'])) {
+                                                               $units = array('B', 'KB', 'MB', 'GB', 'TB');
+                                                               $exp = $size_bytes ? floor(log($size_bytes, 1024)) : 0;
+                                                               echo number_format($size_bytes / pow(1024, $exp), 1) . ' ' . $units[$exp];
+                                                           } else {
+                                                               echo "0 B";
+                                                           }
+                                                           ?></span></span>
+                                                <span class="fs-nano text-muted mt-1">Abaikan jika tidak ingin mengganti.</span>
+                                            </div>
+                                        </div>
+                                        <input type="file" name="file[]" id="fileInputEdit-<?php echo $id; ?>"
+                                            class="hidden-file-input" accept=".pdf" style="display:none;"
+                                            onchange="handleFileSelectEdit(this, '<?php echo $id; ?>')">
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                </div>
-                <div class="delete-btn-new ml-auto" onclick="removeFileEdit(${index}, '${id}')">
-                    <i class="fa fa-trash-alt"></i>
-                </div>
-            `;
-            listContainer.appendChild(item);
-            
-            setTimeout(() => {
-                const statusEl = document.getElementById(`status-edit-${id}-${index}`);
-                if (statusEl) { statusEl.remove(); }
-            }, 1000);
-        });
 
-        if (totalSize > maxSizeTotal) { 
-            alert(`Ukuran berkas melebihi 2 MB!`);
-            window.selectedFilesEdit[id] = [];
-            updateInputFilesEdit(id);
-            renderFileListEdit(id);
-            return;
-        }
+                    <div class="card-footer d-flex justify-content-end">
+                        <button type="button" id="btnIncompleteEdit-<?php echo $id; ?>"
+                            class="btn bg-gradient-secondary custom disabled" style="cursor: not-allowed;">
+                            <i class="fas fa-exclamation-triangle mr-1"></i> Isian Belum Lengkap
+                        </button>
+                        <button type="submit" id="btnSaveEdit-<?php echo $id; ?>" class="btn bg-gradient-primary custom"
+                            name="update2" style="display: none;">
+                            <i class="fas fa-save mr-1"></i> Update
+                        </button>
+                    </div>
+            </div>
+            </form>
+        </div>
 
-        if (totalSize > 0) {
-            if (totalDisplay) totalDisplay.textContent = window.formatBytes(totalSize);
-        } else {
-            // Revert to initial total if no new files
-            updateInitialTotalDisplay(id);
-        }
-    }
+        <script>
+            /**
+             * Form completeness checker
+             */
+            function checkFormCompletionEdit(id) {
+                const $form = $('#form-edit-legalisir-' + id);
+                const $btnIncomplete = $('#btnIncompleteEdit-' + id);
+                const $btnSave = $('#btnSaveEdit-' + id);
 
-    window.removeFileEdit = function(index, id) {
-        window.selectedFilesEdit[id].splice(index, 1);
-        updateInputFilesEdit(id);
-        renderFileListEdit(id);
-    };
+                if (!$form.length || !$btnIncomplete.length || !$btnSave.length) return;
 
-    function updateInputFilesEdit(id) {
-        const input = document.getElementById('fileInputEdit-' + id);
-        if (!input) return;
-        const dataTransfer = new DataTransfer();
-        (window.selectedFilesEdit[id] || []).forEach(file => dataTransfer.items.add(file));
-        input.files = dataTransfer.files;
-    }
-    </script>
+                let isComplete = true;
+                $form.find('[required]').each(function () {
+                    if (!$(this).val().trim()) {
+                        isComplete = false;
+                    }
+                });
 
-    <div class="modal-footer d-flex justify-content-between">
-        <button type="button" class="btn bg-gradient-danger custom" data-dismiss="modal">Batal</button>
-        <button type="button" id="btnIncompleteEdit-<?php echo $id; ?>" class="btn bg-gradient-secondary custom disabled" style="cursor: not-allowed;">Isian Belum Lengkap</button>
-        <button type="submit" id="btnSaveEdit-<?php echo $id; ?>" class="btn bg-gradient-primary custom " name="update2" style="display: none;">Update</button>
-    </div>
-
-    <script>
-    function checkFormCompletionEdit(id) {
-        const form = document.getElementById('form-edit-legalisir-' + id);
-        const btnIncomplete = document.getElementById('btnIncompleteEdit-' + id);
-        const btnSave = document.getElementById('btnSaveEdit-' + id);
-        
-        if (!form || !btnIncomplete || !btnSave) return;
-        
-        const requiredInputs = form.querySelectorAll('[required]');
-        let isComplete = true;
-        
-        requiredInputs.forEach(input => {
-            if (!input.value.trim()) {
-                isComplete = false;
+                if (isComplete) {
+                    $btnIncomplete.hide();
+                    $btnSave.show();
+                } else {
+                    $btnIncomplete.show();
+                    $btnSave.hide();
+                }
             }
-        });
 
-        if (isComplete) {
-            btnIncomplete.style.display = 'none';
-            btnSave.style.display = 'inline-block';
-        } else {
-            btnIncomplete.style.display = 'inline-block';
-            btnSave.style.display = 'none';
-        }
+            /**
+             * File selection handler
+             */
+            function handleFileSelectEdit(input, id) {
+                const files = Array.from(input.files);
+                const pdfFiles = files.filter(f => f.type === 'application/pdf');
+
+                if (files.length > 0 && pdfFiles.length === 0) {
+                    toastr.error('Hanya berkas PDF yang diperbolehkan!');
+                    input.value = "";
+                    return;
+                }
+
+                const $listContainer = $('#new-file-list-display-edit-' + id);
+                const $existingContainer = $('#file-list-display-edit-' + id);
+                const $totalDisplay = $('#total-size-display-edit-' + id);
+
+                $listContainer.empty();
+                let totalSize = 0;
+
+                if (pdfFiles.length > 0) {
+                    $listContainer.removeClass('d-none');
+                    $existingContainer.addClass('d-none');
+
+                    const file = pdfFiles[0];
+                    totalSize = file.size;
+
+                    if (totalSize > 2 * 1024 * 1024) {
+                        toastr.warning("Ukuran berkas melebihi 2 MB!");
+                        input.value = "";
+                        $listContainer.addClass('d-none');
+                        $existingContainer.removeClass('d-none');
+                        return;
+                    }
+
+                    const itemHtml = `
+                        <div class="file-item-new d-flex align-items-center">
+                            <i class="fa fa-file-pdf fa-2x text-info mr-3"></i>
+                            <div class="file-details-new">
+                                <div class="file-name-new font-weight-700 text-dark mb-0" style="font-size:13px;">${file.name}</div>
+                                <div class="file-size-new text-muted fs-xs">Baru: ${window.formatBytes(file.size)}</div>
+                            </div>
+                        </div>
+                    `;
+                    $listContainer.append(itemHtml);
+                    if ($totalDisplay.length) $totalDisplay.text(window.formatBytes(totalSize));
+                } else {
+                    $listContainer.addClass('d-none');
+                    $existingContainer.removeClass('d-none');
+                    const $existingItem = $existingContainer.find('.existing-file-item');
+                    if ($existingItem.length && $totalDisplay.length) {
+                        const originalSize = parseInt($existingItem.attr('data-size') || 0);
+                        $totalDisplay.text(window.formatBytes(originalSize));
+                    }
+                }
+            }
+
+            $(document).ready(function () {
+                const currentId = '<?php echo $id; ?>';
+                const $form = $('#form-edit-legalisir-' + currentId);
+
+                $form.on('input change', 'input, select, textarea', function () {
+                    checkFormCompletionEdit(currentId);
+                });
+
+                checkFormCompletionEdit(currentId);
+
+                // Initial total size display logic if window.formatBytes is ready
+                if (typeof window.formatBytes === 'function') {
+                    const $existingItem = $('#existing-file-' + currentId);
+                    if ($existingItem.length) {
+                        $('#total-size-display-edit-' + currentId).text(window.formatBytes(parseInt($existingItem.attr('data-size'))));
+                    }
+                }
+            });
+        </script>
+
+    <?php } else { ?>
+        <div class="alert alert-danger mx-3 my-3 shadow-sm rounded-lg">
+            <i class="fas fa-exclamation-circle mr-2"></i> Data tidak ditemukan atau id tidak valid!
+        </div>
+        <a href="print/laporanlegalisir" class="btn btn-primary ml-3 px-4 rounded-pill shadow">
+            <i class="fas fa-arrow-left mr-1"></i> Kembali ke Laporan
+        </a>
+        <?php
     }
-
-    $(document).ready(function() {
-        const id = '<?php echo $id; ?>';
-        $('#form-edit-legalisir-' + id).on('input change', 'input, select, textarea', function() {
-            checkFormCompletionEdit(id);
-        });
-        // Initial check
-        setTimeout(() => checkFormCompletionEdit(id), 100);
-    });
-    </script>
-
-</form>
-
-<?php } ?>
+}
+?>

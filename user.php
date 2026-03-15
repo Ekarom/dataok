@@ -28,7 +28,7 @@ function display_notification($type, $message)
     $safe_message = addslashes($message);
 
     // Determine redirection URL
-    $redirect = "?modul=user";
+    $redirect = "Management/User Staff & Admin";
 
     // Check if we are already on the correct module (to avoid loops or unnecessary redirects)
     $current_modul = isset($_REQUEST['modul']) ? $_REQUEST['modul'] : '';
@@ -210,24 +210,6 @@ if (isset($_REQUEST['aksi']) && $_REQUEST['aksi'] == 'hapus') {
 }
 ?>
 
-<!-- Content Wrapper -->
-<div class="content-wrapper">
-    <!-- Header Konten -->
-    <section class="content-header">
-        <div class="container-fluid">
-            <div class="row mb-2">
-                <div class="col-sm-6">
-                    <h1>Management user</h1>
-                </div>
-                <div class="col-sm-6">
-                    <ol class="breadcrumb float-sm-right">
-                        <li class="breadcrumb-item"><a href="index.php">Home</a></li>
-                        <li class="breadcrumb-item active">Management user</li>
-                    </ol>
-                </div>
-            </div>
-        </div>
-    </section>
     <!-- Konten Utama -->
     <section class="content">
         <div class="row">
@@ -242,7 +224,7 @@ if (isset($_REQUEST['aksi']) && $_REQUEST['aksi'] == 'hapus') {
                                 <a href="file/down_excel_user.php" target="_blank" class="btn btn-primary btn-flat btn-sm">
                                     <i class="fas fa-download"></i> &nbsp;Download Data
                                 </a>
-                                <a href="?modul=Upload_user" class="btn btn-primary btn-flat btn-sm">
+                                <a href="uploaduser" class="btn btn-primary btn-flat btn-sm">
                                     <i class="fas fa-upload"></i> &nbsp;Upload Data user
                                 </a>
                             </div>
@@ -316,10 +298,10 @@ while ($s = mysqli_fetch_array($sql)) {
                                         
                                         <!-- Tombol Reset Password -->
                                         <td align="center">
-                                            <a href="?modul=user&resetp=reset&id=<?php echo $s['id']; ?>" onclick="if (confirm('Reset password menjadi = smpn171**?')) { window.location.href='?modul=user&resetp=reset&id=<?php echo $s['id']; ?>'; } return false;">
+                                            <a href="usermanagement?resetp=reset&id=<?php echo $s['id']; ?>" onclick="if (confirm('Reset password menjadi = smpn171**?')) { window.location.href='usermanagement?resetp=reset&id=<?php echo $s['id']; ?>'; } return false;">
                                                 <button type="button" class="btn btn-danger btn-sm" title="Default Password = smpn171**"><i class="fa fa-key"></i></button>
                                             </a>
-                                            <a href="?modul=user&resetga=reset&id=<?php echo $s['id']; ?>" onclick="if (confirm('Reset Google Authenticator user ini?')) { window.location.href='?modul=user&resetga=reset&id=<?php echo $s['id']; ?>'; } return false;">
+                                            <a href="usermanagement?resetga=reset&id=<?php echo $s['id']; ?>" onclick="if (confirm('Reset Google Authenticator user ini?')) { window.location.href='usermanagement?resetga=reset&id=<?php echo $s['id']; ?>'; } return false;">
                                                 <button type="button" class="btn btn-warning btn-sm" title="Reset Google Authenticator"><i class="fab fa-google"></i></button>
                                             </a>
                                         </td>
@@ -338,7 +320,7 @@ while ($s = mysqli_fetch_array($sql)) {
                                             <?php
     }
     else { ?>
-                                                <a href="?modul=user&aksi=hapus&urut=<?php echo $s['id']; ?>" onclick="if (confirm('Yakin ingin menghapus user ini?')) { window.location.href='?modul=user&aksi=hapus&urut=<?php echo $s['id']; ?>'; } return false;">
+                                                <a href="usermanagement?aksi=hapus&urut=<?php echo $s['id']; ?>" onclick="if (confirm('Yakin ingin menghapus user ini?')) { window.location.href='usermanagement?aksi=hapus&urut=<?php echo $s['id']; ?>'; } return false;">
                                                     <button type="button" class="btn btn-danger btn-sm"><i class="fa fa-trash"></i></button>
                                                 </a>
                                             <?php
@@ -368,7 +350,7 @@ while ($s = mysqli_fetch_array($sql)) {
                 </button>
             </div>
             <!-- Form Start -->
-            <form action="?modul=user" method="post">
+            <form action="usermanagement" method="post">
                 <div class="modal-body">
                     <input type="hidden" name="tambah" value="yes">
                     

@@ -1,7 +1,7 @@
 <?php
 // 1. Connect ke database
 if (session_status() == PHP_SESSION_NONE) {
-    session_start();
+  session_start();
 }
 require_once __DIR__ . "/logger.php"; // Include centralized logger
 
@@ -9,17 +9,17 @@ $database = isset($_SESSION['database_asli']) ? $_SESSION['database_asli'] : 'dn
 
 // Lakukan koneksi ke database yang dipilih
 try {
-    $sqlconn = new mysqli("localhost", "root", "", $database);
+  $sqlconn = new mysqli("localhost", "root", "", $database);
 } catch (mysqli_sql_exception $e) {
-    // If connection fails (e.g. unknown database), fallback to default
-    $database = 'dnet_ad2025';
-    try {
-        $sqlconn = new mysqli("localhost", "root", "", $database);
-        // Update session to correct database
-        $_SESSION['database_asli'] = $database;
-    } catch (Exception $ex) {
-        die("Connection failed: " . $ex->getMessage());
-    }
+  // If connection fails (e.g. unknown database), fallback to default
+  $database = 'dnet_ad2025';
+  try {
+    $sqlconn = new mysqli("localhost", "root", "", $database);
+    // Update session to correct database
+    $_SESSION['database_asli'] = $database;
+  } catch (Exception $ex) {
+    die("Connection failed: " . $ex->getMessage());
+  }
 }
 
 // Check connection (for older PHP versions or non-exception errors)
@@ -32,19 +32,19 @@ if ($sqlconn->connect_errno) {
 // --- Cek Database Aktif di Tabel dbset ---
 $q_dbset = @mysqli_query($sqlconn, "SELECT dbname FROM dbset WHERE aktif='1' ORDER BY id DESC LIMIT 1");
 if ($q_dbset && mysqli_num_rows($q_dbset) > 0) {
-    $r_dbset = mysqli_fetch_array($q_dbset);
-    $db_aktif = $r_dbset['dbname'];
-    
-    /* 
-    // DISABLED: Jangan paksa user pindah database jika mereka sudah punya pilihan di session
-    if ($db_aktif != $database) {
-        if ($sqlconn->select_db($db_aktif)) {
-            $database = $db_aktif;
-             // Opsional: Update Session jika diperlukan agar persisten
-             $_SESSION['database_asli'] = $db_aktif;
-        }
-    }
-    */
+  $r_dbset = mysqli_fetch_array($q_dbset);
+  $db_aktif = $r_dbset['dbname'];
+
+  /* 
+  // DISABLED: Jangan paksa user pindah database jika mereka sudah punya pilihan di session
+  if ($db_aktif != $database) {
+      if ($sqlconn->select_db($db_aktif)) {
+          $database = $db_aktif;
+           // Opsional: Update Session jika diperlukan agar persisten
+           $_SESSION['database_asli'] = $db_aktif;
+      }
+  }
+  */
 }
 
 date_default_timezone_set("Asia/Jakarta");
@@ -55,12 +55,12 @@ $table_check = @mysqli_query($sqlconn, "SHOW TABLES LIKE 'profils'");
 $table_exists = ($table_check && mysqli_num_rows($table_check) > 0);
 
 if ($table_exists) {
-    $mysql = @mysqli_query($sqlconn, "select * from profils where id='1'");
-    $g = ($mysql && mysqli_num_rows($mysql) > 0) ? mysqli_fetch_array($mysql) : null;
+  $mysql = @mysqli_query($sqlconn, "select * from profils where id='1'");
+  $g = ($mysql && mysqli_num_rows($mysql) > 0) ? mysqli_fetch_array($mysql) : null;
 } else {
-    $g = null;
-    // Log warning for debugging
-    error_log("Warning: Table 'profils' does not exist in database '{$database}'");
+  $g = null;
+  // Log warning for debugging
+  error_log("Warning: Table 'profils' does not exist in database '{$database}'");
 }
 
 $namasek = $g["nsekolah"] ?? "";
@@ -83,15 +83,16 @@ $sklogo = $g["logo_sekolah"] ?? "logo_default.png";
 $skback = $g["background_login"] ?? "bg_default.jpg";
 $npsn = $g["npsn"] ?? "";
 
+
 // Check if version table exists before querying
 $version_table_check = @mysqli_query($sqlconn, "SHOW TABLES LIKE 'version'");
 $version_table_exists = ($version_table_check && mysqli_num_rows($version_table_check) > 0);
 
 if ($version_table_exists) {
-    $mysqlv = @mysqli_query($sqlconn, "select * from version order by id desc limit 1");
-    $v = ($mysqlv && mysqli_num_rows($mysqlv) > 0) ? mysqli_fetch_array($mysqlv) : null;
+  $mysqlv = @mysqli_query($sqlconn, "select * from version order by id desc limit 1");
+  $v = ($mysqlv && mysqli_num_rows($mysqlv) > 0) ? mysqli_fetch_array($mysqlv) : null;
 } else {
-    $v = null;
+  $v = null;
 }
 $ver = $v["ver"] ?? "1.0";
 

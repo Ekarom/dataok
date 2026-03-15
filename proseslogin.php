@@ -8,22 +8,22 @@ ob_start();
 if (isset($_POST['skradm'], $_POST['skrpass'], $_POST['database_name'])) {
 
     $database_name = $_POST['database_name'];
-    $semester = isset($_POST['semester']) ? (int)$_POST['semester'] : 1;
-    
+    $semester = isset($_POST['semester']) ? (int) $_POST['semester'] : 1;
+
     if (empty($database_name)) {
-        header("Location: login.php?salah=8");
+        header("Location: login?salah=8");
         exit();
     }
 
     // Validate Database Name (Security)
     if (!preg_match('/^[a-zA-Z0-9_]+$/', $database_name)) {
-        header("Location: login.php?salah=2&err=invalid_db");
+        header("Location: login?salah=2&err=invalid_db");
         exit();
     }
 
     $skradm = $_POST['skradm'];
     $userz = mysqli_real_escape_string($sqlconn, $skradm);
-    $passz = $_POST['skrpass']; 
+    $passz = $_POST['skrpass'];
 
     // Extract year from database name (e.g., dnet_ad2025 -> 2025)
     $tahundb = substr($database_name, -4);
@@ -48,10 +48,10 @@ if (isset($_POST['skradm'], $_POST['skrpass'], $_POST['database_name'])) {
         $smt_pilih = $semester;
         $tahun_pilih = $tahundb;
         $tapel_pilih = $tapel;
-        
+
         // Calculate REAL-TIME current period for comparison
-        $bulan_sekarang = (int)date('n');
-        $tahun_sekarang = (int)date('Y');
+        $bulan_sekarang = (int) date('n');
+        $tahun_sekarang = (int) date('Y');
         if ($bulan_sekarang >= 7) {
             $smt_real = '1';
             $tahun_real = $tahun_sekarang;
@@ -60,12 +60,12 @@ if (isset($_POST['skradm'], $_POST['skrpass'], $_POST['database_name'])) {
             $tahun_real = $tahun_sekarang - 1;
         }
         $tapel_real = $tahun_real . "/" . ($tahun_real + 1);
-        
+
         // Activate user's selection in database (FOLLOW USER CHOICE)
         // DISABLED: Jangan ubah status global tapel di database
         /*
         mysqli_query($sqlconn, "UPDATE tapel SET aktif='0'");
-        
+
         $stmt_active = mysqli_prepare($sqlconn, "UPDATE tapel SET aktif='1' WHERE tapel=? AND smt=?");
         if ($stmt_active) {
             mysqli_stmt_bind_param($stmt_active, "ss", $tapel_pilih, $smt_pilih);
@@ -73,24 +73,24 @@ if (isset($_POST['skradm'], $_POST['skrpass'], $_POST['database_name'])) {
             mysqli_stmt_close($stmt_active);
         }
         */
-        
+
         // Set session to user's selection (NOT real-time)
         $_SESSION['tapel'] = $tapel_pilih;
         $_SESSION['semester'] = $smt_pilih;
-        
+
         // Check if user chose a different period than real-time
         $show_warning_alert = false;
         $warning_message = '';
-        
+
         if ($tahun_pilih != $tahun_real || $smt_pilih != $smt_real) {
             $smt_text = ($smt_pilih == '1') ? 'Ganjil' : 'Genap';
             $smt_real_text = ($smt_real == '1') ? 'Ganjil' : 'Genap';
             $warning_message = "PERINGATAN: Anda sedang mengakses Tahun Pelajaran $tapel_pilih Semester $smt_text yang BUKAN merupakan periode aktif saat ini (Semester $smt_real_text $tapel_real).";
             $show_warning_alert = true;
         }
-        
+
     } else {
-        header("Location: login.php?salah=2");
+        header("Location: login?salah=2");
         exit();
     }
 
@@ -135,7 +135,7 @@ if (isset($_POST['skradm'], $_POST['skrpass'], $_POST['database_name'])) {
         echo "<script>alert('Verifikasi reCAPTCHA diperlukan'); window.history.back();</script>";
         exit;
     }
-    
+
     $recaptcha_success = true;
     if (!$is_local) {
         $verifyUrl = 'https://www.google.com/recaptcha/api/siteverify';
@@ -144,21 +144,21 @@ if (isset($_POST['skradm'], $_POST['skrpass'], $_POST['database_name'])) {
             'response' => $captcha,
             'remoteip' => $ip_address
         ];
-        
+
         $ch = curl_init($verifyUrl);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_POST, true);
         curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($params));
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-        
+
         $response = curl_exec($ch);
         $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        
+
         if ($response === false || $http_code !== 200) {
             $recaptcha_success = false;
         } else {
-             $responseData = json_decode($response);
-             $recaptcha_success = $responseData->success;
+            $responseData = json_decode($response);
+            $recaptcha_success = $responseData->success;
         }
         curl_close($ch);
     }
@@ -191,7 +191,8 @@ if (isset($_POST['skradm'], $_POST['skrpass'], $_POST['database_name'])) {
                         if ($check_table_dev && mysqli_num_rows($check_table_dev) > 0) {
                             $token = mysqli_real_escape_string($sqlconn, $device_token);
                             $check_device = mysqli_query($sqlconn, "SELECT * FROM user_devices WHERE user_id='$user_id' AND device_token='$token' AND expires_at > NOW()");
-                            if ($check_device && mysqli_num_rows($check_device) > 0) $is_trusted = true;
+                            if ($check_device && mysqli_num_rows($check_device) > 0)
+                                $is_trusted = true;
                         }
                     }
 
@@ -199,14 +200,14 @@ if (isset($_POST['skradm'], $_POST['skrpass'], $_POST['database_name'])) {
                         unset($_SESSION['skradm']);
                         $_SESSION['temp_skradm'] = $skradm;
                         $_SESSION['temp_user_id_db'] = $user_id;
-                        header('Location: verify_2fa.php');
+                        header('Location: verify_2fa');
                         exit();
                     }
                 } else {
                     unset($_SESSION['skradm']);
                     $_SESSION['temp_skradm'] = $skradm;
                     $_SESSION['temp_user_id_db'] = $user_id;
-                    header('Location: setup_2fa.php');
+                    header('Location: setup_2fa');
                     exit();
                 }
             }
@@ -218,40 +219,41 @@ if (isset($_POST['skradm'], $_POST['skrpass'], $_POST['database_name'])) {
 
             // Show warning alert if user chose non-current period
             if ($show_warning_alert) {
-                echo "<script>alert('" . addslashes($warning_message) . "'); window.location.href='./?';</script>";
+                echo "<script>alert('" . addslashes($warning_message) . "'); window.location.href='./dashboard';</script>";
                 exit();
             }
 
             // REDIRECT TO DASHBOARD
-            header('Location: ./?');
+            header('Location: ./dashboard');
             exit();
 
         } else {
             mysqli_query($sqlconn, "INSERT INTO login_attempts (userid, ip_address, attempts, last_attempt_time) 
                                     VALUES ('$userz', '$ip_address', 1, CURRENT_TIMESTAMP) 
                                     ON DUPLICATE KEY UPDATE attempts = attempts + 1, last_attempt_time = CURRENT_TIMESTAMP");
-            
+
             $q_attempts = mysqli_query($sqlconn, "SELECT attempts FROM login_attempts WHERE ip_address = '$ip_address'");
             $data_attempts = mysqli_fetch_assoc($q_attempts);
             $remaining = 3 - $data_attempts['attempts'];
-            if ($remaining < 0) $remaining = 0;
+            if ($remaining < 0)
+                $remaining = 0;
 
             unset($_SESSION['skradm']);
             if ($data_attempts['attempts'] >= 3) {
                 // Redirect immediately to Blocked state on 3rd failure
-                header("Location: login.php?salah=3&wait=300");
+                header("Location: login?salah=3&wait=300");
             } else {
-                header("Location: login.php?salah=1&attempts=$remaining");
+                header("Location: login?salah=1&attempts=$remaining");
             }
             exit();
         }
     } else {
-        header("Location: login.php?salah=5");
+        header("Location: login?salah=5");
         exit();
     }
 
 } else {
-    header("Location: login.php");
+    header("Location: login");
     exit();
 }
 ?>

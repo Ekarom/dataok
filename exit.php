@@ -17,7 +17,7 @@ foreach ($cookies as $cookie) {
 }
 
 // Redirect langsung ke login.php
-header("Location: login.php");
+header("Location: login");
 exit();
 ?>
 <script>
