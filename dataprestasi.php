@@ -47,16 +47,16 @@ include_once "cfg/konek.php";
                 </div>
                 <div class="card-body p-0">
                     <div class="card-body">
-                        <div class="table-responsive text-nowrap">
-                            <table id="example2" class="table table-bordered table-striped table-hover "
+                        <div class="dataTables_wrapper">
+                            <table id="example2" class="table table-bordered table-striped table-hover text-nowrap"
                                 style="width:100%">
-                                <thead align="center">
+                                <thead>
                                     <tr>
-                                        <th width="30px">No</th>
-                                        <th width="100px">NIS</th>
+                                        <th>No</th>
+                                        <th>NIS</th>
                                         <th>Nama Siswa</th>
-                                        <th width="120px">Status</th>
-                                        <th width="160px">Aksi</th>
+                                        <th>Status</th>
+                                        <th>Aksi</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -108,7 +108,7 @@ include_once "cfg/konek.php";
     <!-- Global scripts provided by index.php -->
     <script>
         $(document).ready(function () {
-            $('#example2').DataTable({
+            var table = $('#example2').DataTable({
                 "paging": false,
                 "scrollY": "450px",
                 "scrollCollapse": true,
@@ -117,12 +117,23 @@ include_once "cfg/konek.php";
                 "ordering": true,
                 "info": true,
                 "autoWidth": false,
-                "responsive": true,
+                "responsive": false,
+                "scrollX": true,
                 "language": {
                     "search": "Search:",
                     "paginate": {
                     }
                 }
             });
+            
+            // Adjust columns on window resize to keep header/body in sync
+            $(window).on('resize', function() {
+                table.columns.adjust();
+            });
+            
+            // Initial adjustment
+            setTimeout(function() {
+                table.columns.adjust();
+            }, 500);
         });
     </script>

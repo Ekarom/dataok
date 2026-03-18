@@ -16,58 +16,29 @@ if (!isset($_REQUEST['urut']) || empty($_REQUEST['urut'])) {
 
 $id = $_REQUEST['urut'];
 
-// First attempt: try to find achievement by ID (urut)
-$sql = mysqli_query($sqlconn, "SELECT 
-        prestasi.id,
-        prestasi.prestasi, 
-        prestasi.pd, 
-        prestasi.kelas, 
-        prestasi.tingkat, 
-        prestasi.penyelenggara, 
-        prestasi.lokasi,
-        prestasi.juara, 
-        prestasi.pdf,
-        prestasi.jenisprestasi,
-        prestasi.tgl_kegiatan,
-        prestasi.bulan,
-        prestasi.nama_kegiatan,
-        siswa.photo 
-    FROM prestasi 
-    LEFT JOIN siswa ON prestasi.pd = siswa.pd AND prestasi.kelas = siswa.kelas
-    WHERE prestasi.id = '$id'");
+$id = $_REQUEST['urut'];
 
-$r = mysqli_fetch_array($sql);
+// Get Student Information first
+$sqlSiswa = mysqli_query($sqlconn, "SELECT * FROM siswa WHERE id = '$id'");
+$rSiswa = mysqli_fetch_array($sqlSiswa);
 
-// Second attempt: if not found, it might be a Student ID from dataprestasi.php
-// Fetch the latest achievement for this student
-if (!$r) {
-    $sqlSiswa = mysqli_query($sqlconn, "SELECT 
-            prestasi.id,
-            prestasi.prestasi, 
-            siswa.pd, 
-            siswa.kelas, 
-            prestasi.tingkat, 
-            prestasi.penyelenggara, 
-            prestasi.lokasi,
-            prestasi.juara, 
-            prestasi.pdf,
-            prestasi.jenisprestasi,
-            prestasi.tgl_kegiatan,
-            prestasi.bulan,
-            prestasi.nama_kegiatan,
-            siswa.photo 
-        FROM siswa 
-        LEFT JOIN prestasi ON prestasi.pd = siswa.pd AND prestasi.kelas = siswa.kelas
-        WHERE siswa.id = '$id' 
-        ORDER BY prestasi.id DESC LIMIT 1");
-    $r = mysqli_fetch_array($sqlSiswa);
+// If not found by student ID, it might be an achievement ID
+if (!$rSiswa) {
+    $sqlCheckPres = mysqli_query($sqlconn, "SELECT pd, kelas FROM prestasi WHERE id = '$id'");
+    $rCheck = mysqli_fetch_array($sqlCheckPres);
+    if ($rCheck) {
+        $pd_name = $rCheck['pd'];
+        $pd_kelas = $rCheck['kelas'];
+        $sqlSiswa = mysqli_query($sqlconn, "SELECT * FROM siswa WHERE pd = '$pd_name' AND kelas = '$pd_kelas'");
+        $rSiswa = mysqli_fetch_array($sqlSiswa);
+    }
 }
 
-// Redirect if no achievement data found (or if student doesn't exist)
-if (!$r || empty($r['id'])) {
+// Redirect if no student found
+if (!$rSiswa) {
     echo '<script>
         $(function() {
-            toastr.warning("Tidak ada detail prestasi pada peserta didik yang dipilih!");
+            toastr.warning("Data siswa tidak ditemukan!");
             setTimeout(function() {
                 window.location.href = "arsipdata/inputprestasi";
             }, 2000);
@@ -76,18 +47,14 @@ if (!$r || empty($r['id'])) {
     return;
 }
 
-$photo = $r['photo'] ?? '';
-$nama = $r['pd'] ?? '';
-$kelas = $r['kelas'] ?? '';
-$prestasi = $r['prestasi'] ?? '';
-$tingkat = $r['tingkat'] ?? '';
-$penyelenggara = $r['penyelenggara'] ?? '';
-$lokasi = $r['lokasi'] ?? '';
-$juara = $r['juara'] ?? '';
-$pdf = $r['pdf'] ?? '';
-$jenisprestasi = $r['jenisprestasi'] ?? '';
-$tgl_kegiatan = $r['tgl_kegiatan'] ?? '';
-$bulan = $r['bulan'] ?? '';
+$photo = $rSiswa['photo'] ?? '';
+$nama = $rSiswa['pd'] ?? '';
+$kelas = $rSiswa['kelas'] ?? '';
+
+// Fetch ALL achievements for this student
+$sqlAchievements = mysqli_query($sqlconn, "SELECT * FROM prestasi WHERE pd = '$nama' AND kelas = '$kelas' ORDER BY tgl_kegiatan DESC");
+$total_prestasi = mysqli_num_rows($sqlAchievements);
+
 ?>
 <style>
     .form-control:disabled, .form-control[readonly] {
@@ -171,19 +138,38 @@ $bulan = $r['bulan'] ?? '';
         display: inline-block;
         padding-bottom: 3px;
     }
+    #tabelPrestasi thead th {
+        background-color: #5c6771 !important;
+        color: #ffffff !important;
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        font-weight: 700;
+        border: 1px solid #dee2e6;
+        vertical-align: middle;
+        text-align: center;
+    }
+    #tabelPrestasi tbody td {
+        vertical-align: middle;
+        font-size: 0.85rem;
+        color: #2c3e50;
+    }
+    .btn-lampiran {
+        padding: 2px 8px;
+        font-size: 11px;
+    }
 </style>
+
 
 
     <!-- Main content -->
     <section class="content">
         <div class="container-fluid">
             <div class="card shadow-sm border-0">
-                <div class="card-header bg-menu-gradient">
-                    <div class="card-tools ml-auto">
-                        <a href="arsipdata/inputprestasi" class="btn btn-warning btn-sm rounded-pill">
-                            <i class="fa fa-arrow-left mr-1"></i> Kembali
-                        </a>
-                    </div>
+                <div class="card-header bg-menu-gradient" >
+                    <h5>Detail Data Prestasi Siswa</h5>
+                    <a href="arsipdata/inputprestasi" class="btn btn-primary btn-sm rounded-pill">
+                        Kembali
+                    </a>
                 </div>
                 <div class="card-body view-form-container" style="background-color: #f8f9fa;">
                     <form>
@@ -195,25 +181,17 @@ $bulan = $r['bulan'] ?? '';
                                 <div class="view-section" style="height: 100%;">
                                     <center><span class="view-section-title"><i class="fa fa-user-graduate mr-1"></i> Informasi Siswa</span></center>
                                     <center>
-                                        <div class="award-frame-wrapper">
-                                            <i class="fas fa-star frame-star star-center-top"></i>
-                                            <i class="fas fa-star frame-star star-top-left"></i>
-                                            <i class="fas fa-star frame-star star-top-right"></i>
-                                            <i class="fas fa-star frame-star star-bottom-left"></i>
-                                            <i class="fas fa-star frame-star star-bottom-right"></i>
                                             <?php if (!empty($photo) && file_exists('file/fotopd/' . $photo)) { ?>
-                                                <a href="file/fotopd/<?php echo $photo; ?>" target="_blank" title="Klik untuk melihat foto penuh">
-                                                    <img class='profile-user-img img-fluid img-circle shadow-sm border-pemenang' style='width: 150px; height: 150px; object-fit: cover; cursor: pointer;' src="file/fotopd/<?php echo $photo; ?>">
-                                                </a>
-                                            <?php
-}
-else { ?>
-                                                <a href="images/default.png" target="_blank" title="Klik untuk melihat foto penuh">
-                                                    <img class="profile-user-img img-fluid img-circle border-pemenang" style='width: 150px; height: 150px; object-fit: cover; cursor: pointer;' src="images/default.png" alt="User profile picture">
-                                                </a>
-                                            <?php
-}?>
-                                        </div>
+                                                    <a href="file/fotopd/<?php echo $photo; ?>" target="_blank" title="Klik untuk melihat foto penuh">
+                                                        <img class='profile-user-img img-fluid img-circle shadow-sm border-pemenang' style='width: 150px; height: 150px; object-fit: cover; cursor: pointer;' src="file/fotopd/<?php echo $photo; ?>">
+                                                    </a>
+                                                <?php
+                                            } else { ?>
+                                                    <a href="images/default.png" target="_blank" title="Klik untuk melihat foto penuh">
+                                                        <img class="profile-user-img img-fluid img-circle border-pemenang" style='width: 150px; height: 150px; object-fit: cover; cursor: pointer;' src="images/default.png" alt="User profile picture">
+                                                    </a>
+                                                <?php
+                                            } ?>
                                     </center>
                                     <div class="mt-4">
                                         <span style="font-size: 16px; font-weight: bold; text-decoration: underline; color: #495057;">Nama Lengkap</span>
@@ -230,110 +208,67 @@ else { ?>
                             <!-- Kolom Kanan: Detail & Lampiran -->
                             <div class="col-md-8">
                                 <div class="view-section">
-                                    <center><span class="view-section-title"><i class="fa fa-medal mr-1"></i> Detail Prestasi</span></center>
+                                    <center><span class="view-section-title"><i class="fa fa-medal mr-1"></i> Daftar Prestasi</span></center>
                                     
-                                    <div class="mt-2">
-                                        <div class="form-group row mb-4">
-                                            <label class="col-sm-4 col-form-label label-custom">Prestasi</label>
-                                            <div class="col-sm-8">
-                                                <input type="text" class="form-control form-control-sm" value="<?php echo $prestasi; ?>" readonly>
-                                            </div>
-                                        </div>
-
-                                        <div class="form-group row mb-4">
-                                            <label class="col-sm-4 col-form-label label-custom">Jenis Prestasi</label>
-                                            <div class="col-sm-8">
-                                                <input type="text" class="form-control form-control-sm" value="<?php echo $jenisprestasi; ?>" readonly>
-                                            </div>
-                                        </div>
-
-                                        <div class="form-group row mb-4">
-                                            <label class="col-sm-4 col-form-label label-custom">Tingkat</label>
-                                            <div class="col-sm-8">
-                                                <input type="text" class="form-control form-control-sm" value="<?php echo $tingkat; ?>" readonly>
-                                            </div>
-                                        </div>
-
-                                        <div class="form-group row mb-4">
-                                            <label class="col-sm-4 col-form-label label-custom">Tanggal Kegiatan</label>
-                                            <div class="col-sm-8">
-                                                <input type="text" class="form-control form-control-sm" value="<?php echo !empty($tgl_kegiatan) ? date('m/d/Y', strtotime($tgl_kegiatan)) : '-'; ?>" readonly>
-                                            </div>
-                                        </div>
-
-                                        <div class="form-group row mb-4">
-                                            <label class="col-sm-4 col-form-label label-custom">Nama Kegiatan</label>
-                                            <div class="col-sm-8">
-                                                <input type="text" class="form-control form-control-sm" value="<?php echo htmlspecialchars($r['nama_kegiatan'] ?? '-'); ?>" readonly>
-                                            </div>
-                                        </div>
-
-                                        <div class="form-group row mb-4">
-                                            <label class="col-sm-4 col-form-label label-custom">Penyelenggara</label>
-                                            <div class="col-sm-8">
-                                                <input type="text" class="form-control form-control-sm" value="<?php echo $penyelenggara; ?>" readonly>
-                                            </div>
-                                        </div>
-
-                                        <div class="form-group row mb-4">
-                                            <label class="col-sm-4 col-form-label label-custom">Lokasi</label>
-                                            <div class="col-sm-8">
-                                                <input type="text" class="form-control form-control-sm" value="<?php echo $lokasi; ?>" readonly>
-                                            </div>
-                                        </div>
-
-                                        <div class="form-group row mb-4">
-                                            <label class="col-sm-4 col-form-label label-custom">Juara Ke-</label>
-                                            <div class="col-sm-8">
-                                                <input type="text" class="form-control form-control-sm" value="<?php
-if (in_array($juara, ['1', '2', '3', '4'])) {
-    echo 'Juara ' . $juara;
-}
-else if (in_array($juara, ['Harapan 1', 'Harapan 2', 'Harapan 3'])) {
-    echo 'Juara ' . $juara;
-}
-else {
-    echo $juara;
-}
-?>" readonly>
-                                            </div>
-                                        </div>
-
-                                        <div class="form-group row mb-4">
-                                            <label class="col-sm-4 col-form-label label-custom">Bulan</label>
-                                            <div class="col-sm-8">
-                                                <input type="text" class="form-control form-control-sm" value="<?php echo $bulan; ?>" readonly>
-                                            </div>
-                                        </div>
-
-                                        <div class="form-group row mb-4">
-                                            <label class="col-sm-4 col-form-label label-custom">Lampiran</label>
-                                            <div class="col-sm-8">
+                                    <div class="table-responsive">
+                                        <table id="tabelPrestasi" class="table table-bordered table-striped table-hover w-100">
+                                            <thead>
+                                                <tr>
+                                                    <th>No</th>
+                                                    <th>Hapus Prestasi</th>
+                                                    <th>Prestasi</th>
+                                                    <th>Jenis</th>
+                                                    <th>Tingkat</th>
+                                                    <th>Nama Kegiatan</th>
+                                                    <th>Penyelenggara</th>
+                                                    <th>Lokasi</th>
+                                                    <th>Tanggal</th>
+                                                    <th>Bulan</th>
+                                                    <th>Juara</th>
+                                                    <th>Dokumen</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
                                                 <?php
-if (!empty($pdf)) {
-    $files = explode(',', $pdf);
-    foreach ($files as $index => $f) {
-        if (!empty($f)) {
-            $ext = strtolower(pathinfo($f, PATHINFO_EXTENSION));
-            $is_image = in_array($ext, ['jpg', 'jpeg', 'png']);
-            if ($is_image) {
-                echo "<div class='attachment-container mb-3 text-center'><a href='file/prestasi/$f' target='_blank' title='Klik untuk melihat gambar penuh'><img src='file/prestasi/$f' class='attachment-img'></a></div>";
-            }
-            else {
-                echo "<div class='attachment-container mb-3'><embed type='application/pdf' src='file/prestasi/$f' width='100%' height='500px' style='border:none;'></div>";
-            }
-        }
-    }
-}
-else {
-    echo "<div class='alert alert-secondary text-center alert-view m-0'><i class='fa fa-info-circle mr-1'></i> Tidak ada lampiran berkas.</div>";
-}
-?>
-                                            </div>
-                                        </div>
+                                                $noP = 1;
+                                                while ($rp = mysqli_fetch_array($sqlAchievements)) {
+                                                    $tgl = !empty($rp['tgl_kegiatan']) ? date('d/m/Y', strtotime($rp['tgl_kegiatan'])) : '-';
+                                                    $juara_val = $rp['juara'];
+                                                    $juara_badge = $juara_val;
+                                                    if (in_array($juara_val, ['1', '2', '3', '4'])) {
+                                                        $juara_badge = '<span class="badge bg-warning text-dark">Juara ' . $juara_val . '</span>';
+                                                    } else if (in_array($juara_val, ['Harapan 1', 'Harapan 2', 'Harapan 3'])) {
+                                                        $juara_badge = '<span class="badge bg-info">Juara ' . $juara_val . '</span>';
+                                                    }
+                                                    
+                                                    $berkas_html = '-';
+                                                    if (!empty($rp['pdf'])) {
+                                                        $berkas_link = "file/prestasi/" . $rp['pdf'];
+                                                        $berkas_html = '<button type="button" class="btn badge bg-primary btn-view-pdf" data-url="'.$berkas_link.'" data-title="'.$rp['prestasi'].'" title="Lihat Berkas"><i class="fa fa-file-alt"></i></button>';
+                                                    }
+                                                    $btn_hapus = '<button type="button" class="btn badge bg-danger btn-hapus" data-id="'.$rp['id'].'" data-name="'.$rp['prestasi'].'" title="Hapus Data"><i class="fa fa-trash"></i></button>';
+                                                ?>
+                                                    <tr>
+                                                        <td class="text-center"><?php echo $noP++; ?></td>
+                                                        <td class="text-center"><?php echo $btn_hapus; ?></td>
+                                                        <td><?php echo $rp['prestasi']; ?></td>
+                                                        <td><?php echo $rp['jenisprestasi']; ?></td>
+                                                        <td><?php echo $rp['tingkat']; ?></td>
+                                                        <td><?php echo htmlspecialchars($rp['nama_kegiatan'] ?? '-'); ?></td>
+                                                        <td><?php echo $rp['penyelenggara']; ?></td>
+                                                        <td><?php echo $rp['lokasi']; ?></td>
+                                                        <td class="text-center"><?php echo $tgl; ?></td>
+                                                        <td class="text-center"><?php echo $rp['bulan']; ?></td>
+                                                        <td class="text-center"><?php echo $juara_badge; ?></td>
+                                                        <td class="text-center"><?php echo $berkas_html; ?></td>
+                                                    </tr>
+                                                <?php } ?>
+                                            </tbody>
+                                        </table>
                                     </div>
                                 </div>
                             </div> <!-- /.col-md-8 -->
+
                         </div>
                     </form>
                 </div>
@@ -341,5 +276,107 @@ else {
         </div>
     </section>
 </div>
+
+<script>
+$(document).ready(function() {
+    var table = $('#tabelPrestasi').DataTable({
+        "paging": true,
+        "lengthChange": false,
+        "searching": true,
+        "ordering": true,
+        "info": true,
+        "autoWidth": false,
+        "responsive": true,
+        "language": {
+            "search": "Cari:",
+            "zeroRecords": "Tidak ada data prestasi ditemukan",
+            "info": "Menampilkan _START_ sampai _END_ dari _TOTAL_ prestasi",
+            "infoEmpty": "Menampilkan 0 sampai 0 dari 0 prestasi",
+            "infoFiltered": "(disaring dari _MAX_ total prestasi)",
+            "paginate": {
+                "first": "Pertama",
+                "last": "Terakhir",
+                "next": "Selanjutnya",
+                "previous": "Sebelumnya"
+            }
+        }
+    });
+
+    // Re-adjust columns after a short delay to ensure correct alignment
+    setTimeout(function() {
+        table.columns.adjust().draw();
+    }, 500);
+
+    // Handle Hapus Data
+    $(document).on('click', '.btn-hapus', function() {
+        var id = $(this).data('id');
+        var name = $(this).data('name');
+        
+        if (confirm('Apakah Anda yakin ingin menghapus prestasi "' + name + '"?')) {
+            $.ajax({
+                url: 'prosespress.php',
+                type: 'GET',
+                data: {
+                    aksi: 'hapus',
+                    urut: id,
+                    is_ajax: 'true'
+                },
+                success: function(response) {
+                    if (response.trim() == 'success') {
+                        toastr.success("Data berhasil dihapus!");
+                        // Reload data in table or refresh
+                        setTimeout(function() {
+                            location.reload();
+                        }, 1000);
+                    } else {
+                        toastr.error("Gagal menghapus data: " + response);
+                    }
+                },
+                error: function() {
+                    toastr.error("Terjadi kesalahan server saat menghapus.");
+                }
+            });
+        }
+    });
+
+    // Handle View PDF in Modal
+    $(document).on('click', '.btn-view-pdf', function() {
+        var url = $(this).data('url');
+        var title = $(this).data('title');
+        
+        $('#pdfModalTitle').text('Dokumen: ' + title);
+        $('#pdfViewer').attr('src', url);
+        $('#modalPDF').modal('show');
+    });
+
+    // Clear PDF viewer when modal is closed
+    $('#modalPDF').on('hidden.bs.modal', function () {
+        $('#pdfViewer').attr('src', '');
+    });
+});
+</script>
+
+<!-- Modal PDF Viewer -->
+<div class="modal fade" id="modalPDF" tabindex="-1" role="dialog" aria-labelledby="pdfModalLabel" aria-hidden="true" data-backdrop="static">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-info">
+                <b>Detail Dokumen Prestasi (<?php echo $nama ?>)</b>
+                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body p-0">
+                <iframe id="pdfViewer" src="" frameborder="0" width="100%" height="600px"></iframe>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Tutup</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
 
 

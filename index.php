@@ -122,9 +122,10 @@ if (
     <link rel="stylesheet" href="plugins/css/palette-gradient.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/admin-lte@3.2.0/dist/css/adminlte.min.css">
 
-    <!-- DataTables BS4 -->
+    <!-- DataTables BS4 
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap4.min.css">
     <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.bootstrap4.min.css">
+    -->
 
     <!-- Core Scripts -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
@@ -134,6 +135,7 @@ if (
     <link rel="stylesheet" href="plugins/css/palette-gradient.min.css">
     <link rel="stylesheet" href="plugins/css/select2.min.css">
     <link rel="stylesheet" href="plugins/css/components.css">
+    <link rel="stylesheet" href="plugins/css/datatables.min.css">
 
     <script src="js/select2.full.min.js"></script>
 
@@ -854,13 +856,15 @@ if (
     <script src="plugins/chart.js/Chart.min.js"></script>
     <!-- Toastr -->
     <script src="plugins/toastr/toastr.min.js"></script>
-
-    <!-- DataTables CDN -->
+    <script src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/fixedcolumns/3.2.6/js/dataTables.fixedColumns.min.js"></script>
+    <script src="https://cdn.datatables.net/colreorder/1.5.1/js/dataTables.colReorder.min.js"></script>
+    <!-- DataTables CDN 
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap4.min.js"></script>
     <script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
     <script src="https://cdn.datatables.net/responsive/2.5.0/js/responsive.bootstrap4.min.js"></script>
-
+    -->
     <!-- ==========================================
          CUSTOM SCRIPTS
          ========================================== -->

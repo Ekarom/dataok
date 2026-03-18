@@ -76,7 +76,7 @@ if (isset($_REQUEST['urut'])) {
             <div class="view-section">
                 <center><span class="view-section-title"><i class="fa fa-file-pdf mr-1"></i> Pratinjau Dokumen</span></center>
                 <div class="pdf-container mt-2">
-                    <embed type="application/pdf" src="file/usulan/<?php echo htmlspecialchars($r['pdf']); ?>" frameborder="0" width="100%" height="600px">
+                    <iframe id="pdfViewer" src="file/usulan/<?php echo htmlspecialchars($r['pdf']); ?>" frameborder="0" width="100%" height="600px"></iframe>
                 </div>
             </div>
 

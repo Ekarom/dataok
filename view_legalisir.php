@@ -125,7 +125,7 @@ if (isset($_GET['urut'])) {
                                 <h5 class="view-section-title text-center d-block"><i class="fa fa-file-pdf mr-1"></i> Pratinjau Lampiran</h5>
                                 <div class="pdf-container mt-2">
                                     <?php if(!empty($r['pdf'])): ?>
-                                        <embed type="application/pdf" src="file/legalisir/<?php echo htmlspecialchars($r['pdf']); ?>" frameborder="0" width="100%" height="750px">
+                                        <iframe src="file/legalisir/<?php echo htmlspecialchars($r['pdf']); ?>" frameborder="0" width="100%" height="600px"></iframe>
                                     <?php else: ?>
                                         <div class="alert alert-warning text-center py-5">
                                             <i class="fas fa-exclamation-triangle fa-3x mb-3"></i>
