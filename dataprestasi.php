@@ -35,6 +35,11 @@ include_once "cfg/konek.php";
         border-radius: 2px !important;
         min-width: 40px;
     }
+
+    .badge-flat {
+        border-radius: 0 !important;
+        padding: 5px 10px !important;
+    }
 </style>
 
 <!-- Main content -->
@@ -43,7 +48,7 @@ include_once "cfg/konek.php";
         <div class="col-12">
             <div class="card shadow-none">
                 <div class="card-header box-shadow-0 bg-gradient-x-warning">
-                    <h5 class="card-title text-white">Input Data Prestasi</h5>
+                    <!--<h5 class="card-title text-white">Input Data Prestasi</h5>-->
                 </div>
                 <div class="card-content table-responsive">
                     <div class="card-body">
@@ -79,18 +84,11 @@ while ($ds = mysqli_fetch_array($sqlSiswa)) {
 
                                             <td class="text-center">
                                                 <div class="btn-group">
-
-                                                    <a href="viewpress?urut=<?php echo $ds['id']; ?>"
-                                                        class="btn badge bg-success flat" title="Detail Prestasi">
+                                                    <a href="viewpress?urut=<?php echo $ds['id']; ?>" class="badge badge-success badge-flat">
                                                         Detail
                                                     </a>
-                                                    <a href="arsipdata/inputprestasi?nis=<?php echo $ds['id']; ?>"
-                                                        class="btn badge bg-primary flat" title="Input Prestasi">
+                                                    <a href="arsipdata/inputprestasi?nis=<?php echo $ds['id']; ?>" class="badge badge-primary badge-flat">
                                                         Input
-                                                    </a>
-                                                    <a href="editpress?urut=<?php echo $ds['id']; ?>"
-                                                        class="btn badge bg-warning flat" title="Edit Prestasi">
-                                                        Edit
                                                     </a>
                                                 </div>
                                             </td>
