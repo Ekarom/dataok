@@ -38,7 +38,13 @@ include_once "cfg/konek.php";
 
     .badge-flat {
         border-radius: 0 !important;
-        padding: 5px 10px !important;
+        padding: 2px 5px !important;
+        font-size: 10px !important;
+    }
+    .badge {
+        border-radius: 0 !important;
+        padding: 2px 5px !important;
+        font-size: 10px !important;
     }
 </style>
 

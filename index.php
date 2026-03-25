@@ -309,7 +309,9 @@ if (
     }
 })();
 </script>
-                <!-- START: Interactive Tapel Check -->
+                </li>
+            </ul>
+            <!-- START: Interactive Tapel Check -->
                 <?php
                 $show_tapel_modal = false;
                 $expected = get_expected_tapel();
