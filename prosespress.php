@@ -445,8 +445,7 @@ $(document).ready(function() {
         e.preventDefault();
         
         // Ensure files are synced from our edit array to the input
-        var id = $(this).find('input[name="id"]').val();
-        if (typeof updateInputFilesEdit === 'function') { updateInputFilesEdit(id); }
+        if (typeof window.updateInputFilesEdit === 'function') { window.updateInputFilesEdit(); }
         
         var formData = new FormData(this);
         formData.append('update2', 'true'); 

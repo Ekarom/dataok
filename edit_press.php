@@ -538,7 +538,7 @@ if (isset($_REQUEST['urut'])) {
                 renderFileList();
             };
 
-            function updateInputFiles() {
+            window.updateInputFilesEdit = function () {
                 if (!inputFiles) return;
                 const dt = new DataTransfer();
                 selectedFiles.forEach(file => dt.items.add(file));
@@ -589,7 +589,11 @@ if (isset($_REQUEST['urut'])) {
 
                 if (isValid) {
                     if (btnIncomplete) btnIncomplete.style.display = 'none';
-                    if (btnSubmit) btnSubmit.style.display = 'inline-block';
+                    if (btnSubmit) {
+                        btnSubmit.style.display = 'inline-block';
+                        btnSubmit.classList.remove('disabled');
+                        btnSubmit.style.pointerEvents = 'auto';
+                    }
                 } else {
                     if (btnIncomplete) btnIncomplete.style.display = 'inline-block';
                     if (btnSubmit) btnSubmit.style.display = 'none';
@@ -613,7 +617,7 @@ if (isset($_REQUEST['urut'])) {
 
                 if (firstInvalid) {
                     toastr.error('Mohon lengkapi semua field yang wajib diisi!');
-                    firstInvalid.focus();
+                    if (typeof firstInvalid.focus === 'function') firstInvalid.focus();
                 }
             };
 

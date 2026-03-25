@@ -38,8 +38,8 @@ $breadcrumb_map = [
     'management/settings' => 'Settings',
     'management/profil' => 'Profile',
     'management/uploadsiswa' => 'Upload Excel Siswa',
-    'Management/Upload Data User' => 'Upload Data User',
-    'Management/Upload Foto (ZIP)' => 'Upload Foto (ZIP)',
+    'management/uploaduser' => 'Upload Data User',
+    'management/uploadfoto' => 'Upload Foto (ZIP)',
     'system' => 'System',
     'system/database' => 'Database',
     'system/checkupdate' => 'Check Update',
@@ -51,7 +51,13 @@ $breadcrumb_map = [
 ];
 
 $breadcrumb_items = [];
-$name = $breadcrumb_map[$route] ?? ucfirst(str_replace(['-', '/'], ' ', end(explode('/', $route))));
+$route_parts = explode('/', $route);
+$route_last = end($route_parts);
+$name = $breadcrumb_map[$route] ?? ucfirst(str_replace(['-', '/'], ' ', $route_last));
+
+if ($name !== 'Management') {
+    $name = str_replace('Management', '', $name);
+}
 
 $breadcrumb_items[] = [
     'name' => $name,
@@ -66,7 +72,7 @@ $user = $_SESSION['skradm'];
 // mengambil data berdasarkan id
 // dan menampilkan data ke dalam form modal bootstrap
 $sqlp = mysqli_query($sqlconn, "SELECT * FROM usera WHERE userid = '$user'");
-$p = mysqli_fetch_array($sqlp);
+$p = ($sqlp && mysqli_num_rows($sqlp) > 0) ? mysqli_fetch_array($sqlp) : [];
 $poto = $p['poto'] ?? '';
 $lv = $p['level'] ?? '';
 $nuser = $p['userid'] ?? '';
@@ -74,7 +80,7 @@ $nama = $p['nama'] ?? '';
 $passworddb = $p['password'] ?? '';
 
 $sqlp_siswa = mysqli_query($sqlconn, "SELECT * FROM siswa WHERE pd = '$user'");
-$p_siswa = mysqli_fetch_array($sqlp_siswa);
+$p_siswa = ($sqlp_siswa && mysqli_num_rows($sqlp_siswa) > 0) ? mysqli_fetch_array($sqlp_siswa) : [];
 $photo = $p_siswa['photo'] ?? '';
 
 // Check for default password (smpn171**) OR Username as Password
@@ -111,7 +117,6 @@ if (
     <link rel="shortcut icon" type="image/x-icon" href="">
 
     <!-- Vendor CSS -->
-    <!-- Vendor CSS -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700">
     <link rel="stylesheet" href="https://code.ionicframework.com/ionicons/2.0.1/css/ionicons.min.css">
@@ -131,13 +136,9 @@ if (
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
 
-    <link rel="stylesheet" href="plugins/css/colors.min.css">
-    <link rel="stylesheet" href="plugins/css/palette-gradient.min.css">
+    <!-- Custom & Plugin CSS --->
     <link rel="stylesheet" href="plugins/css/select2.min.css">
-    <link rel="stylesheet" href="plugins/css/components.css">
     <link rel="stylesheet" href="plugins/css/datatables.min.css">
-
-    <script src="js/select2.full.min.js"></script>
 
 
 
@@ -273,37 +274,41 @@ if (
                 <li class="nav-item">
                     <a class="nav-link" data-widget="pushmenu" href="#" role="button"><i class="fas fa-bars"></i></a>
                 </li>
-            </ul>
-            <li class="nav-item d-none d-sm-inline-block">
-                Tahun Pelajaran: <?php echo $tapel ?> | Semester:
-                <?php echo $semester == '1' ? 'Ganjil' : ($semester == '2' ? 'Genap' : '-'); ?>
-            </li>
+                <li class="nav-item d-none d-sm-inline-block text-white ml-2">
+                    Tahun Pelajaran: <?php echo $tapel ?> | Semester:
+                    <?php echo $semester == '1' ? 'Ganjil' : ($semester == '2' ? 'Genap' : '-'); ?>
+                </li>
             </ul>
             <!-- Right navbar links -->
             <ul class="navbar-nav ml-auto">
-                <script type='text/javascript'>
-                    var months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
-                    var myDays = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
-                    var date = new Date();
-                    var day = date.getDate();
-                    var month = date.getMonth();
-                    var thisDay = date.getDay();
-                    thisDay = myDays[thisDay];
-                    var yy = date.getYear();
-                    var year = (yy < 1000) ? yy + 1900 : yy;
-                    document.write(thisDay + ', ' + day + ' ' + months[month] + ' ' + year + ', ');
-                </script>
-                <time id="clock"></time>
-                <script>
-                    (function () {
-                        var clock = document.getElementById('clock');
-                        setInterval(function () {
-                            var time = new Date().toString().split(' ')[4];
-                            clock.innerHTML = time;
-                        }, 13);
-                    })();
-                </script>
+                <li class="nav-item d-none d-sm-inline-block text-white pr-3">
+<script type='text/javascript'>
+    (function() {
+        var months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+        var myDays = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jum\'at', 'Sabtu'];
+        var now = new Date();
+        var dayName = myDays[now.getDay()];
+        var day = now.getDate();
+        var monthName = months[now.getMonth()];
+        var year = now.getFullYear();
+        document.write(dayName + ', ' + day + ' ' + monthName + ' ' + year + ', ');
+    })();
+</script>
+<time id="clock"></time>
 
+<script>
+(function() {
+    var clock = document.getElementById('clock');
+    if (clock) {
+        setInterval(function() {
+            var now = new Date();
+            clock.innerHTML = now.toLocaleTimeString('id-ID', { hour12: false });
+        }, 1000);
+        // Initial call
+        clock.innerHTML = new Date().toLocaleTimeString('id-ID', { hour12: false });
+    }
+})();
+</script>
                 <!-- START: Interactive Tapel Check -->
                 <?php
                 $show_tapel_modal = false;
@@ -438,12 +443,12 @@ if (
                                         <p>Data Siswa</p>
                                     </a>
                                 </li>
-                                <li class="nav-item">
+                                <!--<li class="nav-item">
                                     <a href="../compress" class="nav-link" target="_blank">
                                         <i class=" nav-icon fas fa-tools"></i>
                                         <p>SAD PDF</p>
                                     </a>
-                                </li>
+                                </li>-->
                             <?php } ?>
 
                             <!-- Arsip Data Menu -->
@@ -563,24 +568,24 @@ if (
 
                                         <?php if ($lv == "1") { ?>
                                             <li class="nav-item">
-                                                <a href="management/upload-excel"
-                                                    class="nav-link <?php echo ($route == 'management/upload-excel' || $route == 'uploadsiswa') ? 'active' : ''; ?>"
+                                                <a href="management/uploadsiswa"
+                                                    class="nav-link <?php echo ($route == 'management/uploadsiswa' || $route == 'uploadsiswa') ? 'active' : ''; ?>"
                                                     id="14">
                                                     <i class="nav-icon fas fa-file-excel"></i>
                                                     <p>Upload Excel Siswa</p>
                                                 </a>
                                             </li>
                                             <li class="nav-item">
-                                                <a href="Management/Upload Data User"
-                                                    class="nav-link <?php echo ($route == 'Management/Upload Data User' || $route == 'uploaduser') ? 'active' : ''; ?>"
+                                                <a href="management/uploaduser"
+                                                    class="nav-link <?php echo ($route == 'management/uploaduser' || $route == 'uploaduser') ? 'active' : ''; ?>"
                                                     id="15">
                                                     <i class="nav-icon fas fa-file-excel"></i>
                                                     <p>Upload Data User</p>
                                                 </a>
                                             </li>
                                             <li class="nav-item">
-                                                <a href="Management/Upload Foto (ZIP)"
-                                                    class="nav-link <?php echo ($route == 'Management/Upload Foto (ZIP)' || $route == 'uploadfoto') ? 'active' : ''; ?>"
+                                                <a href="management/uploadfoto"
+                                                    class="nav-link <?php echo ($route == 'management/uploadfoto' || $route == 'uploadfoto') ? 'active' : ''; ?>"
                                                     id="16">
                                                     <i class="nav-icon fas fa-images"></i>
                                                     <p>Upload Foto (ZIP)</p>
@@ -693,6 +698,7 @@ if (
                     case 'arsipdata':
                     case 'print':
                     case 'management':
+                    case 'system':
                     case 'sistem':
                         include "load.php";
                         break;
@@ -748,7 +754,7 @@ if (
                         include "setting.php";
                         break;
 
-                    case 'management/profile':
+                    case 'management/profil':
                     case 'profil':
                         include "profil.php";
                         break;
@@ -818,8 +824,12 @@ if (
                             include "upload_usera.php";
                         elseif ($mod === 'uploadfoto')
                             include "upload_foto.php";
-                        elseif ($mod === 'profile')
+                        elseif ($mod === 'profile' || $mod === 'profil')
                             include "profil.php";
+                        elseif ($mod === 'settings' || $mod === 'setting' || $mod === 'pengaturan')
+                            include "setting.php";
+                        elseif ($mod === 'activitylog' || $mod === 'log-aktivitas')
+                            include "activity_log.php";
                         else
                             include "load.php";
                         break;
@@ -838,7 +848,7 @@ if (
              ========================================== -->
         <footer class="main-footer">
             <center>
-                <strong>S.A.D <?php echo $ver; ?> - Copyright &copy; 2025</strong>
+                <strong>S.A.D <?php echo isset($ver) ? $ver : '1.0'; ?> - Copyright &copy; 2025</strong>
             </center>
         </footer>
     </div>
@@ -855,23 +865,13 @@ if (
     <!-- Chart.js -->
     <script src="plugins/chart.js/Chart.min.js"></script>
     <!-- Toastr -->
+    <script src="js/vendor.min.js"></script>
+    <script src="js/select2.full.min.js"></script>
     <script src="plugins/toastr/toastr.min.js"></script>
+    <!-- <script src="js/form-select2.min.js"></script> -->
     <script src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.min.js"></script>
-    <script src="https://cdn.datatables.net/fixedcolumns/3.2.6/js/dataTables.fixedColumns.min.js"></script>
-    <script src="https://cdn.datatables.net/colreorder/1.5.1/js/dataTables.colReorder.min.js"></script>
-    <!-- DataTables CDN 
-    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap4.min.js"></script>
-    <script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
-    <script src="https://cdn.datatables.net/responsive/2.5.0/js/responsive.bootstrap4.min.js"></script>
-    -->
-    <!-- ==========================================
-         CUSTOM SCRIPTS
-         ========================================== -->
+<script src="https://cdn.datatables.net/fixedcolumns/3.2.6/js/dataTables.fixedColumns.min.js"></script>
 
-    <!-- ==========================================
-         MODAL PILIH KELAS - DAFTAR HADIR
-         ========================================== -->
     <style>
         #modalDaftarHadir .modal-header {
             background: linear-gradient(135deg, #2c3e50 0%, #01b2d1 100%);
@@ -1016,51 +1016,10 @@ if (
             });
         }
     </script>
-    <script>
-        // ==========================================
-        // CLOCK & DATE UPDATE
-        // ==========================================
-        function updateTime() {
-            var now = new Date();
-            var clock = document.getElementById('clock');
-            var dateDisplay = document.getElementById('date-display');
-
-            // Update Time
-            if (clock) {
-                var timeString = now.toLocaleTimeString('id-ID', { hour12: false });
-                clock.textContent = timeString;
-            }
-
-            // Update Date
-            if (dateDisplay) {
-                var months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
-                var myDays = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
-
-                var dayName = myDays[now.getDay()];
-                var day = now.getDate();
-                var monthName = months[now.getMonth()];
-                var year = now.getFullYear();
-
-                dateDisplay.textContent = dayName + ', ' + day + ' ' + monthName + ' ' + year + ' | ';
-            }
-        }
-
-        // Init and Interval
-        updateTime();
-        setInterval(updateTime, 1000);
-    </script>
-    <script>
-        // Global DataTable defaults (optional, but good for consistency)
-        $.extend(true, $.fn.dataTable.defaults, {
-            responsive: true,
-            autoWidth: false,
-            language: {
-                search: "_INPUT_",
-                searchPlaceholder: "Search..."
-            }
-        });
-
-    </script>
+<script>
+    // Console notice for cleanup
+    console.log("S.A.D System - UI Scripts Initialized");
+</script>
 </body>
 
 </html>

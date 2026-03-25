@@ -4,21 +4,17 @@ include "cfg/secure.php";
 
 if(isset($_REQUEST['stapel']))
 {
+    $tapel = mysqli_real_escape_string($sqlconn, $_REQUEST['tapel']);
+    $smt = mysqli_real_escape_string($sqlconn, $_REQUEST['smt']);
+    $tahun = date('Y'); // Using PHP date for consistency, or keep year(now()) in SQL
 
+    $sql = mysqli_query($sqlconn, "INSERT INTO tapel (tapel, smt, tahun, aktif) VALUES ('$tapel', '$smt', '$tahun', '')");
 
-		$sql = mysqli_query($sqlconn,"insert into tapel (tapel, smt, tahun, aktif) values  
-		('$_REQUEST[tapel]', '$_REQUEST[smt], year(now()),'')");
-
-	if ($sqlconn->error) {
-    try {   
-        throw new Exception("MySQL error $sqlconn->error <br> Query:<br> $sql", $sqlconn->errno);   
-    } catch(Exception $e ) {
-        echo "Error No: ".$e->getCode(). " - ". $e->getMessage() . "<br >";
-        echo nl2br($e->getTraceAsString());
+    if (!$sql) {
+        echo "Error: " . mysqli_error($sqlconn);
+    } else {
+        echo "<script>alert('Tambah Tapel Berhasil'); window.location.href = '?modul=settings';</script>";
     }
-
-}
-echo "<script>alert('Tambah Tapel Berhasil'); window.location.href = '?modul=settings';</script>";
 }
 
 if(isset($_REQUEST['deltapel']))

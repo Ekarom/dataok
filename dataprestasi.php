@@ -45,35 +45,35 @@ include_once "cfg/konek.php";
                 <div class="card-header box-shadow-0 bg-gradient-x-warning">
                     <h5 class="card-title text-white">Input Data Prestasi</h5>
                 </div>
-                <div class="card-body p-0">
+                <div class="card-content table-responsive">
                     <div class="card-body">
-                        <div class="dataTables_wrapper">
-                            <table id="example2" class="table table-bordered table-striped table-hover text-nowrap"
-                                style="width:100%">
-                                <thead>
+                        <table class="table table-bordered" style="width:100%"> 
+                            <thead>
                                     <tr>
-                                        <th>No</th>
-                                        <th>NIS</th>
-                                        <th>Nama Siswa</th>
-                                        <th>Status</th>
-                                        <th>Aksi</th>
+                                        <th class="text-center">No</th>
+                                        <th class="text-center">NIS</th>
+                                        <th class="text-center">NISN</th>
+                                        <th class="text-center">Nama Siswa</th>
+                                        <th class="text-center">Status</th>
+                                        <th class="text-center">Aksi</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     <?php
-                                    // Mengambil data siswa diurutkan berdasarkan nama (pd)
-                                    // Menggunakan subquery untuk cek status apakah sudah upload prestasi
-                                    $sqlSiswa = mysqli_query($sqlconn, "SELECT pd, nis, nisn, kelas, id, (SELECT COUNT(*) FROM prestasi WHERE prestasi.pd = siswa.pd AND prestasi.kelas = siswa.kelas) as jml_p FROM siswa ORDER BY pd ASC");
-                                    $noS = 1;
-                                    while ($ds = mysqli_fetch_array($sqlSiswa)) {
-                                        $has_prestasi = ($ds['jml_p'] > 0);
-                                        $status_badge = $has_prestasi
-                                            ? '<span class="badge bg-success">Sudah Upload</span>'
-                                            : '<span class="badge bg-danger">Belum Upload</span>';
-                                        ?>
+// Mengambil data siswa diurutkan berdasarkan nama (pd)
+// Menggunakan subquery untuk cek status apakah sudah upload prestasi
+$sqlSiswa = mysqli_query($sqlconn, "SELECT pd, nis, nisn, kelas, id, (SELECT COUNT(*) FROM prestasi WHERE prestasi.pd = siswa.pd AND prestasi.kelas = siswa.kelas) as jml_p FROM siswa ORDER BY pd ASC");
+$noS = 1;
+while ($ds = mysqli_fetch_array($sqlSiswa)) {
+    $has_prestasi = ($ds['jml_p'] > 0);
+    $status_badge = $has_prestasi
+        ? '<span class="badge bg-success">Sudah Upload</span>'
+        : '<span class="badge bg-danger">Belum Upload</span>';
+?>
                                         <tr>
                                             <td class="text-center"><?php echo $noS++; ?></td>
                                             <td class="text-center"><?php echo htmlspecialchars($ds['nis']); ?></td>
+                                            <td class="text-center"><?php echo htmlspecialchars($ds['nisn']); ?></td>
                                             <td class="text-left px-3"><?php echo htmlspecialchars($ds['pd']); ?></td>
                                             <td class="text-center"><?php echo $status_badge; ?></td>
 
@@ -96,7 +96,7 @@ include_once "cfg/konek.php";
                                             </td>
                                         </tr>
                                         <?php
-                                    } ?>
+}?>
                                 </tbody>
                             </table>
                         </div>
@@ -107,33 +107,15 @@ include_once "cfg/konek.php";
     </div>
     <!-- Global scripts provided by index.php -->
     <script>
-        $(document).ready(function () {
-            var table = $('#example2').DataTable({
-                "paging": false,
-                "scrollY": "450px",
-                "scrollCollapse": true,
-                "lengthChange": false,
-                "searching": true,
-                "ordering": true,
-                "info": true,
-                "autoWidth": false,
-                "responsive": false,
-                "scrollX": true,
-                "language": {
-                    "search": "Search:",
-                    "paginate": {
-                    }
-                }
-            });
-            
-            // Adjust columns on window resize to keep header/body in sync
-            $(window).on('resize', function() {
-                table.columns.adjust();
-            });
-            
-            // Initial adjustment
-            setTimeout(function() {
-                table.columns.adjust();
-            }, 500);
+        $(document).ready(function() {
+        $('table.table').DataTable( {
+            scrollY:        450,
+            scrollX:        true,
+            scrollCollapse: true,
+            paging:         false,
+            // fixedColumns:   {
+            //     leftColumns: 3
+            // }
+        } );
         });
-    </script>
+        </script>

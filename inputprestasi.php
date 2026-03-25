@@ -178,45 +178,9 @@ if (isset($s['photo']) && $s['photo'] != "" && file_exists("file/fotopd/" . $s['
     }
 
     /* ==========================================
-       CUSTOM SELECT2 SEARCH STYLING
+       SELECT2 PREMIUM UI OVERRIDES
        ========================================== */
-    .select2-container .select2-selection--single {
-        height: 38px !important;
-        border: 1px solid #ced4da !important;
-        border-radius: 4px !important;
-    }
-
-    .select2-container--default .select2-selection--single .select2-selection__rendered {
-        line-height: 36px !important;
-        padding-left: 12px !important;
-    }
-
-    .select2-container--default .select2-selection--single .select2-selection__arrow {
-        height: 36px !important;
-    }
-
-    .select2-search--dropdown .select2-search__field {
-        border: 2px solid #000 !important;
-        border-radius: 8px !important;
-        padding: 5px 12px !important;
-        margin: 6px 4px !important;
-        outline: none !important;
-        font-weight: 600 !important;
-        font-size: 0.60rem !important;
-        width: calc(100% - 8px) !important;
-    }
-
-    .select2-container--default .select2-results__option--highlighted[aria-selected] {
-        background-color: #6f42c1 !important;
-        color: #fff !important;
-    }
-
-    .select2-results__option {
-        padding: 8px 12px !important;
-        font-size: 13px !important;
-    }
-</style>
-<link rel="stylesheet" href="plugins/css/select2.min.css" />
+    </style>
 
 <!-- Main content -->
 <section class="content">
@@ -257,7 +221,7 @@ if (isset($s['photo']) && $s['photo'] != "" && file_exists("file/fotopd/" . $s['
                     <div class="card-header bg-menu-gradient d-flex align-items-center">
                         <h3 class="card-title text-white">Form Input Prestasi</h3>
                         <div class="card-tools ml-auto">
-                            <a href="arsipdata/inputprestasi" class="btn btn-primary btn-sm">
+                            <a href="arsipdata/inputprestasi" class="btn btn-primary btn-sm rounded-pill">
                                 Kembali
                             </a>
                         </div>
@@ -279,8 +243,8 @@ if (isset($s['photo']) && $s['photo'] != "" && file_exists("file/fotopd/" . $s['
                         <div class="form-group row">
                             <label for="jenisprestasi" class="col-sm-4 col-form-label">Jenis Prestasi</label>
                             <div class="col-sm-8">
-                                <select class="form-control warna select2" name="jenisprestasi" required>
-                                    <option value="">- Pilih Jenis -</option>
+                                <select class="form-control" id="jenisprestasi" name="jenisprestasi" required>
+                                    <option></option>
                                     <option value="Akademik">Akademik</option>
                                     <option value="Non-Akademik">Non-Akademik</option>
                                 </select>
@@ -290,8 +254,8 @@ if (isset($s['photo']) && $s['photo'] != "" && file_exists("file/fotopd/" . $s['
                         <div class="form-group row">
                             <label for="tingkat" class="col-sm-4 col-form-label">Tingkat</label>
                             <div class="col-sm-8">
-                                <select class="form-control warna select2" name="tingkat" required>
-                                    <option value="">- Pilih Tingkat -</option>
+                                <select class="form-control" id="tingkat" name="tingkat" required>
+                                    <option></option>
                                     <option value="Sekolah">Sekolah</option>
                                     <option value="Kecamatan">Kecamatan</option>
                                     <option value="Kabupaten/Kota">Kabupaten/Kota</option>
@@ -336,8 +300,8 @@ if (isset($s['photo']) && $s['photo'] != "" && file_exists("file/fotopd/" . $s['
                         <div class="form-group row">
                             <label for="juara" class="col-sm-4 col-form-label">Juara Ke-</label>
                             <div class="col-sm-8">
-                                <select class="form-control warna select2" id="juara" name="juara" required>
-                                    <option value="">- Pilih Juara -</option>
+                                <select class="select2 form-control" id="juara" name="juara" required>
+                                    <option></option>
                                     <option value="1">Juara 1</option>
                                     <option value="2">Juara 2</option>
                                     <option value="3">Juara 3</option>
@@ -352,8 +316,8 @@ if (isset($s['photo']) && $s['photo'] != "" && file_exists("file/fotopd/" . $s['
                         <div class="form-group row">
                             <label for="bulan" class="col-sm-4 col-form-label">Bulan</label>
                             <div class="col-sm-8">
-                                <select class="form-control warna select2" id="bulan" name="bulan" required>
-                                    <option value="">- Pilih Bulan -</option>
+                                <select class="form-control" id="bulan" name="bulan" required>
+                                    <option></option>
                                     <option value="Januari">Januari</option>
                                     <option value="Februari">Februari</option>
                                     <option value="Maret">Maret</option>
@@ -444,14 +408,18 @@ if (isset($s['photo']) && $s['photo'] != "" && file_exists("file/fotopd/" . $s['
         let isComplete = true;
 
         requiredInputs.forEach(input => {
-            if (!input.value.trim()) {
+            const val = $(input).val();
+            if (!val || val.toString().trim() === '') {
                 isComplete = false;
             }
         });
 
         if (isComplete) {
             if (btnIncomplete) btnIncomplete.style.display = 'none';
-            if (btnSave) btnSave.style.display = 'inline-block';
+            if (btnSave) {
+                btnSave.style.display = 'inline-block';
+                btnSave.classList.remove('disabled');
+            }
         } else {
             if (btnIncomplete) btnIncomplete.style.display = 'inline-block';
             if (btnSave) btnSave.style.display = 'none';
@@ -588,14 +556,6 @@ if (isset($s['photo']) && $s['photo'] != "" && file_exists("file/fotopd/" . $s['
      * MAIN INITIALIZATION
      * ==========================================
      */
-    $(document).ready(function () {
-        // Initialize Select2 with Search Always Active
-        $('.select2').select2({
-            theme: 'default',
-            width: '100%',
-            allowClear: true,
-            minimumResultsForSearch: 0 // Always show search box
-        });
 
         // Form field changes listener
         $('#inputpresForm').on('input change', 'input, select, textarea', function () {
@@ -676,5 +636,38 @@ if (isset($s['photo']) && $s['photo'] != "" && file_exists("file/fotopd/" . $s['
 
         // Initial check
         validateInputForm();
-    });
+        
+        // Initialize Select2 with Placeholders (with existence check)
+        const initS2 = () => {
+            if (typeof $.fn.select2 !== 'undefined') {
+                $("#jenisprestasi").select2({
+                    placeholder: "- Pilih Jenis -",
+                    allowClear: true,
+                    width: '100%',
+                    minimumResultsForSearch: 0
+                });
+                $("#bulan").select2({
+                    placeholder: "- Pilih Bulan -",
+                    allowClear: true,
+                    width: '100%',
+                    minimumResultsForSearch: 0
+                });
+                $("#tingkat").select2({
+                    placeholder: "- Pilih Tingkat -",
+                    allowClear: true,
+                    width: '100%',
+                    minimumResultsForSearch: 0
+                });
+                $("#juara").select2({
+                    placeholder: "- Pilih Juara -",
+                    allowClear: true,
+                    width: '100%',
+                    minimumResultsForSearch: 0
+                });
+            } else {
+                console.warn("Select2 not found, retrying...");
+                setTimeout(initS2, 100);
+            }
+        };
+        initS2();
 </script>
