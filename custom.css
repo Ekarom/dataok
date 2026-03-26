@@ -13,7 +13,7 @@
            SIDEBAR & NAVBAR STYLES
            ========================================== */
 .main-sidebar {
-    background: linear-gradient(180deg, #2c3e50 0%, #ee8f01ff 100%) !important;
+    background: linear-gradient(135deg, #2c3e50 0%, #01b2d1 100%);
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
 }
 
@@ -55,21 +55,21 @@
 
 /* Global Menu Gradient Class */
 .bg-menu-gradient {
-    background: linear-gradient(180deg, #2c3e50 0%, #ee8f01ff 100%) !important;
+    background: linear-gradient(135deg, #2c3e50 0%, #01b2d1 100%);
     color: #fff !important;
 }
 
 
 /* Nav Tabs Styling */
 .nav-tabs .nav-link.active {
-    background: linear-gradient(180deg, #2c3e50 0%, #ee8f01ff 100%) !important;
+    background: linear-gradient(135deg, #2c3e50 0%, #01b2d1 100%);
     color: #1f2d3d !important;
     border-color: #dee2e6 #dee2e6 #fff;
 }
 
 /* Table Header Styling */
 table thead th {
-    background: linear-gradient(180deg, #2c3e50 0%, #ee8f01ff 100%) !important;
+    background: linear-gradient(180deg, #2c3e50 0%, #01b2d1 100%) !important;
     color: #ffffffff !important;
     border-color: #1a1611ff;
     text-align: center;
@@ -114,4 +114,49 @@ table td {
 
 .icon {
     background-color: transparent !important;
+}
+
+/* Fix DataTables Search Box Visibility & Styling */
+.dataTables_filter input {
+    border: 1px solid #ced4da !important;
+    border-radius: .25rem !important;
+    padding: 6px 12px 6px 12px !important;
+    background-color: #fff !important;
+    color: #495057 !important;
+    margin-left: .5em !important;
+    transition: border-color .15s ease-in-out, box-shadow .15s ease-in-out !important;
+    outline: none !important;
+}
+
+/* Premium Focus & Select2 Styling */
+.dataTables_filter input:focus,
+.form-control:focus,
+.select2-container--default.select2-container--focus .select2-selection--single {
+    border-color: #6f42c1 !important;
+    box-shadow: 0 0 0 0.2rem rgba(111, 66, 193, 0.25) !important;
+}
+
+.select2-container--default .select2-selection--single {
+    height: 38px !important;
+    padding: 5px 12px !important;
+    border: 1px solid #ced4da !important;
+}
+
+.select2-container--default .select2-selection--single .select2-selection__rendered {
+    line-height: 26px !important;
+    color: #495057 !important;
+    padding-left: 0 !important;
+}
+
+.select2-container--default .select2-selection--single .select2-selection__arrow {
+    height: 36px !important;
+}
+
+.select2-dropdown {
+    border: 1px solid #6f42c1 !important;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1) !important;
+}
+
+.select2-results__option--highlighted[aria-selected] {
+    background-color: #6f42c1 !important;
 }

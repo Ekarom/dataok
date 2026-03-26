@@ -13,8 +13,14 @@ if (isset($_POST['db_year']) && !empty($_POST['db_year'])) {
 if (isset($_POST['nis']) || isset($_GET['nis'])) {
     $nis = isset($_POST['nis']) ? $_POST['nis'] : $_GET['nis'];
     $sql = mysqli_query($sqlconn, "SELECT * FROM siswa WHERE id='$nis'");
-    if ($sql && mysqli_num_rows($sql) > 0) {
-        $s = mysqli_fetch_array($sql);
+    if ($sql) {
+        if (mysqli_num_rows($sql) > 0) {
+            $s = mysqli_fetch_array($sql);
+        }
+    }
+    else {
+        // Log or show error for PHP 8 compatibility
+        $db_error = mysqli_error($sqlconn);
     }
 }
 

@@ -3,48 +3,24 @@
 
 
 /*//////////////////////////////////////////////////////////////////
-[ FONT ]*/
-
-@font-face {
-  font-family: Poppins-Regular;
-  
-}
-
-@font-face {
-  font-family: Poppins-Medium;
-  
-}
-
-@font-face {
-  font-family: Poppins-Bold;
-  
-}
-
-@font-face {
-  font-family: Poppins-SemiBold;
-  
-}
-
-
-
+[ FONT - Loaded via Google Fonts in index.php ]*/
 
 /*//////////////////////////////////////////////////////////////////
-[ RESTYLE TAG ]*/
+[ RESTYLE TAG - Scoped to .limiter to avoid global conflicts ]*/
 
-* {
+.limiter * {
 	margin: 0px; 
 	padding: 0px; 
 	box-sizing: border-box;
 }
 
-body, html {
+.limiter, .container-login100 {
 	height: 100%;
-	font-family: Poppins-Regular, sans-serif;
+	font-family: Poppins, sans-serif;
 }
 
-/*---------------------------------------------*/
-a {
-	font-family: Poppins-Regular;
+.limiter a {
+	font-family: Poppins, sans-serif;
 	font-size: 14px;
 	line-height: 1.7;
 	color: #666666;
@@ -55,86 +31,86 @@ a {
   -moz-transition: all 0.4s;
 }
 
-a:focus {
+.limiter a:focus {
 	outline: none !important;
 }
 
-a:hover {
+.limiter a:hover {
 	text-decoration: none;
   color: #fff;
 }
 
 /*---------------------------------------------*/
-h1,h2,h3,h4,h5,h6 {
+.limiter h1, .limiter h2, .limiter h3, .limiter h4, .limiter h5, .limiter h6 {
 	margin: 0px;
 }
 
-p {
-	font-family: Poppins-Regular;
+.limiter p {
+	font-family: Poppins, sans-serif;
 	font-size: 14px;
 	line-height: 1.7;
-	color: #666666;
+	color: #f6f6f6fa;
 	margin: 0px;
 }
 
-ul, li {
+.limiter ul, .limiter li {
 	margin: 0px;
 	list-style-type: none;
 }
 
 
 /*---------------------------------------------*/
-input {
+.limiter input {
 	outline: none;
 	border: none;
 }
 
-textarea {
+.limiter textarea {
   outline: none;
   border: none;
 }
 
-textarea:focus, input:focus {
+.limiter textarea:focus, .limiter input:focus {
   border-color: transparent !important;
 }
 
-input:focus::-webkit-input-placeholder { color:transparent; }
-input:focus:-moz-placeholder { color:transparent; }
-input:focus::-moz-placeholder { color:transparent; }
-input:focus:-ms-input-placeholder { color:transparent; }
+.limiter input:focus::-webkit-input-placeholder { color:transparent; }
+.limiter input:focus:-moz-placeholder { color:transparent; }
+.limiter input:focus::-moz-placeholder { color:transparent; }
+.limiter input:focus:-ms-input-placeholder { color:transparent; }
 
-textarea:focus::-webkit-input-placeholder { color:transparent; }
-textarea:focus:-moz-placeholder { color:transparent; }
-textarea:focus::-moz-placeholder { color:transparent; }
-textarea:focus:-ms-input-placeholder { color:transparent; }
+.limiter textarea:focus::-webkit-input-placeholder { color:transparent; }
+.limiter textarea:focus:-moz-placeholder { color:transparent; }
+.limiter textarea:focus::-moz-placeholder { color:transparent; }
+.limiter textarea:focus:-ms-input-placeholder { color:transparent; }
 
-input::-webkit-input-placeholder { color: #fff;}
-input:-moz-placeholder { color: #fff;}
-input::-moz-placeholder { color: #fff;}
-input:-ms-input-placeholder { color: #fff;}
+.limiter input::-webkit-input-placeholder { color: #fff;}
+.limiter input:-moz-placeholder { color: #fff;}
+.limiter input::-moz-placeholder { color: #fff;}
+.limiter input:-ms-input-placeholder { color: #fff;}
 
-textarea::-webkit-input-placeholder { color: #fff;}
-textarea:-moz-placeholder { color: #fff;}
-textarea::-moz-placeholder { color: #fff;}
-textarea:-ms-input-placeholder { color: #fff;}
+.limiter textarea::-webkit-input-placeholder { color: #fff;}
+.limiter textarea:-moz-placeholder { color: #fff;}
+.limiter textarea::-moz-placeholder { color: #fff;}
+.limiter textarea:-ms-input-placeholder { color: #fff;}
 
-label {
+.limiter label {
   margin: 0;
   display: block;
 }
 
 /*---------------------------------------------*/
-button {
+.limiter button {
 	outline: none !important;
 	border: none;
 	background: transparent;
 }
 
-button:hover {
+.limiter button:hover {
 	cursor: pointer;
 }
 
-iframe {
+.limiter iframe {
 	border: none !important;
 }
 
@@ -142,14 +118,14 @@ iframe {
 /*//////////////////////////////////////////////////////////////////
 [ Utility ]*/
 .txt1 {
-  font-family: Poppins-Regular;
+  font-family: Poppins;
   font-size: 13px;
   color: #e5e5e5;
   line-height: 1.5;
 }
 
 .txt2 {
-  font-family: Poppins-Regular;
+  font-family: Poppins;
   font-size: 16px;
   color: #e5e5e5;
   line-height: 1;
@@ -232,7 +208,7 @@ iframe {
 }
 
 .login100-form-title {
-  font-family: Poppins-Medium;
+  font-family: Poppins;
   font-size: 30px;
   color: #fff;
   line-height: 1.2;
@@ -254,7 +230,7 @@ iframe {
 }
 
 .input100 {
-  font-family: Poppins-Regular;
+  font-family: Poppins;
   font-size: 16px;
   color: #fff;
   line-height: 1.2;
@@ -354,7 +330,7 @@ iframe {
 }
 
 .label-checkbox100 {
-  font-family: Poppins-Regular;
+  font-family: Poppins;
   font-size: 13px;
   color: #fff;
   line-height: 1.2;
@@ -411,7 +387,7 @@ iframe {
 }
 
 .login100-form-btn {
-  font-family: Poppins-Medium;
+  font-family: Poppins;
   font-size: 16px;
   color: #555555;
   line-height: 1.2;
@@ -429,10 +405,10 @@ iframe {
   border-radius: 25px;
 
   background: #9152f8;
-  background: -webkit-linear-gradient(bottom, #7579ff, #b224ef);
-  background: -o-linear-gradient(bottom, #7579ff, #b224ef);
-  background: -moz-linear-gradient(bottom, #7579ff, #b224ef);
-  background: linear-gradient(bottom, #7579ff, #b224ef);
+  background: -webkit-linear-gradient(to top, #7579ff, #b224ef);
+  background: -o-linear-gradient(to top, #7579ff, #b224ef);
+  background: -moz-linear-gradient(to top, #7579ff, #b224ef);
+  background: linear-gradient(to top, #7579ff, #b224ef);
   position: relative;
   z-index: 1;
 
@@ -505,7 +481,7 @@ iframe {
   right: 0px;
   pointer-events: none;
 
-  font-family: Poppins-Regular;
+  font-family: Poppins;
   color: #c80000;
   font-size: 13px;
   line-height: 1.4;

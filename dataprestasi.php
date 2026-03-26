@@ -1,125 +1,88 @@
 <?php
 include_once "cfg/konek.php";
 ?>
-<style>
-    /* Styling headers to match screenshot */
-    #example2 thead th {
-        background-color: #5c6771 !important;
-        color: #ffffff !important;
-        text-transform: uppercase;
-        font-size: 0.85rem;
-        font-weight: 700;
-        border: 1px solid #dee2e6;
-        vertical-align: middle;
-        text-align: center;
-    }
-
-    /* Styling cells */
-    #example2 tbody td {
-        vertical-align: middle;
-        font-size: 0.9rem;
-    }
-
-    /* Style for action buttons to match screenshot boxes */
-    .btn-action-container {
-        display: flex;
-        justify-content: center;
-        gap: 3px;
-    }
-
-    .btn-action {
-        padding: 2px 6px !important;
-        font-size: 10px !important;
-        font-weight: 600;
-        text-transform: capitalize;
-        border-radius: 2px !important;
-        min-width: 40px;
-    }
-
-    .badge-flat {
-        border-radius: 0 !important;
-        padding: 2px 5px !important;
-        font-size: 10px !important;
-    }
-    .badge {
-        border-radius: 0 !important;
-        padding: 2px 5px !important;
-        font-size: 10px !important;
-    }
-</style>
-
 <!-- Main content -->
 <section class="content">
     <div class="row">
         <div class="col-12">
-            <div class="card shadow-none">
+            <div class="card">
                 <div class="card-header box-shadow-0 bg-gradient-x-warning">
-                    <!--<h5 class="card-title text-white">Input Data Prestasi</h5>-->
+                    <h3 class="card-title">Data Prestasi Siswa</h3>
                 </div>
-                <div class="card-content table-responsive">
-                    <div class="card-body">
-                        <table class="table table-bordered" style="width:100%"> 
-                            <thead>
-                                    <tr>
-                                        <th class="text-center">No</th>
-                                        <th class="text-center">NIS</th>
-                                        <th class="text-center">NISN</th>
-                                        <th class="text-center">Nama Siswa</th>
-                                        <th class="text-center">Status</th>
-                                        <th class="text-center">Aksi</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <?php
+                <div class="card-body">
+                    <table id="tableDataPrestasi" class="table table-striped table-hover" style="width:100%"> 
+                        <thead>
+                            <tr>
+                                <th>No</th>
+                                <th>NIS</th>
+                                <th>NISN</th>
+                                <th>Nama Siswa</th>
+                                <th>Status</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php
 // Mengambil data siswa diurutkan berdasarkan nama (pd)
 // Menggunakan subquery untuk cek status apakah sudah upload prestasi
 $sqlSiswa = mysqli_query($sqlconn, "SELECT pd, nis, nisn, kelas, id, (SELECT COUNT(*) FROM prestasi WHERE prestasi.pd = siswa.pd AND prestasi.kelas = siswa.kelas) as jml_p FROM siswa ORDER BY pd ASC");
-$noS = 1;
-while ($ds = mysqli_fetch_array($sqlSiswa)) {
-    $has_prestasi = ($ds['jml_p'] > 0);
-    $status_badge = $has_prestasi
-        ? '<span class="badge bg-success">Sudah Upload</span>'
-        : '<span class="badge bg-danger">Belum Upload</span>';
-?>
-                                        <tr>
-                                            <td class="text-center"><?php echo $noS++; ?></td>
-                                            <td class="text-center"><?php echo htmlspecialchars($ds['nis']); ?></td>
-                                            <td class="text-center"><?php echo htmlspecialchars($ds['nisn']); ?></td>
-                                            <td class="text-left px-3"><?php echo htmlspecialchars($ds['pd']); ?></td>
-                                            <td class="text-center"><?php echo $status_badge; ?></td>
 
-                                            <td class="text-center">
-                                                <div class="btn-group">
-                                                    <a href="viewpress?urut=<?php echo $ds['id']; ?>" class="badge badge-success badge-flat">
-                                                        Detail
-                                                    </a>
-                                                    <a href="arsipdata/inputprestasi?nis=<?php echo $ds['id']; ?>" class="badge badge-primary badge-flat">
-                                                        Input
-                                                    </a>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                        <?php
-}?>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
+if ($sqlSiswa) {
+    $noS = 1;
+    while ($ds = mysqli_fetch_array($sqlSiswa)) {
+        $has_prestasi = ($ds['jml_p'] > 0);
+        $status_badge = $has_prestasi
+            ? '<span class="badge bg-success badge-square">Sudah Upload</span>'
+            : '<span class="badge bg-danger badge-square">Belum Upload</span>';
+?>
+                                <tr>
+                                    <td class="text-center"><?php echo $noS++; ?></td>
+                                    <td class="text-center"><?php echo htmlspecialchars($ds['nis']); ?></td>
+                                    <td class="text-center"><?php echo htmlspecialchars($ds['nisn']); ?></td>
+                                    <td class="text-left px-3"><?php echo htmlspecialchars($ds['pd']); ?></td>
+                                    <td class="text-center"><?php echo $status_badge; ?></td>
+
+                                    <td class="text-center">
+                                        <div class="btn-group">
+                                            <a href="viewpress?urut=<?php echo $ds['id']; ?>" class="badge badge-success badge-square">
+                                                Detail
+                                            </a>
+                                            <a href="arsipdata/inputprestasi?nis=<?php echo $ds['id']; ?>" class="badge badge-primary badge-square">
+                                                Input
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <?php
+    }
+}
+else {
+    echo "<tr><td colspan='6' class='text-center'>Error: " . mysqli_error($sqlconn) . "</td></tr>";
+}
+?>
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
     </div>
+</section>
     <!-- Global scripts provided by index.php -->
     <script>
         $(document).ready(function() {
-        $('table.table').DataTable( {
-            scrollY:        450,
-            scrollX:        true,
-            scrollCollapse: true,
-            paging:         false,
-            // fixedColumns:   {
-            //     leftColumns: 3
-            // }
-        } );
+            var table = $('#tableDataPrestasi').DataTable( {
+                scrollY:        450,
+                scrollX:        true,
+                scrollCollapse: true,
+                paging:         false
+            });
+
+            // Tambahkan styling tambahan untuk kolom pencarian agar lebih premium
+            $('.dataTables_filter input').addClass('form-control form-control-sm').css({
+                'display': 'inline-block',
+                'width': '200px',
+                'margin-left': '10px',
+                'border': '1px solid #ced4da'
+            });
         });
         </script>

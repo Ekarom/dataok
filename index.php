@@ -44,6 +44,8 @@ $breadcrumb_map = [
     'system/database' => 'Database',
     'system/checkupdate' => 'Check Update',
     'system/activitylog' => 'Activity Log',
+    'dataprestasi' => 'Input Prestasi',
+    'inputprestasi' => 'Input Prestasi',
     'viewpress' => 'Detail Prestasi',
     'editpress' => 'Edit Prestasi',
     'editlegalisir' => 'Edit Legalisir',
@@ -119,7 +121,6 @@ if (
 
     <!-- Vendor CSS -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700">
     <link rel="stylesheet" href="https://code.ionicframework.com/ionicons/2.0.1/css/ionicons.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
 
@@ -140,124 +141,13 @@ if (
     <link rel="stylesheet" href="plugins/css/datatables.min.css">
     <link rel="stylesheet" href="https://cdn.datatables.net/1.10.19/css/jquery.dataTables.min.css">
     <link rel="stylesheet" href="https://cdn.datatables.net/fixedcolumns/3.2.6/css/fixedColumns.dataTables.min.css">
-
-
-
-
-
-
-     <style>
-        /* ==========================================
-           FORM VALIDATION STYLES
-           ========================================== */
-        .warna:valid {
-            background-color: #18c5dbff;
-        }
-        
-        .custom {
-            width: 200px !important;
-        }
-        
-        /* ==========================================
-           SIDEBAR & NAVBAR STYLES
-           ========================================== */
-        .main-sidebar {
-            background: linear-gradient(135deg, #2c3e50 0%, #01b2d1 100%);
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-        }
-
-        .nav-sidebar .nav-item {
-            margin-bottom: 5px;
-        }
-
-        .nav-sidebar .nav-link {
-            border-radius: 10px !important;
-            color: #ecf0f1 !important;
-            transition: all 0.3s ease;
-        }
-
-        .nav-sidebar .nav-link:hover, .nav-sidebar .nav-link.active {
-            background-color: rgba(255,255,255,0.2) !important;
-            transform: translateX(5px);
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }
-
-        .nav-sidebar .nav-icon {
-            color: #fff !important;
-            opacity: 0.8;
-            }
-
-              
-        .brand-link {
-            border-bottom: 1px solid rgba(255,255,255,0.1) !important;
-            text-decoration: none !important;
-        }
-
-        .user-panel {
-            border-bottom: 1px solid rgba(255,255,255,0.1) !important;
-        }
-
-        .user-panel a {
-            text-decoration: none !important;
-        }
-        
-        /* Global Menu Gradient Class */
-        .bg-menu-gradient {
-            background: linear-gradient(135deg, #2c3e50 0%, #01b2d1 100%);
-            color: #fff !important;
-        }       
-
-        /* Nav Tabs Styling */
-        .nav-tabs .nav-link.active {
-            background: linear-gradient(135deg, #2c3e50 0%, #01b2d1 100%);
-            color: #fff !important;
-            border-color: #dee2e6 #dee2e6 #fff;
-        }
-
-        /* Table Header Styling */
-        table thead th {
-            background: linear-gradient(135deg, #2c3e50 0%, #01b2d1 100%);
-            color: #fff !important;
-            border-color: #5682fc;
-            text-align: center;
-        }
-
-        table td {
-            text-align: center;
-        }
-
-        .modal-header {
-            padding: 9px 15px;
-            border-bottom: 1px solid #eee;
-            background-color: white;
-            border-top-left-radius: 5px;
-            border-top-right-radius: 5px;
-        }
-        .bg-1 {
-            background: linear-gradient(180deg,  #2c3e50 25%, #01d112ff 100%);
-            color: #fff !important;
-        }
-        .bg-2 {
-            background: linear-gradient(180deg,  #2c3e50 25%, #01b2d1ff 100%);
-            color: #fff !important;
-        }
-        .bg-3 {
-            background: linear-gradient(180deg,  #2c3e50 25%, #1900ffff 100%);
-            color: #fff !important;
-        }
-        .bg-4 {
-            background: linear-gradient(180deg,  #2c3e50 25%, #ffee00ff 100%);
-            color: #fff !important;
-        }
-        .bg-5 {
-            background: linear-gradient(180deg,  #2c3e50 25%, #ff0000ff 100%);
-            color: #fff !important;
-        }
-        .icon {
-             background-color: transparent !important;
-        }
-    </style>
-
+    <link rel="stylesheet" href="plugins/css/bootstrap-extended.min.css">
+    <link rel="stylesheet" href="plugins/css/main.css">
+    <link rel="stylesheet" href="custom.css">
+    <link rel="stylesheet" href="plugins/css/colors.min.css">
+    <link rel="stylesheet" href="plugins/css/palette-gradient.min.css">
+    <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,300i,400,400i,600,600i,700,700i%7CQuicksand:300,400,500,700%7CPoppins:300,400,500,600,700" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/material-design-iconic-font/2.2.0/css/material-design-iconic-font.min.css">
 </head>
 
 <body class="hold-transition sidebar-mini layout-fixed">
