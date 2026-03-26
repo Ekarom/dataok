@@ -496,6 +496,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['action'])) {
             case 'get_databases':
                 // Tambahkan -N untuk skip column headers
                 $cmd_list = "{$mysql} -h {$db_host_escaped} -u {$db_user_escaped}{$pass_flag} -N -e " . escapeshellarg("SHOW DATABASES");
+                $output = [];
                 exec($cmd_list . " 2>&1", $output, $return_var);
 
                 if ($return_var !== 0) {

@@ -380,9 +380,9 @@ class Spreadsheet_Excel_Reader {
 		return $val;
 	}
 	function hyperlink($row,$col,$sheet=0) {
-		$link = $this->sheets[$sheet]['cellsInfo'][$row][$col]['hyperlink'];
-		if ($link) {
-			return $link['link'];
+		$link = isset($this->sheets[$sheet]['cellsInfo'][$row][$col]['hyperlink']) ? $this->sheets[$sheet]['cellsInfo'][$row][$col]['hyperlink'] : null;
+		if ($link && is_array($link)) {
+			return isset($link['link']) ? $link['link'] : '';
 		}
 		return '';
 	}

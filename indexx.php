@@ -143,24 +143,24 @@ if (
 
 
 
-     <style>
+    <style>
         /* ==========================================
            FORM VALIDATION STYLES
            ========================================== */
         .warna:valid {
             background-color: #18c5dbff;
         }
-        
+
         .custom {
             width: 200px !important;
         }
-        
+
         /* ==========================================
            SIDEBAR & NAVBAR STYLES
            ========================================== */
         .main-sidebar {
-            background: linear-gradient(180deg, #2c3e50 0%, #eca200ff 100%) !important;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            background: linear-gradient(180deg, #f1f1f1ff 0%, #0065c4ff 100%) !important;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
         }
 
         .nav-sidebar .nav-item {
@@ -169,53 +169,57 @@ if (
 
         .nav-sidebar .nav-link {
             border-radius: 10px !important;
-            color: #ecf0f1 !important;
+            color: #1f2d3d !important; /* Diubah menjadi gelap agar terbaca di background putih */
             transition: all 0.3s ease;
         }
 
-        .nav-sidebar .nav-link:hover, .nav-sidebar .nav-link.active {
-            background-color: rgba(255,255,255,0.2) !important;
+        .nav-sidebar .nav-link:hover,
+        .nav-sidebar .nav-link.active {
+            background-color: rgba(0, 0, 0, 0.1) !important; /* Efek hover digelapkan */
             transform: translateX(5px);
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
         }
 
         .nav-sidebar .nav-icon {
-            color: #fff !important;
+            color: #1f2d3d !important; /* Ikon diubah gelap */
             opacity: 0.8;
-            }
+        }
 
-              
+
         .brand-link {
-            border-bottom: 1px solid rgba(255,255,255,0.1) !important;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1) !important;
             text-decoration: none !important;
+            color: #1f2d3d !important; /* Teks logo atas diubah gelap */
         }
 
         .user-panel {
-            border-bottom: 1px solid rgba(255,255,255,0.1) !important;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1) !important;
         }
 
         .user-panel a {
             text-decoration: none !important;
+            color: #1f2d3d !important;
         }
-        
+
         /* Global Menu Gradient Class */
         .bg-menu-gradient {
-            background: linear-gradient(180deg, #2c3e50 0%, #eca200ff 100%) !important;
-            color: #fff !important;
-        }       
+            background: linear-gradient(180deg, #1f2d3d 0%, #0065c4ff 100%) !important;
+            color: #1f2d3d !important;
+        }
+
 
         /* Nav Tabs Styling */
         .nav-tabs .nav-link.active {
-            background: linear-gradient(180deg, #2c3e50 0%, #eca200ff 100%) !important;
-            color: #fff !important;
+            background: linear-gradient(180deg, #f1f1f1ff 0%, #ee8f01ff 100%) !important;
+            color: #1f2d3d !important;
             border-color: #dee2e6 #dee2e6 #fff;
         }
 
         /* Table Header Styling */
         table thead th {
-            background: linear-gradient(180deg, #2c3e50 0%, #eca200ff 100%) !important;
-            color: #fff !important;
-            border-color: #5682fc;
+            background: linear-gradient(180deg, #f1f1f1ff 0%, #ee8f01ff 100%) !important;
+            color: #1f2d3d !important;
+            border-color: #1a1611ff;
             text-align: center;
         }
 
@@ -230,31 +234,36 @@ if (
             border-top-left-radius: 5px;
             border-top-right-radius: 5px;
         }
+
         .bg-1 {
-            background: linear-gradient(180deg,  #2c3e50 25%, #01d112ff 100%);
+            background: linear-gradient(180deg, #2c3e50 25%, #01d112ff 100%);
             color: #fff !important;
         }
+
         .bg-2 {
-            background: linear-gradient(180deg,  #2c3e50 25%, #01b2d1ff 100%);
+            background: linear-gradient(180deg, #2c3e50 25%, #01b2d1ff 100%);
             color: #fff !important;
         }
+
         .bg-3 {
-            background: linear-gradient(180deg,  #2c3e50 25%, #1900ffff 100%);
+            background: linear-gradient(180deg, #2c3e50 25%, #1900ffff 100%);
             color: #fff !important;
         }
+
         .bg-4 {
-            background: linear-gradient(180deg,  #2c3e50 25%, #ffee00ff 100%);
+            background: linear-gradient(180deg, #2c3e50 25%, #ffee00ff 100%);
             color: #fff !important;
         }
+
         .bg-5 {
-            background: linear-gradient(180deg,  #2c3e50 25%, #ff0000ff 100%);
+            background: linear-gradient(180deg, #2c3e50 25%, #ff0000ff 100%);
             color: #fff !important;
         }
+
         .icon {
-             background-color: transparent !important;
+            background-color: transparent !important;
         }
     </style>
-
 </head>
 
 <body class="hold-transition sidebar-mini layout-fixed">
@@ -266,10 +275,11 @@ if (
                 <li class="nav-item">
                     <a class="nav-link" data-widget="pushmenu" href="#" role="button"><i class="fas fa-bars"></i></a>
                 </li>
-                <li class="nav-item d-none d-sm-inline-block mt-2 text-white">
-                Tahun Pelajaran: <?php echo $tapel?> | Semester: <?php echo $semester == '1' ? 'Ganjil' : ($semester == '2' ? 'Genap' : '-'); ?>
-            </li>
-        </ul>
+                <li class="nav-item d-none d-sm-inline-block text-white ml-2">
+                    Tahun Pelajaran: <?php echo $tapel ?> | Semester:
+                    <?php echo $semester == '1' ? 'Ganjil' : ($semester == '2' ? 'Genap' : '-'); ?>
+                </li>
+            </ul>
             <!-- Right navbar links -->
             <ul class="navbar-nav ml-auto">
                 <li class="nav-item d-none d-sm-inline-block text-white pr-3">
@@ -379,7 +389,7 @@ if (
         <!-- ==========================================
              MAIN SIDEBAR
              ========================================== -->
-        <aside class="main-sidebar sidebar-dark-primary elevation-4">
+        <aside class="main-sidebar sidebar-light-primary elevation-4">
             <!-- Brand Logo -->
             <a href="dashboard" class="brand-link d-flex flex-column align-items-center text-center py-3">
                 <img src="images/logo.png" alt="smpn171" class="brand-image img-circle elevation-3 mb-2"
@@ -992,28 +1002,22 @@ if (
             });
         });
     </script>
-     <script>
-    $(document).ready(function () {
-      $('a[data-toggle="mn"]').click(function () {
-        var id = $(this).attr("id");
+    <script>
+        $(document).ready(function () {
+            // AdminLTE 3 will automatically handle treeview state if we add classes.
+            // But we already added menu-open and active via PHP for reliability.
 
-        $('#' + id).siblings().find(".active").removeClass("active");
-        $('#' + id).addClass("active");
-        localStorage.setItem("activeMenu", id);
-      });
-      var activeMenu = localStorage.getItem('activeMenu');
+            // Fix some UI inconsistencies when navigating categories
+            if ($('.nav-link.active').length > 1) {
+                // Ensure parents and children are both highlighted correctly
+            }
+        });
 
-      if (activeMenu != null) {
-        $('#' + activeMenu).siblings().find(".active").removeClass("active");
-        $('#' + activeMenu).addClass("active");
-      }
-    });
-
-    if ($.fn.draggable) {
-      $('.modal-dialog').draggable({
-        handle: ".modal-header"
-      });
-    }
+        if ($.fn.draggable) {
+            $('.modal-dialog').draggable({
+                handle: ".modal-header"
+            });
+        }
     </script>
 <script>
     // Console notice for cleanup

@@ -2711,67 +2711,7 @@
                         }
                     }
         
-        {
-            $masked = array_fill(0, $width, str_repeat("\0", $width));
-            $this->makeMaskNo($maskNo, $width, $frame, $masked);
-            $this->writeFormatInformation($width, $masked, $maskNo, $level);
-       
-            return $masked;
-        }
-        
-        //----------------------------------------------------------------------
-        public function calcN1N3($length)
-        {
-            $demerit = 0;
 
-            for($i=0; $i<$length; $i++) {
-                
-                if($this->runLength[$i] >= 5) {
-                    $demerit += (N1 + ($this->runLength[$i] - 5));
-                }
-                if($i & 1) {
-                    if(($i >= 3) && ($i < ($length-2)) && ($this->runLength[$i] % 3 == 0)) {
-                        $fact = (int)($this->runLength[$i] / 3);
-                        if(($this->runLength[$i-2] == $fact) &&
-                           ($this->runLength[$i-1] == $fact) &&
-                           ($this->runLength[$i+1] == $fact) &&
-                           ($this->runLength[$i+2] == $fact)) {
-                            if(($this->runLength[$i-3] < 0) || ($this->runLength[$i-3] >= (4 * $fact))) {
-                                $demerit += N3;
-                            } else if((($i+3) >= $length) || ($this->runLength[$i+3] >= (4 * $fact))) {
-                                $demerit += N3;
-                            }
-                        }
-                    }
-                }
-            }
-            return $demerit;
-        }
-        
-        //----------------------------------------------------------------------
-        public function evaluateSymbol($width, $frame)
-        {
-            $head = 0;
-            $demerit = 0;
-
-            for($y=0; $y<$width; $y++) {
-                $head = 0;
-                $this->runLength[0] = 1;
-                
-                $frameY = $frame[$y];
-                
-                if ($y>0)
-                    $frameYM = $frame[$y-1];
-                
-                for($x=0; $x<$width; $x++) {
-                    if(($x > 0) && ($y > 0)) {
-                        $b22 = ord($frameY[$x]) & ord($frameY[$x-1]) & ord($frameYM[$x]) & ord($frameYM[$x-1]);
-                        $w22 = ord($frameY[$x]) | ord($frameY[$x-1]) | ord($frameYM[$x]) | ord($frameYM[$x-1]);
-                        
-                        if(($b22 | ($w22 ^ 1))&1) {                                                                     
-                            $demerit += N2;
-                        }
-                    }
                     if(($x == 0) && (ord($frameY[$x]) & 1)) {
                         $this->runLength[0] = -1;
                         $head = 1;

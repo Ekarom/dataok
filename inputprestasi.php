@@ -235,8 +235,7 @@ if (isset($s['photo']) && $s['photo'] != "" && file_exists("file/fotopd/" . $s['
                         <div class="form-group row">
                             <label for="prestasi" class="col-sm-4 col-form-label">Prestasi</label>
                             <div class="col-sm-8">
-                                <input type="text" class="form-control warna" name="prestasi"
-                                    placeholder="Contoh: Juara 1 Lomba Web Design" required>
+                                <input type="text" class="form-control warna" name="prestasi" required>
                             </div>
                         </div>
 
@@ -276,16 +275,14 @@ if (isset($s['photo']) && $s['photo'] != "" && file_exists("file/fotopd/" . $s['
                         <div class="form-group row">
                             <label for="nama_kegiatan" class="col-sm-4 col-form-label">Nama Kegiatan</label>
                             <div class="col-sm-8">
-                                <input type="text" class="form-control warna" name="nama_kegiatan"
-                                    placeholder="Isi nama kegiatan" required>
+                                <input type="text" class="form-control warna" name="nama_kegiatan" required>
                             </div>
                         </div>
 
                         <div class="form-group row">
                             <label for="penyelenggara" class="col-sm-4 col-form-label">Penyelenggara</label>
                             <div class="col-sm-8">
-                                <input type="text" class="form-control warna" name="penyelenggara"
-                                    placeholder="Contoh: Dinas Pendidikan" required>
+                                <input type="text" class="form-control warna" name="penyelenggara" required>
                             </div>
                         </div>
 
@@ -641,25 +638,25 @@ if (isset($s['photo']) && $s['photo'] != "" && file_exists("file/fotopd/" . $s['
         const initS2 = () => {
             if (typeof $.fn.select2 !== 'undefined') {
                 $("#jenisprestasi").select2({
-                    placeholder: "- Pilih Jenis -",
+                    placeholder: "Pilih Jenis Prestasi",
                     allowClear: true,
                     width: '100%',
                     minimumResultsForSearch: 0
                 });
                 $("#bulan").select2({
-                    placeholder: "- Pilih Bulan -",
+                    placeholder: "Pilih Bulan Kegiatan",
                     allowClear: true,
                     width: '100%',
                     minimumResultsForSearch: 0
                 });
                 $("#tingkat").select2({
-                    placeholder: "- Pilih Tingkat -",
+                    placeholder: "Pilih Tingkat Kejuaraan",
                     allowClear: true,
                     width: '100%',
                     minimumResultsForSearch: 0
                 });
                 $("#juara").select2({
-                    placeholder: "- Pilih Juara -",
+                    placeholder: "Pilih Juara",
                     allowClear: true,
                     width: '100%',
                     minimumResultsForSearch: 0

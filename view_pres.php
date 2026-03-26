@@ -55,6 +55,18 @@ $kelas = $rSiswa['kelas'] ?? '';
 $sqlAchievements = mysqli_query($sqlconn, "SELECT * FROM prestasi WHERE pd = '$nama' AND kelas = '$kelas' ORDER BY tgl_kegiatan DESC");
 $total_prestasi = mysqli_num_rows($sqlAchievements);
 
+// Redirect and show toast if there are no achievements
+if ($total_prestasi == 0) {
+    echo '<script>
+        $(function() {
+            toastr.error("Tidak ada detail prestasi pada peserta didik yang dipilih");
+            setTimeout(function() {
+                window.location.href = "arsipdata/inputprestasi";
+            }, 2000);
+        });
+    </script>';
+    return;
+}
 ?>
 <style>
     .form-control:disabled, .form-control[readonly] {
@@ -353,6 +365,14 @@ $(document).ready(function() {
     $('#modalPDF').on('hidden.bs.modal', function () {
         $('#pdfViewer').attr('src', '');
     });
+
+    // Make the PDF modal draggable (safely)
+    if ($.fn.draggable) {
+        $("#modalPDF .modal-content").draggable({
+            handle: ".modal-header"
+        });
+        $("#modalPDF .modal-header").css("cursor", "move");
+    }
 });
 </script>
 
@@ -362,9 +382,6 @@ $(document).ready(function() {
         <div class="modal-content">
             <div class="modal-header bg-info">
                 <b>Detail Dokumen Prestasi (<?php echo $nama ?>)</b>
-                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
             </div>
             <div class="modal-body p-0">
                 <iframe id="pdfViewer" src="" frameborder="0" width="100%" height="600px"></iframe>

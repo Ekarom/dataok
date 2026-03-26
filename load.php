@@ -317,7 +317,7 @@ include "cfg/secure.php";
         <!-- Right col -->
         <section class="col-lg-5 connectedSortable">
 
-            <!-- User Online Card -->
+            <!-- User Online Card 
             <div class="card mb-3">
                 <div class="card-header bg-menu-gradient">
                     <h3 class="card-title">
