@@ -256,9 +256,9 @@ if ($total_prestasi == 0) {
                                                     $berkas_html = '-';
                                                     if (!empty($rp['pdf'])) {
                                                         $berkas_link = "file/prestasi/" . $rp['pdf'];
-                                                        $berkas_html = '<button type="button" class="btn badge bg-primary btn-view-pdf" data-url="'.$berkas_link.'" data-title="'.$rp['prestasi'].'" title="Lihat Berkas"><i class="fa fa-file-alt"></i></button>';
+                                                        $berkas_html = '<button type="button" class="badge badge-primary badge-square btn-view-pdf" data-url="'.$berkas_link.'" data-title="'.$rp['prestasi'].'" title="Lihat Berkas"><i class="fa fa-file-alt"></i></button>';
                                                     }
-                                                    $btn_hapus = '<button type="button" class="btn badge bg-danger btn-hapus" data-id="'.$rp['id'].'" data-name="'.$rp['prestasi'].'" title="Hapus Data"><i class="fa fa-trash"></i></button>';
+                                                    $btn_hapus = '<button type="button" class="badge badge-primary badge-square btn-hapus" data-id="'.$rp['id'].'" data-name="'.$rp['prestasi'].'" title="Hapus Data"><i class="fa fa-trash"></i></button>';
                                                 ?>
                                                     <tr>
                                                         <td class="text-center"><?php echo $noP++; ?></td>
@@ -292,26 +292,14 @@ if ($total_prestasi == 0) {
 <script>
 $(document).ready(function() {
     var table = $('#tabelPrestasi').DataTable({
-        "paging": true,
+        "paging": false,
         "lengthChange": false,
         "searching": true,
         "ordering": true,
         "info": true,
         "autoWidth": false,
         "responsive": true,
-        "language": {
-            "search": "Cari:",
-            "zeroRecords": "Tidak ada data prestasi ditemukan",
-            "info": "Menampilkan _START_ sampai _END_ dari _TOTAL_ prestasi",
-            "infoEmpty": "Menampilkan 0 sampai 0 dari 0 prestasi",
-            "infoFiltered": "(disaring dari _MAX_ total prestasi)",
-            "paginate": {
-                "first": "Pertama",
-                "last": "Terakhir",
-                "next": "Selanjutnya",
-                "previous": "Sebelumnya"
-            }
-        }
+        
     });
 
     // Re-adjust columns after a short delay to ensure correct alignment
