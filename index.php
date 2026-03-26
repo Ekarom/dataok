@@ -122,9 +122,7 @@ if (
     <link rel="stylesheet" href="https://code.ionicframework.com/ionicons/2.0.1/css/ionicons.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
 
-    <!-- Custom & Plugin CSS -->
-    <link rel="stylesheet" href="plugins/css/colors.min.css">
-    <link rel="stylesheet" href="plugins/css/palette-gradient.min.css">
+
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/admin-lte@3.2.0/dist/css/adminlte.min.css">
 
     <!-- DataTables BS4 
@@ -160,7 +158,7 @@ if (
            SIDEBAR & NAVBAR STYLES
            ========================================== */
         .main-sidebar {
-            background: linear-gradient(180deg, #2c3e50 0%, #ee8f01ff 100%) !important;
+            background: linear-gradient(180deg, #f1f1f1ff 0%, #ee8f01ff 100%) !important;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
         }
 
@@ -170,54 +168,56 @@ if (
 
         .nav-sidebar .nav-link {
             border-radius: 10px !important;
-            color: #ecf0f1 !important;
+            color: #1f2d3d !important; /* Diubah menjadi gelap agar terbaca di background putih */
             transition: all 0.3s ease;
         }
 
         .nav-sidebar .nav-link:hover,
         .nav-sidebar .nav-link.active {
-            background-color: rgba(255, 255, 255, 0.2) !important;
+            background-color: rgba(0, 0, 0, 0.1) !important; /* Efek hover digelapkan */
             transform: translateX(5px);
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
         }
 
         .nav-sidebar .nav-icon {
-            color: #fff !important;
+            color: #1f2d3d !important; /* Ikon diubah gelap */
             opacity: 0.8;
         }
 
 
         .brand-link {
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1) !important;
             text-decoration: none !important;
+            color: #1f2d3d !important; /* Teks logo atas diubah gelap */
         }
 
         .user-panel {
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1) !important;
         }
 
         .user-panel a {
             text-decoration: none !important;
+            color: #1f2d3d !important;
         }
 
         /* Global Menu Gradient Class */
         .bg-menu-gradient {
-            background: linear-gradient(180deg, #2c3e50 0%, #ee8f01ff 100%) !important;
-            color: #fff !important;
+            background: linear-gradient(180deg, #f1f1f1ff 0%, #ee8f01ff 100%) !important;
+            color: #1f2d3d !important;
         }
 
 
         /* Nav Tabs Styling */
         .nav-tabs .nav-link.active {
-            background: linear-gradient(180deg, #2c3e50 0%, #ee8f01ff 100%) !important;
+            background: linear-gradient(180deg, #f1f1f1ff 0%, #ee8f01ff 100%) !important;
             color: #1f2d3d !important;
             border-color: #dee2e6 #dee2e6 #fff;
         }
 
         /* Table Header Styling */
         table thead th {
-            background: linear-gradient(180deg, #2c3e50 0%, #ee8f01ff 100%) !important;
-            color: #ffffffff !important;
+            background: linear-gradient(180deg, #f1f1f1ff 0%, #ee8f01ff 100%) !important;
+            color: #1f2d3d !important;
             border-color: #1a1611ff;
             text-align: center;
         }
@@ -388,7 +388,7 @@ if (
         <!-- ==========================================
              MAIN SIDEBAR
              ========================================== -->
-        <aside class="main-sidebar sidebar-dark-primary elevation-4">
+        <aside class="main-sidebar sidebar-light-primary elevation-4">
             <!-- Brand Logo -->
             <a href="dashboard" class="brand-link d-flex flex-column align-items-center text-center py-3">
                 <img src="images/logo.png" alt="smpn171" class="brand-image img-circle elevation-3 mb-2"
