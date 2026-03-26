@@ -114,7 +114,16 @@ if ($sql) {
                                                         <span class="badge badge-secondary"><?php echo htmlspecialchars($s['kelas']); ?></span>
                                                     </td>
                                                     <td>
-                                                        <span class="badge badge-warning"><?php echo htmlspecialchars($s['juara']); ?></span>
+                                                        <?php
+                                                           $juara_val = $s['juara'];
+                                                           $juara_badge = '<span class="badge badge-warning">' . htmlspecialchars($juara_val) . '</span>';
+                                                           if (in_array($juara_val, ['1', '2', '3', '4'])) {
+                                                               $juara_badge = '<span class="badge bg-warning text-dark">Juara ' . $juara_val . '</span>';
+                                                           } else if (in_array($juara_val, ['Harapan 1', 'Harapan 2', 'Harapan 3'])) {
+                                                               $juara_badge = '<span class="badge bg-info">Juara ' . $juara_val . '</span>';
+                                                           }
+                                                           echo $juara_badge;
+                                                        ?>
                                                     </td>
                                                     <td class="small"><?php echo htmlspecialchars($s['jenisprestasi']); ?></td>
                                                     <td class="text-left small font-weight-bold"><?php echo htmlspecialchars($s['nama_kegiatan']); ?></td>

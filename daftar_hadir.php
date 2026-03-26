@@ -262,7 +262,7 @@ body {
 
             <!-- KOP SURAT -->
             <div class="kop">
-                <img src="images/<?= $sklogo ?>" alt="Logo Sekolah" onerror="this.src='images/logo_default.png'">
+                <img src="images/<?= $sklogo ?? 'logo_default.png' ?>" alt="Logo Sekolah" onerror="this.src='images/logo_default.png'">
                 <div class="kop-text">
                     <p class="sekolah-name"><?= htmlspecialchars($namasek) ?></p>
                     <p class="sekolah-alamat">

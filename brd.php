@@ -515,7 +515,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['action'])) {
                 ];
                 
                 foreach ($output as $line) {
-                    $line = trim($line);
+                    $line = trim((string)$line);
                     if (empty($line)) continue;
                     
                     // Skip database yang ada di exclude list
@@ -688,7 +688,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['action'])) {
             <div class="col-12">
                 <div class="card">
                     <div class="card-header bg-menu-gradient">
-
                         <b class="blinking-text">Jangan lupa Backup Database sebelum melakukan hal lain..!!!</b>
                     </div>
                     <!-- /.panel-heading -->
