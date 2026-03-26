@@ -14,10 +14,10 @@
                         <div class="card-header bg-menu-gradient">
                             <h3 class="card-title text-bold"><i class="fas fa-filter mr-1"></i> Rekap Prestasi</h3>
                         </div>
-                                          <div class="card-body text-nowrap">
+                        <div class="card-body">
                             <div class="row">
                                 <div class="col-md-2 mb-2">
-                                    <select id="rekap_triwulan" class="form-control" onchange="updateMonthsByQuarter(this.value)">
+                                    <select id="rekap_triwulan" class="form-control form-control-sm" onchange="updateMonthsByQuarter(this.value)">
                                         <option value="">- Triwulan -</option>
                                         <option value="1">Triwulan I</option>
                                         <option value="2">Triwulan II</option>
@@ -26,7 +26,7 @@
                                     </select>
                                 </div>
                                 <div class="col-md-2 mb-2">
-                                    <select id="rekap_m1" class="form-control">
+                                    <select id="rekap_m1" class="form-control form-control-sm">
                                         <option value="Januari">Januari</option>
                                         <option value="Februari">Februari</option>
                                         <option value="Maret">Maret</option>
@@ -45,7 +45,7 @@
                                     <span class="text-muted">s/d</span>
                                 </div>
                                 <div class="col-md-2 mb-2">
-                                    <select id="rekap_m2" class="form-control">
+                                    <select id="rekap_m2" class="form-control form-control-sm">
                                         <option value="Januari">Januari</option>
                                         <option value="Februari">Februari</option>
                                         <option value="Maret">Maret</option>
@@ -61,7 +61,7 @@
                                     </select>
                                 </div>
                                 <div class="col-md-3 mb-2">
-                                    <select id="rekap_kejuaraan" class="form-control">
+                                    <select id="rekap_kejuaraan" class="form-control form-control-sm">
                                         <option value="">- Semua Kejuaraan -</option>
                                         <?php
 $q_kej = mysqli_query($sqlconn, "SELECT DISTINCT prestasi FROM prestasi WHERE prestasi != '' ORDER BY prestasi ASC");
@@ -72,15 +72,18 @@ while ($rk = mysqli_fetch_array($q_kej)) {
                                     </select>
                                 </div>
                                 <div class="col-md-1 mb-2">
-                                    <input type="number" id="rekap_y" class="form-control" value="<?php echo date('Y'); ?>">
+                                    <input type="number" id="rekap_y" class="form-control form-control-sm" value="<?php echo date('Y'); ?>">
                                 </div>
                                 <div class="col-md-1">
-                                    <button type="button" class="btn btn-dark btn-block" onclick="printRekapTriwulan()">
+                                    <button type="button" class="btn btn-dark btn-block btn-sm" onclick="printRekapTriwulan()">
                                         <i class="fa fa-print"></i>
                                     </button>
                                 </div>
-                     <div class="card-body text-nowrap">
-<div class="table-responsive">
+                            </div> <!-- End Filter Row -->
+                            
+                            <hr class="my-4">
+                            
+                            <div class="table-responsive">
                                    <table id="example2" class="table table-striped table-hover table-sm" style="width:100%">
                                     <thead>
                                         <tr>
@@ -115,15 +118,16 @@ if ($sql) {
                                                     </td>
                                                     <td>
                                                         <?php
-                                                           $juara_val = $s['juara'];
-                                                           $juara_badge = '<span class="badge badge-warning">' . htmlspecialchars($juara_val) . '</span>';
-                                                           if (in_array($juara_val, ['1', '2', '3', '4'])) {
-                                                               $juara_badge = '<span class="badge bg-warning text-dark">Juara ' . $juara_val . '</span>';
-                                                           } else if (in_array($juara_val, ['Harapan 1', 'Harapan 2', 'Harapan 3'])) {
-                                                               $juara_badge = '<span class="badge bg-info">Juara ' . $juara_val . '</span>';
-                                                           }
-                                                           echo $juara_badge;
-                                                        ?>
+        $juara_val = $s['juara'];
+        $juara_badge = '<span class="badge badge-warning">' . htmlspecialchars($juara_val) . '</span>';
+        if (in_array($juara_val, ['1', '2', '3', '4'])) {
+            $juara_badge = '<span class="badge bg-warning text-dark">Juara ' . $juara_val . '</span>';
+        }
+        else if (in_array($juara_val, ['Harapan 1', 'Harapan 2', 'Harapan 3'])) {
+            $juara_badge = '<span class="badge bg-info">Juara ' . $juara_val . '</span>';
+        }
+        echo $juara_badge;
+?>
                                                     </td>
                                                     <td class="small"><?php echo htmlspecialchars($s['jenisprestasi']); ?></td>
                                                     <td class="text-left small font-weight-bold"><?php echo htmlspecialchars($s['nama_kegiatan']); ?></td>
@@ -154,7 +158,13 @@ if ($sql) {
 <script>
 $(document).ready(function() {
     $('#example2').DataTable({
-        responsive: true,
+        "paging": true,
+        "lengthChange": false,
+        "searching": true,
+        "ordering": true,
+        "info": true,
+        "autoWidth": false,
+            "responsive": true,
     });
 });
 
@@ -184,7 +194,7 @@ function printRekapTriwulan() {
     var y = $('#rekap_y').val();
     var tw = $('#rekap_triwulan').val();
     var kej = $('#rekap_kejuaraan').val();
-    var db = '<?php echo isset($db_req) ? $db_req : ""; ?>';
+    var db = '<?php echo $database ?? ""; ?>';
     
     var url = 'print_rekap_triwulan.php?m1=' + m1 + '&m2=' + m2 + '&y=' + y + '&db=' + db;
     if (tw) url += '&tw=' + tw;

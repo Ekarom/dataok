@@ -138,6 +138,9 @@ if (
     <!-- Custom & Plugin CSS --->
     <link rel="stylesheet" href="plugins/css/select2.min.css">
     <link rel="stylesheet" href="plugins/css/datatables.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.10.19/css/jquery.dataTables.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/fixedcolumns/3.2.6/css/fixedColumns.dataTables.min.css">
+
 
 
 
@@ -159,7 +162,7 @@ if (
            SIDEBAR & NAVBAR STYLES
            ========================================== */
         .main-sidebar {
-            background: linear-gradient(180deg, #2c3e50 0%, #eca200ff 100%) !important;
+            background: linear-gradient(135deg, #2c3e50 0%, #01b2d1 100%);
             box-shadow: 0 4px 15px rgba(0,0,0,0.3);
         }
 
@@ -200,20 +203,20 @@ if (
         
         /* Global Menu Gradient Class */
         .bg-menu-gradient {
-            background: linear-gradient(180deg, #2c3e50 0%, #eca200ff 100%) !important;
+            background: linear-gradient(135deg, #2c3e50 0%, #01b2d1 100%);
             color: #fff !important;
         }       
 
         /* Nav Tabs Styling */
         .nav-tabs .nav-link.active {
-            background: linear-gradient(180deg, #2c3e50 0%, #eca200ff 100%) !important;
+            background: linear-gradient(135deg, #2c3e50 0%, #01b2d1 100%);
             color: #fff !important;
             border-color: #dee2e6 #dee2e6 #fff;
         }
 
         /* Table Header Styling */
         table thead th {
-            background: linear-gradient(180deg, #2c3e50 0%, #eca200ff 100%) !important;
+            background: linear-gradient(135deg, #2c3e50 0%, #01b2d1 100%);
             color: #fff !important;
             border-color: #5682fc;
             text-align: center;
