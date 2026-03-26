@@ -451,9 +451,9 @@ if (
                             <?php $is_arsip = (strpos($route, 'arsipdata') === 0 || $route == 'dataprestasi' || $route == 'inputlegalisir'); ?>
                             <li class="nav-item has-treeview <?php echo $is_arsip ? 'menu-open' : ''; ?>">
                                 <a href="arsipdata" class="nav-link <?php echo $is_arsip ? 'active' : ''; ?>" id="2">
-                                    <i class="nav-icon fas fa-file-archive"></i>
+                                    <i class="nav-icon fas fa-edit"></i>
                                     <p>
-                                        Arsip Data
+                                        Input
                                         <i class="right fas fa-angle-left"></i>
                                     </p>
                                 </a>
