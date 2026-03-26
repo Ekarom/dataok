@@ -1,0 +1,117 @@
+/* ==========================================
+           FORM VALIDATION STYLES
+           ========================================== */
+.warna:valid {
+    background-color: #18c5dbff;
+}
+
+.custom {
+    width: 200px !important;
+}
+
+/* ==========================================
+           SIDEBAR & NAVBAR STYLES
+           ========================================== */
+.main-sidebar {
+    background: linear-gradient(180deg, #2c3e50 0%, #ee8f01ff 100%) !important;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+.nav-sidebar .nav-item {
+    margin-bottom: 5px;
+}
+
+.nav-sidebar .nav-link {
+    border-radius: 10px !important;
+    color: #ecf0f1 !important;
+    transition: all 0.3s ease;
+}
+
+.nav-sidebar .nav-link:hover,
+.nav-sidebar .nav-link.active {
+    background-color: rgba(255, 255, 255, 0.2) !important;
+    transform: translateX(5px);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.nav-sidebar .nav-icon {
+    color: #fff !important;
+    opacity: 0.8;
+}
+
+
+.brand-link {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+    text-decoration: none !important;
+}
+
+.user-panel {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+.user-panel a {
+    text-decoration: none !important;
+}
+
+/* Global Menu Gradient Class */
+.bg-menu-gradient {
+    background: linear-gradient(180deg, #2c3e50 0%, #ee8f01ff 100%) !important;
+    color: #fff !important;
+}
+
+
+/* Nav Tabs Styling */
+.nav-tabs .nav-link.active {
+    background: linear-gradient(180deg, #2c3e50 0%, #ee8f01ff 100%) !important;
+    color: #1f2d3d !important;
+    border-color: #dee2e6 #dee2e6 #fff;
+}
+
+/* Table Header Styling */
+table thead th {
+    background: linear-gradient(180deg, #2c3e50 0%, #ee8f01ff 100%) !important;
+    color: #ffffffff !important;
+    border-color: #1a1611ff;
+    text-align: center;
+}
+
+table td {
+    text-align: center;
+}
+
+.modal-header {
+    padding: 9px 15px;
+    border-bottom: 1px solid #eee;
+    background-color: white;
+    border-top-left-radius: 5px;
+    border-top-right-radius: 5px;
+}
+
+.bg-1 {
+    background: linear-gradient(180deg, #2c3e50 25%, #01d112ff 100%);
+    color: #fff !important;
+}
+
+.bg-2 {
+    background: linear-gradient(180deg, #2c3e50 25%, #01b2d1ff 100%);
+    color: #fff !important;
+}
+
+.bg-3 {
+    background: linear-gradient(180deg, #2c3e50 25%, #1900ffff 100%);
+    color: #fff !important;
+}
+
+.bg-4 {
+    background: linear-gradient(180deg, #2c3e50 25%, #ffee00ff 100%);
+    color: #fff !important;
+}
+
+.bg-5 {
+    background: linear-gradient(180deg, #2c3e50 25%, #ff0000ff 100%);
+    color: #fff !important;
+}
+
+.icon {
+    background-color: transparent !important;
+}

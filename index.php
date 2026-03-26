@@ -111,7 +111,7 @@ if (
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>S.A.D | <?php echo $page_title; ?></title>
-    <base href="/data/">
+    <base href="/coba/">
 
     <!-- Favicon -->
     <link rel="shortcut icon" type="image/x-icon" href="">
@@ -160,7 +160,7 @@ if (
            SIDEBAR & NAVBAR STYLES
            ========================================== */
         .main-sidebar {
-            background: linear-gradient(180deg, #2c3e50 0%, #01b2d1ff 100%) !important;
+            background: linear-gradient(180deg, #2c3e50 0%, #ee8f01ff 100%) !important;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
         }
 
@@ -202,21 +202,21 @@ if (
 
         /* Global Menu Gradient Class */
         .bg-menu-gradient {
-            background: linear-gradient(180deg, #2c3e50 0%, #049da8 100%) !important;
+            background: linear-gradient(180deg, #2c3e50 0%, #ee8f01ff 100%) !important;
             color: #fff !important;
         }
 
 
         /* Nav Tabs Styling */
         .nav-tabs .nav-link.active {
-            background: linear-gradient(180deg, #2c3e50 0%, #01b2d1ff 100%) !important;
+            background: linear-gradient(180deg, #2c3e50 0%, #ee8f01ff 100%) !important;
             color: #1f2d3d !important;
             border-color: #dee2e6 #dee2e6 #fff;
         }
 
         /* Table Header Styling */
         table thead th {
-            background: linear-gradient(180deg, #2c3e50 0%, #01b2d1ff 100%) !important;
+            background: linear-gradient(180deg, #2c3e50 0%, #ee8f01ff 100%) !important;
             color: #ffffffff !important;
             border-color: #1a1611ff;
             text-align: center;
