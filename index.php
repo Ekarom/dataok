@@ -139,8 +139,8 @@ if (
     <!-- Custom & Plugin CSS --->
     <link rel="stylesheet" href="plugins/css/select2.min.css">
     <link rel="stylesheet" href="plugins/css/datatables.min.css">
-    <link rel="stylesheet" href="https://cdn.datatables.net/1.10.19/css/jquery.dataTables.min.css">
-    <link rel="stylesheet" href="https://cdn.datatables.net/fixedcolumns/3.2.6/css/fixedColumns.dataTables.min.css">
+    <!--<link rel="stylesheet" href="https://cdn.datatables.net/1.10.19/css/jquery.dataTables.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/fixedcolumns/3.2.6/css/fixedColumns.dataTables.min.css">-->
     <link rel="stylesheet" href="plugins/css/bootstrap-extended.min.css">
     <link rel="stylesheet" href="plugins/css/main.css">
     <link rel="stylesheet" href="custom.css">

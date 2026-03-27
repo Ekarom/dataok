@@ -117,23 +117,34 @@ table td {
 }
 
 /* Fix DataTables Search Box Visibility & Styling */
+.dataTables_filter label {
+    font-weight: bold;
+    color: #020202;
+    /* Brownish-orange */
+    margin-bottom: 0;
+}
+
 .dataTables_filter input {
     border: 1px solid #ced4da !important;
     border-radius: .25rem !important;
-    padding: 6px 12px 6px 12px !important;
+    padding: 3px 8px !important;
+    /* sm padding */
+    height: 31px !important;
+    /* sm height */
     background-color: #fff !important;
     color: #495057 !important;
     margin-left: .5em !important;
     transition: border-color .15s ease-in-out, box-shadow .15s ease-in-out !important;
     outline: none !important;
+    font-size: 13px !important;
 }
 
 /* Premium Focus & Select2 Styling */
 .dataTables_filter input:focus,
 .form-control:focus,
 .select2-container--default.select2-container--focus .select2-selection--single {
-    border-color: #6f42c1 !important;
-    box-shadow: 0 0 0 0.2rem rgba(111, 66, 193, 0.25) !important;
+    border-color: #01b2d1 !important;
+    box-shadow: 0 0 0 0.2rem rgba(1, 178, 209, 0.25) !important;
 }
 
 .select2-container--default .select2-selection--single {
@@ -153,10 +164,10 @@ table td {
 }
 
 .select2-dropdown {
-    border: 1px solid #6f42c1 !important;
+    border: 1px solid #01b2d1 !important;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1) !important;
 }
 
 .select2-results__option--highlighted[aria-selected] {
-    background-color: #6f42c1 !important;
+    background-color: #01b2d1 !important;
 }

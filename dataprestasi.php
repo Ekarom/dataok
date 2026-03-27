@@ -7,7 +7,7 @@ include_once "cfg/konek.php";
         <div class="col-12">
             <div class="card">
                 <div class="card-header box-shadow-0 bg-gradient-x-warning">
-                    <h3 class="card-title">Data Prestasi Siswa</h3>
+                    <h3 class="card-title text-white">Data Prestasi Siswa</h3>
                 </div>
                 <div class="card-body">
                     <table id="tableDataPrestasi" class="table table-striped table-hover" style="width:100%"> 
