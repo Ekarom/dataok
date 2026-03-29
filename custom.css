@@ -198,6 +198,7 @@ table td {
     font-size: 13.5px;
 }
 
+<<<<<<< HEAD
 .main-footer a {
     color: #01b2d1;
     font-weight: 600;
@@ -206,4 +207,60 @@ table td {
 .main-footer a:hover {
     color: #2c3e50;
     text-decoration: none;
+=======
+/* Fix DataTables Search Box Visibility & Styling */
+.dataTables_filter label {
+    font-weight: bold;
+    color: #020202;
+    /* Brownish-orange */
+    margin-bottom: 0;
+}
+
+.dataTables_filter input {
+    border: 1px solid #ced4da !important;
+    border-radius: .25rem !important;
+    padding: 3px 8px !important;
+    /* sm padding */
+    height: 31px !important;
+    /* sm height */
+    background-color: #fff !important;
+    color: #495057 !important;
+    margin-left: .5em !important;
+    transition: border-color .15s ease-in-out, box-shadow .15s ease-in-out !important;
+    outline: none !important;
+    font-size: 13px !important;
+}
+
+/* Premium Focus & Select2 Styling */
+.dataTables_filter input:focus,
+.form-control:focus,
+.select2-container--default.select2-container--focus .select2-selection--single {
+    border-color: #01b2d1 !important;
+    box-shadow: 0 0 0 0.2rem rgba(1, 178, 209, 0.25) !important;
+}
+
+.select2-container--default .select2-selection--single {
+    height: 38px !important;
+    padding: 5px 12px !important;
+    border: 1px solid #ced4da !important;
+}
+
+.select2-container--default .select2-selection--single .select2-selection__rendered {
+    line-height: 26px !important;
+    color: #495057 !important;
+    padding-left: 0 !important;
+}
+
+.select2-container--default .select2-selection--single .select2-selection__arrow {
+    height: 36px !important;
+}
+
+.select2-dropdown {
+    border: 1px solid #01b2d1 !important;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1) !important;
+}
+
+.select2-results__option--highlighted[aria-selected] {
+    background-color: #01b2d1 !important;
+>>>>>>> 4edc61980be6bcf6772bccd84d6da818fdbfb793
 }

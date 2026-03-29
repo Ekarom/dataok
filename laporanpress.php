@@ -17,7 +17,7 @@
                         <div class="card-body">
                             <div class="row">
                                 <div class="col-md-2 mb-2">
-                                    <select id="rekap_triwulan" class="form-control" onchange="updateMonthsByQuarter(this.value)">
+                                    <select id="rekap_triwulan" class="form-control form-control-sm" onchange="updateMonthsByQuarter(this.value)">
                                         <option value="">- Triwulan -</option>
                                         <option value="1">Triwulan I</option>
                                         <option value="2">Triwulan II</option>
@@ -26,8 +26,7 @@
                                     </select>
                                 </div>
                                 <div class="col-md-2 mb-2">
-                                    <select class="form-control " id="rekap_m1">
-                                        <option value="">- Pilih Bulan -</option>
+                                    <select id="rekap_m1" class="form-control form-control-sm">
                                         <option value="Januari">Januari</option>
                                         <option value="Februari">Februari</option>
                                         <option value="Maret">Maret</option>
@@ -46,8 +45,7 @@
                                     <b>s/d</b>
                                 </div>
                                 <div class="col-md-2 mb-2">
-                                    <select class="form-control" id="rekap_m2">
-                                        <option value="">- Pilih Bulan -</option>
+                                    <select id="rekap_m2" class="form-control form-control-sm">
                                         <option value="Januari">Januari</option>
                                         <option value="Februari">Februari</option>
                                         <option value="Maret">Maret</option>
@@ -63,7 +61,7 @@
                                     </select>
                                 </div>
                                 <div class="col-md-3 mb-2">
-                                    <select class="form-control" id="rekap_kejuaraan">
+                                    <select id="rekap_kejuaraan" class="form-control form-control-sm">
                                         <option value="">- Semua Kejuaraan -</option>
                                         <?php
 $q_kej = mysqli_query($sqlconn, "SELECT DISTINCT prestasi FROM prestasi WHERE prestasi != '' ORDER BY prestasi ASC");
@@ -76,8 +74,8 @@ while ($rk = mysqli_fetch_array($q_kej)) {
                                 <div class="col-md-1 mb-2">
                                     <input type="number" id="rekap_y" class="form-control" value="<?php echo date('Y'); ?>">
                                 </div>
-                                <div class="col-md-1 mb-2">
-                                    <button type="button" class="btn btn-dark btn-block" onclick="printRekapTriwulan()">
+                                <div class="col-md-1">
+                                    <button type="button" class="btn btn-dark btn-block btn-sm" onclick="printRekapTriwulan()">
                                         <i class="fa fa-print"></i>
                                     </button>
                                 </div>
@@ -155,87 +153,47 @@ if ($sql) {
 </div>
 
 <script>
-            // Initialize Select2 with Placeholders (with existence check)
-        const initS2 = () => {
-            if (typeof $.fn.select2 !== 'undefined') {
-                $("#rekap_kejuaraan").select2({
-                    placeholder: "Pilih Jenis Prestasi",
-                    allowClear: false,
-                    width: '100%',
-                    minimumResultsForSearch: 0
-                });
-                $("#rekap_m1").select2({
-                    placeholder: "Pilih Bulan Awal",
-                    allowClear: false,
-                    width: '100%',
-                    minimumResultsForSearch: 0
-                });
-                $("#rekap_m2").select2({
-                    placeholder: "Pilih Bulan Akhir",
-                    allowClear: false,
-                    width: '100%',
-                    minimumResultsForSearch: 0
-                });
-                $("#rekap_triwulan").select2({
-                    placeholder: "Pilih Triwulan",
-                    allowClear: false,
-                    width: '100%',
-                    minimumResultsForSearch: 0
-                });
-            } else {
-                console.warn("Select2 not found, retrying...");
-                setTimeout(initS2, 100);
-            }
-        };
-        initS2();
+$(document).ready(function() {
+    $('#example2').DataTable({
+        "paging": true,
+        "lengthChange": false,
+        "searching": true,
+        "ordering": true,
+        "info": true,
+        "autoWidth": false,
+            "responsive": true,
+    });
+});
 
-        $(document).ready(function() {
-            $('table.table').DataTable( {
-            scrollY:        450,
-            scrollX:        true,
-            scrollCollapse: true,
-            paging:         false,
-            // fixedColumns:   {
-            //     leftColumns: 3
-            // }
-        } );
-            // Tambahkan styling tambahan untuk kolom pencarian agar lebih premium
-            $('.dataTables_filter input').addClass('form-control form-control-sm').css({
-                'display': 'inline-block',
-                'width': '200px',
-                'margin-left': '10px',
-                'border': '1px solid #ced4da'
-            });
-        });
 function updateMonthsByQuarter(q) {
     if (!q) return;
-    const m1 = $('#rekap_m1');
-    const m2 = $('#rekap_m2');
+    const m1 = $('#rekap_1');
+    const m2 = $('#rekap_2');
     
     if (q == '1') {
-        m1.val('Januari');
-        m2.val('Maret');
+        m1.val('Januari').trigger('change');
+        m2.val('Maret').trigger('change');
     } else if (q == '2') {
-        m1.val('April');
-        m2.val('Juni');
+        m1.val('April').trigger('change');
+        m2.val('Juni').trigger('change');
     } else if (q == '3') {
-        m1.val('Juli');
-        m2.val('September');
+        m1.val('Juli').trigger('change');
+        m2.val('September').trigger('change');
     } else if (q == '4') {
-        m1.val('Oktober');
-        m2.val('Desember');
+        m1.val('Oktober').trigger('change');
+        m2.val('Desember').trigger('change');
     }
 }
 
 function printRekapTriwulan() {
-    var m1 = $('#rekap_m1').val();
-    var m2 = $('#rekap_m2').val();
+    var m1 = $('#rekap_1').val();
+    var m2 = $('#rekap_2').val();
     var y = $('#rekap_y').val();
     var tw = $('#rekap_triwulan').val();
     var kej = $('#rekap_kejuaraan').val();
     var db = '<?php echo $database ?? ""; ?>';
     
-    var url = 'print_rekap_triwulan.php?m1=' + m1 + '&m2=' + m2 + '&y=' + y + '&db=' + db;
+    var url = 'print_rekap_triwulan.php?1=' + m1 + '&2=' + m2 + '&y=' + y + '&db=' + db;
     if (tw) url += '&tw=' + tw;
     if (kej) url += '&kej=' + encodeURIComponent(kej);
     

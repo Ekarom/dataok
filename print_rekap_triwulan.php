@@ -7,8 +7,8 @@ $ks        = $identitas['kop_dinas'] ?? '';
 $kepsek    = $identitas['kepsek'] ?? '';
 $nipkepsek = $identitas['nipkepsek'] ?? '';
 
-$m1 = isset($_GET['m1']) ? $_GET['m1'] : 'Januari';
-$m2 = isset($_GET['m2']) ? $_GET['m2'] : 'Desember';
+$m1 = $_GET['1'] ?? ($_GET['m1'] ?? 'Januari');
+$m2 = $_GET['2'] ?? ($_GET['m2'] ?? 'Desember');
 $y = isset($_GET['y']) ? $_GET['y'] : date('Y');
 $db = isset($_GET['db']) ? $_GET['db'] : '';
 $tw = isset($_GET['tw']) ? $_GET['tw'] : '';

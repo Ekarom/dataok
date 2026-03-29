@@ -6,8 +6,8 @@ include_once "cfg/konek.php";
     <div class="row">
         <div class="col-12">
             <div class="card">
-                <div class="card-header box-shadow-0 bg-gradient-x-info">
-                    <h4 class="card-title text-white">Input Prestasi Peserta Didik</h4>
+                <div class="card-header box-shadow-0 bg-gradient-x-warning">
+                    <h3 class="card-title">Data Prestasi Siswa</h3>
                 </div>
                 <div class="card-body">
 <table class="table table-bordered" style="width:100%">

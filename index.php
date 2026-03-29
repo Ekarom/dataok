@@ -158,6 +158,22 @@ if (
     <!-- Core Scripts -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
+<<<<<<< HEAD
+=======
+
+    <!-- Custom & Plugin CSS --->
+    <link rel="stylesheet" href="plugins/css/select2.min.css">
+    <link rel="stylesheet" href="plugins/css/datatables.min.css">
+    <!--<link rel="stylesheet" href="https://cdn.datatables.net/1.10.19/css/jquery.dataTables.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/fixedcolumns/3.2.6/css/fixedColumns.dataTables.min.css">-->
+    <link rel="stylesheet" href="plugins/css/bootstrap-extended.min.css">
+    <link rel="stylesheet" href="plugins/css/main.css">
+    <link rel="stylesheet" href="custom.css">
+    <link rel="stylesheet" href="plugins/css/colors.min.css">
+    <link rel="stylesheet" href="plugins/css/palette-gradient.min.css">
+    <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,300i,400,400i,600,600i,700,700i%7CQuicksand:300,400,500,700%7CPoppins:300,400,500,600,700" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/material-design-iconic-font/2.2.0/css/material-design-iconic-font.min.css">
+>>>>>>> 4edc61980be6bcf6772bccd84d6da818fdbfb793
 </head>
 
 <body class="hold-transition sidebar-mini layout-fixed">
