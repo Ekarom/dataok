@@ -3,7 +3,7 @@ session_start();
 
 include "cfg/konek.php";
 include "cfg/secure.php";
-include "cfg/tapel.php"; // Ensure functions are available
+include "cfg/tapel.php";
 
 // Ambil daftar kelas untuk modal daftar hadir
 $dh_kelas_list = [];
@@ -19,7 +19,7 @@ $route_key = key($_GET);
 if (empty($route_key)) {
     $route = "dashboard";
 } else {
-    $route = urldecode((string)$route_key);
+    $route = urldecode((string) $route_key);
 }
 
 // --- BREADCRUMB & PAGE TITLE LOGIC ---
@@ -49,16 +49,22 @@ $breadcrumb_map = [
     'viewpress' => 'Detail Prestasi',
     'editpress' => 'Edit Prestasi',
     'editlegalisir' => 'Edit Legalisir',
-    'viewlegalisir' => 'Detail Legalisir'
+    'viewlegalisir' => 'Detail Legalisir',
+    'edit_usera' => 'Edit Data User',
+    'tambah_usera' => 'Tambah User Baru'
 ];
 
 $breadcrumb_items = [];
 $route_parts = explode('/', $route);
 $route_last = end($route_parts);
-$name = $breadcrumb_map[$route] ?? ucfirst(str_replace(['-', '/'], ' ', $route_last));
-
-if ($name !== 'Management') {
-    $name = str_replace('Management', '', $name);
+if (isset($breadcrumb_map[$route])) {
+    $name = $breadcrumb_map[$route];
+} else {
+    // If not in map, clean up the route name
+    $name = str_replace(['-', '/', '_', '.php'], ' ', $route_last);
+    $name = ucwords(trim($name));
+    if (empty($name))
+        $name = 'Dashboard';
 }
 
 $breadcrumb_items[] = [
@@ -119,35 +125,39 @@ if (
     <!-- Favicon -->
     <link rel="shortcut icon" type="image/x-icon" href="">
 
-    <!-- Vendor CSS -->
+    <!-- Base & Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <link rel="stylesheet" href="https://code.ionicframework.com/ionicons/2.0.1/css/ionicons.min.css">
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/material-design-iconic-font/2.2.0/css/material-design-iconic-font.min.css">
+
+    <!-- Vendor CSS -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
-
-
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/admin-lte@3.2.0/dist/css/adminlte.min.css">
+    <link rel="stylesheet" href="plugins/css/select2.min.css">
+    <link rel="stylesheet" href="plugins/css/datatables.min.css">
 
-    <!-- DataTables BS4 
-    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap4.min.css">
-    <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.bootstrap4.min.css">
-    -->
+    <!-- Core Bootstrap & Extensions -->
+    <link rel="stylesheet" href="plugins/css/bootstrap.min.css">
+    <link rel="stylesheet" href="plugins/css/bootstrap-extended.min.css">
+    <link rel="stylesheet" href="plugins/css/components.min.css">
+    <link rel="stylesheet" href="plugins/css/colors.min.css">
+    <link rel="stylesheet" href="plugins/css/palette-gradient.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.10.19/css/jquery.dataTables.min.css">
+
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="plugins/css/main.css">
+    <link rel="stylesheet" href="custom.css">
+
+    <!-- Google Fonts -->
+    <link
+        href="https://fonts.googleapis.com/css?family=Open+Sans:300,400,600,700|Quicksand:300,400,500,700|Poppins:300,400,500,600,700"
+        rel="stylesheet">
 
     <!-- Core Scripts -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
-
-    <!-- Custom & Plugin CSS --->
-    <link rel="stylesheet" href="plugins/css/select2.min.css">
-    <link rel="stylesheet" href="plugins/css/datatables.min.css">
-    <link rel="stylesheet" href="https://cdn.datatables.net/1.10.19/css/jquery.dataTables.min.css">
-    <link rel="stylesheet" href="https://cdn.datatables.net/fixedcolumns/3.2.6/css/fixedColumns.dataTables.min.css">
-    <link rel="stylesheet" href="plugins/css/bootstrap-extended.min.css">
-    <link rel="stylesheet" href="plugins/css/main.css">
-    <link rel="stylesheet" href="custom.css">
-    <link rel="stylesheet" href="plugins/css/colors.min.css">
-    <link rel="stylesheet" href="plugins/css/palette-gradient.min.css">
-    <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,300i,400,400i,600,600i,700,700i%7CQuicksand:300,400,500,700%7CPoppins:300,400,500,600,700" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/material-design-iconic-font/2.2.0/css/material-design-iconic-font.min.css">
 </head>
 
 <body class="hold-transition sidebar-mini layout-fixed">
@@ -155,136 +165,139 @@ if (
         <!-- Navbar -->
         <nav class="main-header navbar navbar-expand bg-menu-gradient">
             <!-- Left navbar links -->
-            <ul class="navbar-nav">
+            <ul class="navbar-nav align-items-center">
                 <li class="nav-item">
                     <a class="nav-link" data-widget="pushmenu" href="#" role="button"><i class="fas fa-bars"></i></a>
                 </li>
-                <li class="nav-item d-none d-sm-inline-block mt-2 text-white">
-                Tahun Pelajaran: <?php echo $tapel?> | Semester: <?php echo $semester == '1' ? 'Ganjil' : ($semester == '2' ? 'Genap' : '-'); ?>
-            </li>
-        </ul>
-            <!-- Right navbar links -->
-            <ul class="navbar-nav ml-auto">
-                <li class="nav-item d-none d-sm-inline-block text-white pr-3">
-<script type='text/javascript'>
-    (function() {
-        var months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
-        var myDays = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jum\'at', 'Sabtu'];
-        var now = new Date();
-        var dayName = myDays[now.getDay()];
-        var day = now.getDate();
-        var monthName = months[now.getMonth()];
-        var year = now.getFullYear();
-        document.write(dayName + ', ' + day + ' ' + monthName + ' ' + year + ', ');
-    })();
-</script>
-<time id="clock"></time>
+                <li class="nav-item d-none d-sm-inline-block text-white">
+                    <span class="nav-link">Tahun Pelajaran: <?php echo $tapel ?> | Semester:
+                        <?php echo $semester == '1' ? 'Ganjil' : ($semester == '2' ? 'Genap' : '-'); ?></span>
+                </li>
+            </ul>
 
-<script>
-(function() {
-    var clock = document.getElementById('clock');
-    if (clock) {
-        setInterval(function() {
-            var now = new Date();
-            clock.innerHTML = now.toLocaleTimeString('id-ID', { hour12: false });
-        }, 1000);
-        // Initial call
-        clock.innerHTML = new Date().toLocaleTimeString('id-ID', { hour12: false });
-    }
-})();
-</script>
+            <!-- Right navbar links -->
+            <ul class="navbar-nav ml-auto align-items-center">
+                <li class="nav-item d-none d-sm-inline-block text-white pr-3">
+                    <span class="nav-link">
+                        <script type='text/javascript'>
+                            (function () {
+                                var months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+                                var myDays = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jum\'at', 'Sabtu'];
+                                var now = new Date();
+                                var dayName = myDays[now.getDay()];
+                                var day = now.getDate();
+                                var monthName = months[now.getMonth()];
+                                var year = now.getFullYear();
+                                document.write(dayName + ', ' + day + ' ' + monthName + ' ' + year + ', ');
+                            })();
+                        </script>
+                        <time id="clock"></time>
+
+                        <script>
+                            (function () {
+                                var clock = document.getElementById('clock');
+                                if (clock) {
+                                    setInterval(function () {
+                                        var now = new Date();
+                                        clock.innerHTML = now.toLocaleTimeString('id-ID', { hour12: false });
+                                    }, 1000);
+                                    // Initial call
+                                    clock.innerHTML = new Date().toLocaleTimeString('id-ID', { hour12: false });
+                                }
+                            })();
+                        </script>
+                    </span>
                 </li>
             </ul>
             <!-- START: Interactive Tapel Check -->
-                <?php
-                $show_tapel_modal = false;
-                $expected = get_expected_tapel();
+            <?php
+            $show_tapel_modal = false;
+            $expected = get_expected_tapel();
 
-                // Check if this expected tapel/smt exists
-                if (!check_tapel_exists($sqlconn, $expected['tapel'], $expected['smt'])) {
-                    $show_tapel_modal = true;
-                    $new_tapel = $expected['tapel'];
-                    $new_smt = $expected['smt'];
-                    $new_tahun = $expected['tahun'];
-                }
-                ?>
+            // Check if this expected tapel/smt exists
+            if (!check_tapel_exists($sqlconn, $expected['tapel'], $expected['smt'])) {
+                $show_tapel_modal = true;
+                $new_tapel = $expected['tapel'];
+                $new_smt = $expected['smt'];
+                $new_tahun = $expected['tahun'];
+            }
+            ?>
 
-                <?php if ($show_tapel_modal): ?>
-                    <script>
-                        $(document).ready(function () {
-                            // Append modal to body to fix backdrop issue
-                            $('#modalNewTapel').appendTo('body').modal('show');
+            <?php if ($show_tapel_modal): ?>
+                <script>
+                    $(document).ready(function () {
+                        // Append modal to body to fix backdrop issue
+                        $('#modalNewTapel').appendTo('body').modal('show');
 
-                            $('#btnCreateTapel').click(function () {
-                                var tapel = '<?php echo $new_tapel; ?>';
-                                var smt = '<?php echo $new_smt; ?>';
-                                var tahun = '<?php echo $new_tahun; ?>';
+                        $('#btnCreateTapel').click(function () {
+                            var tapel = '<?php echo $new_tapel; ?>';
+                            var smt = '<?php echo $new_smt; ?>';
+                            var tahun = '<?php echo $new_tahun; ?>';
 
-                                $.ajax({
-                                    type: 'POST',
-                                    url: 'create_tapel.php',
-                                    data: { tapel: tapel, smt: smt, tahun: tahun },
-                                    success: function (response) {
-                                        if (response.trim() == "success") {
-                                            alert("Tahun Pelajaran Baru Berhasil Dibuat dan Diaktifkan! Silahkan Login Ulang untuk memperbaharui sesi.");
-                                            window.location.href = 'exit.php';
-                                        } else {
-                                            alert("Gagal: " + response);
-                                        }
-                                    },
-                                    error: function () {
-                                        alert("Terjadi kesalahan koneksi.");
+                            $.ajax({
+                                type: 'POST',
+                                url: 'create_tapel.php',
+                                data: { tapel: tapel, smt: smt, tahun: tahun },
+                                success: function (response) {
+                                    if (response.trim() == "success") {
+                                        alert("Tahun Pelajaran Baru Berhasil Dibuat dan Diaktifkan! Silahkan Login Ulang untuk memperbaharui sesi.");
+                                        window.location.href = 'exit.php';
+                                    } else {
+                                        alert("Gagal: " + response);
                                     }
-                                });
+                                },
+                                error: function () {
+                                    alert("Terjadi kesalahan koneksi.");
+                                }
                             });
                         });
-                    </script>
+                    });
+                </script>
 
-                    <!-- Modal New Tapel -->
-                    <div class="modal fade" id="modalNewTapel" tabindex="-1" aria-labelledby="exampleModalLabel"
-                        aria-hidden="true" data-backdrop="static" data-keyboard="false">
-                        <div class="modal-dialog">
-                            <div class="modal-content ">
-                                <div class="modal-header bg-info">
-                                    <h5 class="modal-title" id="exampleModalLabel"><i class="fas fa-calendar-alt"></i>
-                                        Deteksi Tahun Pelajaran Baru</h5>
-                                </div>
-                                <div class="modal-body">
-                                    <p>Sistem mendeteksi bahwa saat ini sudah memasuki periode:</p>
-                                    <h3>Tahun Pelajaran: <b><?php echo $new_tapel; ?></b></h3>
-                                    <h3>Semester: <b><?php echo $new_smt == '1' ? '1 (Ganjil)' : '2 (Genap)'; ?></b></h3>
-                                    <p>Data ini belum ada di database. Apakah Anda ingin membuatnya dan mengaktifkannya
-                                        sekarang?</p>
-                                </div>
-                                <div class="modal-footer justify-content-between">
-                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Nanti
-                                        Saja</button>
-                                    <button type="button" class="btn btn-primary" id="btnCreateTapel"><b>Ya, Buat &
-                                            Aktifkan</b></button>
-                                </div>
+                <!-- Modal New Tapel -->
+                <div class="modal fade" id="modalNewTapel" tabindex="-1" aria-labelledby="exampleModalLabel"
+                    aria-hidden="true" data-backdrop="static" data-keyboard="false">
+                    <div class="modal-dialog">
+                        <div class="modal-content ">
+                            <div class="modal-header bg-info">
+                                <h5 class="modal-title" id="exampleModalLabel"><i class="fas fa-calendar-alt"></i>
+                                    Deteksi Tahun Pelajaran Baru</h5>
+                            </div>
+                            <div class="modal-body">
+                                <p>Sistem mendeteksi bahwa saat ini sudah memasuki periode:</p>
+                                <h3>Tahun Pelajaran: <b><?php echo $new_tapel; ?></b></h3>
+                                <h3>Semester: <b><?php echo $new_smt == '1' ? '1 (Ganjil)' : '2 (Genap)'; ?></b></h3>
+                                <p>Data ini belum ada di database. Apakah Anda ingin membuatnya dan mengaktifkannya
+                                    sekarang?</p>
+                            </div>
+                            <div class="modal-footer justify-content-between">
+                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Nanti
+                                    Saja</button>
+                                <button type="button" class="btn btn-primary" id="btnCreateTapel"><b>Ya, Buat &
+                                        Aktifkan</b></button>
                             </div>
                         </div>
                     </div>
-                <?php endif; ?>
-                <!-- END: Interactive Tapel Check -->
+                </div>
+            <?php endif; ?>
+            <!-- END: Interactive Tapel Check -->
         </nav>
 
         <!-- ==========================================
              MAIN SIDEBAR
              ========================================== -->
-        <aside class="main-sidebar sidebar-dark-primary elevation-4">
+        <aside class="main-sidebar sidebar-dark-primary elevation">
             <!-- Brand Logo -->
-            <a href="dashboard" class="brand-link d-flex flex-column align-items-center text-center py-3">
-                <img src="images/logo.png" alt="smpn171" class="brand-image img-circle elevation-3 mb-2"
+            <a href="dashboard" class="brand-link d-flex flex-column align-items-center text-center py-2">
+                <img src="images/logo.png" alt="smpn171" class="brand-image img-circle elevation-3 mb-1"
                     style="opacity: .7; float: none; margin-left: 0;">
-                <span class="brand-text font-weight-light text-wrap" style="line-height: 1.2;">Sistem Arsip Data
-                </span>
+                <span class="brand-text font-weight-light text-wrap" style="line-height: 1.2;">Sistem Arsip Data</span>
             </a>
 
             <!-- Sidebar -->
             <div class="sidebar">
                 <!-- User Panel -->
-                <div class="user-panel mt-3 pb-3 mb-3 d-flex">
+                <div class="user-panel mt-1 pb-1 mb-1 d-flex">
                     <div class="image">
                         <?php
                         if (!empty($poto) && file_exists("images/$poto")) {
@@ -310,7 +323,7 @@ if (
                 </div>
 
                 <!-- Sidebar Menu -->
-                <nav class="mt-2">
+                <nav class="">
                     <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu"
                         data-accordion="false">
                         <?php
@@ -531,12 +544,6 @@ if (
                                 </a>
                             </li>
                         <?php } ?>
-                    </ul>
-                    <br>
-                    <div class="text-center"><i class="fa fa-database text-warning"> Database <?php echo htmlspecialchars($database ?? '', ENT_QUOTES, 'UTF-8'); ?></i></div>
-                    <br />
-                </nav>
-            </div>
         </aside>
 
         <!-- ==========================================
@@ -578,7 +585,6 @@ if (
                     </div>
                 </section>
                 <?php
-                // $route already set above in nav
                 switch ($route) {
                     case 'dashboard':
                     case 'arsipdata':
@@ -588,11 +594,9 @@ if (
                     case 'sistem':
                         include "load.php";
                         break;
-
                     case 'datasiswa':
                         include "siswa.php";
                         break;
-
                     case 'arsipdata/inputprestasi':
                     case 'inputprestasi':
                     case 'dataprestasi':
@@ -603,83 +607,68 @@ if (
                             include "dataprestasi.php";
                         }
                         break;
-
                     case 'arsipdata/inputlegalisir':
                     case 'inputlegalisir':
                         $_GET['aksi'] = 'tambah';
                         include "laporanlegalisir.php";
                         break;
-
                     case 'print/laporanprestasi':
                     case 'laporanprestasi':
-                    case 'laporanpress':
                     case 'laporan':
                         include "laporanpress.php";
                         break;
-
                     case 'print/laporanlegalisir':
                     case 'laporanlegalisir':
                         include "laporanlegalisir.php";
                         break;
-
                     case 'management/usermanagement':
                     case 'usermanagement':
                     case 'user':
                         include "user.php";
                         break;
-
                     case 'management/datasekolah':
                     case 'datasekolah':
                     case 'datasek':
                         include "datasek.php";
                         break;
-
                     case 'management/settings':
                     case 'pengaturan':
                     case 'settings':
                         include "setting.php";
                         break;
-
                     case 'management/profil':
                     case 'profil':
                         include "profil.php";
                         break;
-
                     case 'management/uploadsiswa':
                     case 'uploadsiswa':
                         include "upload_siswa.php";
                         break;
-
                     case 'management/uploaduser':
                     case 'uploaduser':
                         include "upload_usera.php";
                         break;
-
                     case 'management/uploadfoto':
                     case 'uploadfoto':
                         include "upload_foto.php";
                         break;
-
                     case 'system/database':
                     case 'sistem/database':
                     case 'database':
                     case 'brd':
                         include "brd.php";
                         break;
-
                     case 'system/checkupdate':
                     case 'sistem/checkupdate':
                     case 'checkupdate':
                         include "chckupdate.php";
                         break;
-
                     case 'system/activitylog':
                     case 'sistem/activitylog':
                     case 'activitylog':
                     case 'activity':
                         include "activity_log.php";
                         break;
-
                     case 'press':
                         include "prosespress.php";
                         break;
@@ -697,6 +686,12 @@ if (
                         break;
                     case 'viewlegalisir':
                         include "view_legalisir.php";
+                        break;
+                    case 'edit_usera':
+                        include "edit_usera.php";
+                        break;
+                    case 'tambah_usera':
+                        include "tambah_usera.php";
                         break;
                     case 'dh':
                         include "daftar_hadir.php";
@@ -734,97 +729,14 @@ if (
              ========================================== -->
         <footer class="main-footer">
             <div class="text-center">
-                <strong>S.A.D <?php echo isset($ver) ? htmlspecialchars($ver, ENT_QUOTES, 'UTF-8') : '1.0'; ?> - Copyright &copy; <?php echo date('Y'); ?></strong>
+                <strong>S.A.D <?php echo isset($ver) ? htmlspecialchars($ver, ENT_QUOTES, 'UTF-8') : '1.0'; ?> -
+                    Copyright &copy; <?php echo date('Y'); ?></strong>
             </div>
         </footer>
     </div>
     <!-- ./wrapper -->
 
-    <!-- ==========================================
-         JAVASCRIPT LIBRARIES
-         ========================================== -->
-    <script>
-        $.widget.bridge('uibutton', $.ui.button)
-    </script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/4.6.2/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/admin-lte/3.2.0/js/adminlte.min.js"></script>
-    <!-- Chart.js -->
-    <script src="plugins/chart.js/Chart.min.js"></script>
-    <!-- Toastr -->
-    <script src="js/vendor.min.js"></script>
-    <script src="js/select2.full.min.js"></script>
-    <script src="plugins/toastr/toastr.min.js"></script>
-    <!-- <script src="js/form-select2.min.js"></script> -->
-    <script src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.min.js"></script>
-<script src="https://cdn.datatables.net/fixedcolumns/3.2.6/js/dataTables.fixedColumns.min.js"></script>
-
-    <style>
-        #modalDaftarHadir .modal-header {
-            background: linear-gradient(135deg, #2c3e50 0%, #01b2d1 100%);
-            color: #fff;
-            border-radius: 4px 4px 0 0;
-        }
-
-        #modalDaftarHadir .modal-header .close {
-            color: #fff;
-            opacity: .8;
-        }
-
-        #modalDaftarHadir .modal-header .close:hover {
-            opacity: 1;
-        }
-
-        #modalDaftarHadir .form-label-sm {
-            font-size: 12px;
-            font-weight: 600;
-            color: #475569;
-            text-transform: uppercase;
-            letter-spacing: .4px;
-            margin-bottom: 4px;
-            display: block;
-        }
-
-        #modalDaftarHadir .form-control {
-            border-radius: 8px;
-            border: 1.5px solid #cbd5e1;
-            font-size: 13px;
-        }
-
-        #modalDaftarHadir .form-control:focus {
-            border-color: #01b2d1;
-            box-shadow: 0 0 0 3px rgba(1, 178, 209, .15);
-        }
-
-        #modalDaftarHadir .btn-buka {
-            background: linear-gradient(135deg, #2c3e50 0%, #01b2d1 100%);
-            color: #fff;
-            border: none;
-            border-radius: 8px;
-            padding: 10px 24px;
-            font-weight: 700;
-            font-size: 14px;
-            transition: opacity .2s;
-        }
-
-        #modalDaftarHadir .btn-buka:hover {
-            opacity: .88;
-            color: #fff;
-        }
-
-        #modalDaftarHadir .preview-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-            background: #f0fdf4;
-            color: #166534;
-            border: 1px solid #bbf7d0;
-            border-radius: 6px;
-            padding: 4px 10px;
-            font-size: 11px;
-            font-weight: 600;
-        }
-    </style>
-
+    <!-- Modal Daftar Hadir -->
     <div class="modal fade" id="modalDaftarHadir" tabindex="-1" role="dialog" aria-labelledby="lblDaftarHadir">
         <div class="modal-dialog modal-md" role="document">
             <div class="modal-content">
@@ -835,7 +747,6 @@ if (
                     <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
                 </div>
                 <div class="modal-body">
-
                     <!-- Pilih Kelas -->
                     <div class="form-group mb-3">
                         <label class="form-label-sm"><i class="fas fa-chalkboard-teacher mr-1"></i>Pilih Kelas</label>
@@ -857,7 +768,7 @@ if (
                             <option value="Tanda Terima Kartu Pelajar RFID">Tanda Terima Kartu Pelajar</option>
                         </select>
                     </div>
-                </div><!-- /modal-body -->
+                </div>
                 <div class="modal-footer justify-content-between">
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
                     <button type="button" class="btn btn-primary" id="btnBukaDH">
@@ -868,50 +779,63 @@ if (
         </div>
     </div>
 
+    <!-- Scripts -->
+    <script>
+        $.widget.bridge('uibutton', $.ui.button)
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/4.6.2/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/admin-lte/3.2.0/js/adminlte.min.js"></script>
+    <script src="plugins/chart.js/Chart.min.js"></script>
+    <script src="js/vendor.min.js"></script>
+    <script src="js/select2.full.min.js"></script>
+    <script src="plugins/toastr/toastr.min.js"></script>
+    <script src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/fixedcolumns/3.2.6/js/dataTables.fixedColumns.min.js"></script>
+
     <script>
         $(document).ready(function () {
-            // -- Tombol Tampilkan
+            // -- Tombol Daftar Hadir Preview/Print
             $('#btnBukaDH').on('click', function () {
                 var kelas = $('#dhKelasVal').val();
                 var tgl = $('#dhTanggal').val() || '<?= date('Y-m-d') ?>';
                 var judul = $('#dhJenisCetak').val();
-
-                var url = 'daftar_hadir.php?kelas=' + encodeURIComponent(kelas)
-                    + '&tanggal=' + encodeURIComponent(tgl)
-                    + '&judul=' + encodeURIComponent(judul);
-
+                var url = 'daftar_hadir.php?kelas=' + encodeURIComponent(kelas) + '&tanggal=' + encodeURIComponent(tgl) + '&judul=' + encodeURIComponent(judul);
                 window.open(url, '_blank');
                 $('#modalDaftarHadir').modal('hide');
             });
+
+            // -- Sidebar Menu Auto-Active State
+            $('a[data-toggle="mn"]').click(function () {
+                var id = $(this).attr("id");
+                $('#' + id).siblings().find(".active").removeClass("active");
+                $('#' + id).addClass("active");
+                localStorage.setItem("activeMenu", id);
+            });
+            var activeMenu = localStorage.getItem('activeMenu');
+            if (activeMenu != null) {
+                $('#' + activeMenu).siblings().find(".active").removeClass("active");
+                $('#' + activeMenu).addClass("active");
+            }
         });
+
+        // -- Modal Drag Support
+        if ($.fn.draggable) {
+            $('.modal-dialog').draggable({ handle: ".modal-header" });
+        }
     </script>
-     <script>
-    $(document).ready(function () {
-      $('a[data-toggle="mn"]').click(function () {
-        var id = $(this).attr("id");
 
-        $('#' + id).siblings().find(".active").removeClass("active");
-        $('#' + id).addClass("active");
-        localStorage.setItem("activeMenu", id);
-      });
-      var activeMenu = localStorage.getItem('activeMenu');
-
-      if (activeMenu != null) {
-        $('#' + activeMenu).siblings().find(".active").removeClass("active");
-        $('#' + activeMenu).addClass("active");
-      }
-    });
-
-    if ($.fn.draggable) {
-      $('.modal-dialog').draggable({
-        handle: ".modal-header"
-      });
-    }
-    </script>
-<script>
-    // Console notice for cleanup
-    console.log("S.A.D System - UI Scripts Initialized");
-</script>
+    <!-- Toastr script handler -->
+    <?php if (isset($_SESSION['toast_msg'])): ?>
+        <script>
+            $(document).ready(function () {
+                toastr.options = { "closeButton": true, "progressBar": true, "positionClass": "toast-top-right", "timeOut": "5000" };
+                toastr.<?php echo $_SESSION['toast_type']; ?>("<?php echo addslashes($_SESSION['toast_msg']); ?>");
+            });
+        </script>
+        <?php
+        unset($_SESSION['toast_msg'], $_SESSION['toast_type']);
+        ?>
+    <?php endif; ?>
 </body>
 
 </html>

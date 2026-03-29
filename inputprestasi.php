@@ -31,162 +31,6 @@ if (isset($s['photo']) && $s['photo'] != "" && file_exists("file/fotopd/" . $s['
 }
 ?>
 
-<style>
-    /* ==========================================
-       FILE UPLOADER PREMIUM UI STYLES
-       ========================================== */
-    .file-upload-wrapper {
-        width: 100%;
-        margin-bottom: 20px;
-    }
-
-    .file-upload-selector {
-        background: #f8f9fa;
-        display: flex;
-        align-items: center;
-        border: 1px solid #ced4da;
-        border-radius: 4px 4px 0 0;
-    }
-
-    .upload-area {
-        display: flex;
-        align-items: center;
-        width: 100%;
-        padding: 8px 12px;
-    }
-
-    .btn-light-info {
-        background-color: #e3f2fd;
-        color: #0288d1;
-        border: 1px solid #b3e5fc;
-        font-weight: 600;
-        font-size: 13px;
-        padding: 5px 12px;
-        white-space: nowrap;
-        border-radius: 4px;
-        transition: all 0.2s;
-    }
-
-    .btn-light-info:hover {
-        background-color: #b3e5fc;
-        color: #01579b;
-    }
-
-    .dropzone {
-        flex-grow: 1;
-        text-align: center;
-        color: #6c757d;
-        font-size: 13px;
-        border-left: 1px solid #dee2e6;
-        margin-left: 10px;
-        padding-left: 10px;
-        cursor: pointer;
-    }
-
-    .file-list-uploaded {
-        border: 1px solid #ced4da;
-        border-top: none;
-        background: #fff;
-        max-height: 200px;
-        overflow-y: auto;
-    }
-
-    .file-item-new {
-        display: flex;
-        align-items: center;
-        padding: 10px 15px;
-        border-bottom: 1px solid #f1f1f1;
-        transition: background 0.2s;
-    }
-
-    .file-item-new:hover {
-        background-color: #fcfcfc;
-    }
-
-    .file-info-new {
-        display: flex;
-        align-items: center;
-        flex-grow: 1;
-        min-width: 0;
-    }
-
-    .file-details-new {
-        margin-left: 12px;
-        overflow: hidden;
-    }
-
-    .file-name-new {
-        font-size: 13px;
-        font-weight: 600;
-        color: #333;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        display: block;
-    }
-
-    .file-size-new {
-        font-size: 11px;
-        color: #888;
-        display: block;
-    }
-
-    .delete-btn-new {
-        color: #dc3545;
-        cursor: pointer;
-        font-size: 16px;
-        padding: 5px;
-        margin-left: 10px;
-        transition: color 0.2s;
-    }
-
-    .delete-btn-new:hover {
-        color: #bd2130;
-    }
-
-    .uploader-footer {
-        padding: 8px 12px;
-        background: #f8f9fa;
-        border: 1px solid #ced4da;
-        border-top: none;
-        border-radius: 0 0 4px 4px;
-        font-size: 12px;
-        line-height: 1.5;
-    }
-
-    .font-600 {
-        font-weight: 600;
-    }
-
-    .text-black {
-        color: #333;
-    }
-
-    .hidden-file-input {
-        display: none;
-    }
-
-    .file-upload-selector.dragover {
-        background-color: #e8f0fe;
-        border-color: #4285f4;
-    }
-
-    .fs-xs {
-        font-size: 13px;
-    }
-
-    .fs-nano {
-        font-size: 11px;
-    }
-
-    .mt-1 {
-        margin-top: 0.25rem !important;
-    }
-
-    /* ==========================================
-       SELECT2 PREMIUM UI OVERRIDES
-       ========================================== */
-    </style>
 
 <!-- Main content -->
 <section class="content">
@@ -223,9 +67,9 @@ if (isset($s['photo']) && $s['photo'] != "" && file_exists("file/fotopd/" . $s['
 
             <!-- Input Form Column -->
             <div class="col-md-8">
-                <div class="card">
-                    <div class="card-header bg-menu-gradient d-flex align-items-center">
-                        <h3 class="card-title text-white">Form Input Prestasi</h3>
+                <div class="card shadow-sm border-0">
+                    <div class="card-header box-shadow-0 bg-gradient-x-info d-flex align-items-center">
+                        <h5 class="card-title text-white">Form Input Prestasi</h5>
                         <div class="card-tools ml-auto">
                             <a href="arsipdata/inputprestasi" class="btn btn-primary btn-sm rounded-pill">
                                 Kembali
@@ -336,51 +180,12 @@ if (isset($s['photo']) && $s['photo'] != "" && file_exists("file/fotopd/" . $s['
                                 </select>
                             </div>
                         </div>
-
                         <div class="form-group row">
-                            <label for="file" class="col-sm-4 col-form-label">Upload Lampiran (PDF/Gambar)</label>
+                            <label for="bulan" class="col-sm-4 col-form-label">Lampiran Berkas</label>
                             <div class="col-sm-8">
-                                <div class="file-upload-wrapper" id="drop-area">
-                                    <div class="file-upload-selector border rounded-top">
-                                        <div class="upload-area d-flex align-items-center">
-                                            <div style="flex-shrink: 0;">
-                                                <button type="button" class="btn btn-sm btn-light-info"
-                                                    onclick="document.getElementById('fileInput').click()">Pilih
-                                                    File...</button>
-                                            </div>
-                                            <div class="dropzone text-center prevent-select">
-                                                <span class="upload-text"><i class="fa fa-cloud-upload-alt mr-1"></i>
-                                                    atau drag & drop berkas disini.</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div id="file-list-display" class="file-list-uploaded d-none">
-                                        <!-- File items will be injected here -->
-                                    </div>
-                                    <div class="uploader-footer border rounded-bottom p-2 border-top-0">
-                                        <div class="fs-xs"><span class="font-600 text-black">Total : </span><span id="total-size-display">0 B</span></div>
-                                        <div class="fs-nano text-muted">
-                                            Lampirkan berkas <span class="font-600 text-black">.pdf / .jpg / .png</span> maksimal <span class="font-600 text-black">2</span> berkas dan ukuran maksimal <span class="font-600 text-black">2.0 MB</span>
-                                        </div>
-                                    </div>
-                                    <input type="file" name="file[]" id="fileInput" class="hidden-file-input"
-                                        accept=".pdf,.jpg,.jpeg,.png" multiple onchange="handleFileSelect(this)">
-                                </div>
-                                <small class="text-warning">*Opsional. Upload sertifikat/dokumentasi.</small>
+                                <input type="file" name="file[]" id="fileInput" class="form-control" accept=".pdf" multiple onchange="handleFileSelect()">
                             </div>
                         </div>
-
-                        <div class="form-group row mt-2" id="preview-area" style="display:none;">
-                            <div class="col-sm-4"></div>
-                            <div class="col-sm-8">
-                                <img id="img-preview" src=""
-                                    style="max-width: 100%; max-height: 200px; display:none; border: 1px solid #ddd; padding: 5px;">
-                                <p id="pdf-preview" style="display:none;"><i class="fa fa-file-pdf"></i> PDF Selected
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-
                     <div class="card-footer text-right">
                         <button type="button" id="btnIncomplete" class="btn btn-secondary disabled"
                             style="cursor: ;">Lengkapi Data</button>

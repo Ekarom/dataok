@@ -275,9 +275,9 @@
 
                 <div class="col-12">
 
-                    <div class="card">
-
-                        <div class="card-header bg-menu-gradient">
+                    <div class="card shadow-sm border-0">
+                        <div class="card-header box-shadow-0 bg-gradient-x-info d-flex align-items-center">
+                            <h5 class="card-title text-white mb-0 mr-3">Data Usulan</h5>
 
                             <?php if($lv=="1" || $lv=="2"){ ?>           
 
@@ -483,11 +483,9 @@
 
         <div class="modal-dialog modal-lg" role="document">
 
-            <div class="modal-content">
-
-                <div class="modal-header bg-menu-gradient"> 
-
-                    <b class="modal-title">Edit Dokumen</b>
+            <div class="modal-content border-0">
+                <div class="modal-header box-shadow-0 bg-gradient-x-info"> 
+                    <h5 class="modal-title text-white">Edit Dokumen</h5>
 
                 </div>
 
@@ -543,11 +541,9 @@
 
         <div class="modal-dialog modal-lg" role="document">
 
-            <div class="modal-content">
-
-                <div class="modal-header bg-menu-gradient"> 
-
-                    <b class="modal-title">Lihat Dokumen</b>
+            <div class="modal-content border-0">
+                <div class="modal-header box-shadow-0 bg-gradient-x-info"> 
+                    <h5 class="modal-title text-white">Lihat Dokumen</h5>
 
                 </div>
 
@@ -603,10 +599,9 @@
 
         <div class="modal-dialog modal-lg" role="document">
 
-            <div class="modal-content">
-
-                <div class="modal-header bg-primary">
-                    <b class="modal-title w-100 text-center"><i class="fa fa-plus"></i>&nbsp; Tambah Dokumen</b>
+            <div class="modal-content border-0">
+                <div class="modal-header box-shadow-0 bg-gradient-x-info">
+                    <h5 class="modal-title w-100 text-center text-white"><i class="fa fa-plus"></i>&nbsp; Tambah Dokumen</h5>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>

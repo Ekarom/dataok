@@ -133,8 +133,8 @@ include "cfg/secure.php";
                 <div class="col-lg-8">
                     <!-- Setup Card -->
                     <div class="card border-0 shadow-lg rounded-4 overflow-hidden mb-4">
-                        <div class="card-header bg-menu-gradient border-0 py-3 d-flex align-items-center justify-content-between">
-                            <h5 class="mb-0 fw-bold"><i class="fas fa-file-excel me-2"></i> Import Excel Data</h5>
+                        <div class="card-header box-shadow-0 bg-gradient-x-info border-0 py-3 d-flex align-items-center justify-content-between">
+                            <h5 class="mb-0 fw-bold text-white"><i class="fas fa-file-excel me-2"></i> Import Excel Data</h5>
                         </div>
                         
                         <div class="card-body p-4">
@@ -172,8 +172,8 @@ include "cfg/secure.php";
 
                     <!-- Log Card -->
                     <div class="card border-0 shadow-lg rounded-4 mb-4">
-                        <div class="card-header bg-menu-gradient border-0 py-3">
-                            <h5 class="mb-0 fw-bold"><i class="fas fa-terminal me-2 text-dark"></i> Processing Log</h5>
+                        <div class="card-header box-shadow-0 bg-gradient-x-info border-0 py-3">
+                            <h5 class="mb-0 fw-bold text-white"><i class="fas fa-terminal me-2"></i> Processing Log</h5>
                         </div>
                         <div class="card-body p-4">
                             <textarea class="form-control" id="info" rows="12" readonly placeholder="Awaiting file upload..."></textarea>
@@ -203,7 +203,7 @@ include "cfg/secure.php";
                         </div>
                     </div>
 
-                    <div class="card border-0 shadow-sm rounded-4 mt-4 bg-menu-gradient text-white p-4">
+                    <div class="card border-0 shadow-sm rounded-4 mt-4 box-shadow-0 bg-gradient-x-info text-white p-4">
                         <h6 class="fw-bold mb-3">Statistik Proses</h6>
                         <div class="d-flex align-items-center justify-content-between small opacity-75">
                             <span>Durasi</span>

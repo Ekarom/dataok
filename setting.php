@@ -47,8 +47,8 @@ echo '<script>  alert("Data Tapel berhasil dihapus!");</script>';
 
                 <div class="col-md-12">
 
-                    <div class="card card-primary card-tabs">
-                        <div class="card-header bg-gradient-primary p-0 pt-1">
+                    <div class="card card-primary card-tabs shadow-sm border-0">
+                        <div class="card-header box-shadow-0 bg-gradient-x-info p-0 pt-1">
                             <ul class="nav nav-tabs" id="myTab" role="tablist">
                                 <li class="nav-item">
                                     <a class="nav-link" id="custom-tabs-five-normal-tab" data-toggle="pill" href="#tapels" role="tab" aria-controls="tapels" aria-selected="false">Tahun Pelajaran</a>
@@ -64,8 +64,8 @@ echo '<script>  alert("Data Tapel berhasil dihapus!");</script>';
   <div class="tab-pane fade" id="tapels" role="tabpanel" aria-labelledby="tapels">
                 <div class="row">
         <div class="col-4">
-          <div class="card">
-            <div class="card-header bg-menu-gradient">
+          <div class="card shadow-sm border-0">
+            <div class="card-header box-shadow-0 bg-gradient-x-info">
                 
            <a href='#itapel' id='custId' data-toggle='modal' data-id=''><button type="button" class="btn btn-info btn-sm"><i class="fa fa-disk"></i>Tambah Tapel</button></a></div>
                         <!-- /.panel-heading -->
@@ -150,9 +150,9 @@ echo '<script>  alert("Data Tapel berhasil dihapus!");</script>';
 <!-- /.content-wrapper -->
 <div class="modal fade" id="itapel" role="dialog">
         <div class="modal-dialog modal-lg" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h4 class="modal-title">Tambah Tahun Pelajaran</h4>
+            <div class="modal-content border-0">
+                <div class="modal-header box-shadow-0 bg-gradient-x-info">
+                    <h5 class="modal-title text-white">Tambah Tahun Pelajaran</h5>
                 </div>
                 <div class="modal-body">
         <!-- MEMBUAT FORM -->

@@ -228,7 +228,7 @@ switch ($action) {
 
 
         // --- Header Tabel Statis ---
-        $tableHtml .= '<thead class="table-light"><tr class="text-center">
+        $tableHtml .= '<thead class="bg-gradient-x-secondary"><tr class="text-center">
             <th>No</th>
             <th>Foto</th>
             <th>Nama Siswa</th>

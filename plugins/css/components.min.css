@@ -98,9 +98,7 @@ html body .content.app-content .content-overlay {
 }
 
 .center-layout,
-.sidebar {
-    position: relative
-}
+
 
 .main-menu.menu-dark .navigation li a,
 .main-menu.menu-dark .navigation li a i,
@@ -177,7 +175,7 @@ html body .pace .pace-progress {
     overflow: hidden
 }
 
-@media (min-width: 992px) {
+@media (min-width:992px) {
     body .content-right {
         width: calc(100% - 300px);
         float: right
@@ -210,25 +208,10 @@ html body .pace .pace-progress {
         margin-right: 320px
     }
 
-    .sidebar-right.sidebar-sticky {
-        float: right !important;
-        margin-left: -300px;
-        width: 300px !important
-    }
 
-    .sidebar-left.sidebar-sticky {
-        float: left !important;
-        margin-right: -300px;
-        width: 300px !important
-    }
 
-    [data-col=content-left-sidebar] .sticky-wrapper {
-        float: left
-    }
 
-    .vertical-content-menu .content .sidebar-left {
-        margin-left: 288px
-    }
+
 
     .vertical-content-menu .content .content-detached.content-right {
         float: right;
@@ -251,30 +234,6 @@ html body .pace .pace-progress {
     }
 }
 
-.sidebar {
-    width: 100%
-}
-
-@media (min-width: 992px) {
-    .sidebar {
-        vertical-align: top;
-        width: 300px
-    }
-
-    .sidebar-left {
-        float: left
-    }
-
-    .sidebar-right {
-        float: right
-    }
-}
-
-.sidebar-fixed {
-    position: fixed;
-    height: 100%;
-    overflow: scroll
-}
 
 .sidenav-overlay {
     position: fixed;
@@ -968,7 +927,7 @@ footer .ft-heart:before {
     z-index: 999 !important
 }
 
-@media (max-width: 767.98px) {
+@media (max-width:767.98px) {
     html body footer {
         text-align: center
     }
@@ -989,7 +948,7 @@ footer .ft-heart:before {
     }
 }
 
-@media (max-width: 991.98px) {
+@media (max-width:991.98px) {
 
     .horizontal-layout.vertical-overlay-menu .main-menu-content,
     .horizontal-layout.vertical-overlay-menu .main-menu-content .mega-dropdown-menu>li {
@@ -1007,7 +966,7 @@ footer .ft-heart:before {
     }
 }
 
-@media (min-width: 768px) {
+@media (min-width:768px) {
     .drag-target {
         z-index: 0
     }
@@ -2048,19 +2007,19 @@ footer .ft-heart:before {
     color: #F9FAFD
 }
 
-@media only screen and (max-width: 576px) {
+@media only screen and (max-width:576px) {
     #search-results li.media {
         flex-direction: column
     }
 }
 
-@media only screen and (max-width: 600px) {
+@media only screen and (max-width:600px) {
     #search-results .img-fluid.rounded {
         margin-right: 1rem
     }
 }
 
-@media (max-width: 768px) {
+@media (max-width:768px) {
     .chart-container {
         overflow-x: scroll;
         overflow-y: visible;
@@ -3451,7 +3410,7 @@ footer .ft-heart:before {
     -ms-overflow-style: none
 }
 
-@supports (-ms-overflow-style: none) {
+@supports (-ms-overflow-style:none) {
     .ps-container {
         overflow: auto !important
     }
@@ -3574,7 +3533,7 @@ footer .ft-heart:before {
     -ms-overflow-style: none
 }
 
-@supports (-ms-overflow-style: none) {
+@supports (-ms-overflow-style:none) {
     .ps-theme-dark {
         overflow: auto !important
     }
@@ -3697,7 +3656,7 @@ footer .ft-heart:before {
     -ms-overflow-style: none
 }
 
-@supports (-ms-overflow-style: none) {
+@supports (-ms-overflow-style:none) {
     .ps-theme-light {
         overflow: auto !important
     }
@@ -3820,7 +3779,7 @@ footer .ft-heart:before {
     -ms-overflow-style: none
 }
 
-@supports (-ms-overflow-style: none) {
+@supports (-ms-overflow-style:none) {
     .menu-collapsed .ps-theme-dark {
         overflow: auto !important
     }
@@ -3947,7 +3906,7 @@ footer .ft-heart:before {
     -ms-overflow-style: none
 }
 
-@supports (-ms-overflow-style: none) {
+@supports (-ms-overflow-style:none) {
     .menu-collapsed ul.ps-theme-dark {
         overflow: auto !important
     }
@@ -4070,7 +4029,7 @@ footer .ft-heart:before {
     -ms-overflow-style: none
 }
 
-@supports (-ms-overflow-style: none) {
+@supports (-ms-overflow-style:none) {
     .vertical-menu-modern.menu-collapsed .ps-theme-dark {
         overflow: auto !important
     }
@@ -4193,7 +4152,7 @@ footer .ft-heart:before {
     -ms-overflow-style: none
 }
 
-@supports (-ms-overflow-style: none) {
+@supports (-ms-overflow-style:none) {
     .vertical-menu-modern.menu-collapsed ul.ps-theme-dark {
         overflow: auto !important
     }
@@ -4322,7 +4281,7 @@ footer .ft-heart:before {
     margin: 100px 0
 }
 
-@media screen and (min-width: 0px) {
+@media screen and (min-width:0px) {
     head {
         font-family: "xs 0px"
     }
@@ -4332,7 +4291,7 @@ footer .ft-heart:before {
     }
 }
 
-@media screen and (min-width: 544px) {
+@media screen and (min-width:544px) {
     head {
         font-family: "sm 544px"
     }
@@ -4342,7 +4301,7 @@ footer .ft-heart:before {
     }
 }
 
-@media screen and (min-width: 768px) {
+@media screen and (min-width:768px) {
     head {
         font-family: "md 768px"
     }
@@ -4352,7 +4311,7 @@ footer .ft-heart:before {
     }
 }
 
-@media screen and (min-width: 992px) {
+@media screen and (min-width:992px) {
     head {
         font-family: "lg 992px"
     }
@@ -4362,7 +4321,7 @@ footer .ft-heart:before {
     }
 }
 
-@media screen and (min-width: 1200px) {
+@media screen and (min-width:1200px) {
     head {
         font-family: "xl 1200px"
     }
@@ -5076,7 +5035,7 @@ table.dataTable tfoot th {
     background-color: #ff4961
 }
 
-@media (max-width: 991.98px) {
+@media (max-width:991.98px) {
     .dataTables_wrapper table {
         display: block;
         width: 100%;
@@ -5223,13 +5182,13 @@ tr.shown td.details-control {
     background: #fff
 }
 
-@media screen and (max-width: 600px) {
+@media screen and (max-width:600px) {
     div.dataTables_wrapper div.dataTables_paginate ul.pagination {
         justify-content: center
     }
 }
 
-@media screen and (max-width: 1200px) and (min-width:768px) {
+@media screen and (max-width:1200px) and (min-width:768px) {
     div.dataTables_wrapper div.row:last-child {
         justify-content: space-between
     }
@@ -5243,7 +5202,7 @@ tr.shown td.details-control {
     }
 }
 
-@media screen and (max-width: 767px) {
+@media screen and (max-width:767px) {
     div.dataTables_wrapper div.dataTables_filter#users-contacts_filter {
         text-align: right
     }

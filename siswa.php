@@ -4,12 +4,10 @@
         <div class="container-fluid">
             <div class="row">
                 <div class="col-12">
-                    <div class="card">
+                    <div class="card shadow-sm border-0">
                         <!-- Card Header -->
-                        <div class="card-header">
-                            <button type="button" class="btn btn-danger btn-sm float-right" id="hapusSemuaBtn">
-                                <i class="fas fa-trash"></i> Hapus Semua Siswa
-                            </button>                            
+                        <div class="card-header box-shadow-0 bg-gradient-x-info">
+                            <h5 class="card-title text-white">Daftar Siswa</h5>
                         </div>
                         <!-- Card Body -->
                         <div class="card-body">
@@ -72,9 +70,9 @@
      aria-hidden="true" 
      data-backdrop="static">
     <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header bg-menu-gradient">
-                <h5 class="modal-title" id="viewModalLabel">Detail Siswa</h5>
+        <div class="modal-content border-0">
+            <div class="modal-header box-shadow-0 bg-gradient-x-info">
+                <h5 class="modal-title text-white" id="viewModalLabel">Detail Siswa</h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
@@ -103,9 +101,9 @@
                     </div>
                 </div>
                 <center>
-                NIS : <br><span class="badge bg-menu-gradient" style="font-size: 15px;"><span id="view_nis"></span></span><br>
-                Nama : <br><span class="badge bg-menu-gradient" style="font-size: 15px;"><span id="view_pd"></span></span><br>
-                Kelas : <br><span class="badge bg-menu-gradient" style="font-size: 15px;"><span id="view_kelas"></span></span>
+                NIS : <br><span class="badge bg-gradient-x-info text-white" style="font-size: 15px;"><span id="view_nis"></span></span><br>
+                Nama : <br><span class="badge bg-gradient-x-info text-white" style="font-size: 15px;"><span id="view_pd"></span></span><br>
+                Kelas : <br><span class="badge bg-gradient-x-info text-white" style="font-size: 15px;"><span id="view_kelas"></span></span>
                 </center>
             </div>
             <div class="modal-footer">

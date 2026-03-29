@@ -195,12 +195,9 @@ if (!$data) {
 
                 <div class="col-md-8">
 
-                    <div class="card">
-
-                        <div class="card-header bg-menu-gradient">
-
-                            <h3 class="card-title"><i class="fas fa-school"></i>&nbsp; Data Identitas Sekolah</h3>
-
+                        <div class="card shadow-sm border-0">
+                        <div class="card-header box-shadow-0 bg-gradient-x-info">
+                            <h5 class="card-title text-white"><i class="fas fa-school"></i>&nbsp; Data Identitas Sekolah</h5>
                         </div>
 
                         <form method="POST" action="">
@@ -300,9 +297,8 @@ if (!$data) {
 
                     <!-- TABEL PEJABAT (TABS) -->
 
-                    <div class="card card-navy card-outline card-tabs">
-            
-                        <div class="card-header bg-menu-gradient p-0 pt-1 border-bottom-0">
+                    <div class="card card-navy card-outline card-tabs shadow-sm border-0">
+                        <div class="card-header box-shadow-0 bg-gradient-x-info p-0 pt-1 border-bottom-0">
 
                             <ul class="nav nav-tabs" id="custom-tabs-three-tab" role="tablist">
 
@@ -402,9 +398,9 @@ if (!$data) {
                     foreach ($uploads as $field => $title) {
                         $currentImg = !empty($data[$field]) ? "images/" . $data[$field] : "images/noimage.png";
                         ?>
-                        <div class="card card-danger card-outline">
-                            <div class="card-header bg-menu-gradient">
-                                <h3 class="card-title"><?= $title ?></h3>
+                        <div class="card shadow-sm border-0 mb-3">
+                            <div class="card-header box-shadow-0 bg-gradient-x-info">
+                                <h5 class="card-title text-white"><?= $title ?></h5>
                             </div>
                             <div class="card-body text-center">
                                 <!-- Area Preview -->

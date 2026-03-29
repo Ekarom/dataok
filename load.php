@@ -4,69 +4,6 @@ if (session_status() == PHP_SESSION_NONE) {
 }
 include "cfg/secure.php";
 ?>
-<style>
-    .small-box {
-        border-radius: 10px;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-    }
-
-    .card {
-        border-radius: 10px;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-    }
-
-    @keyframes blink {
-        0% {
-            opacity: 1;
-            transform: scale(1);
-        }
-
-        50% {
-            opacity: 0.5;
-            transform: scale(0.9);
-        }
-
-        100% {
-            opacity: 1;
-            transform: scale(1);
-        }
-    }
-
-    .online-indicator {
-        height: 10px;
-        width: 10px;
-        background-color: #28a745;
-        border-radius: 50%;
-        display: inline-block;
-        margin-right: 5px;
-        box-shadow: 0 0 5px #28a745;
-        animation: blink 1.5s infinite ease-in-out;
-    }
-
-    .user-list-item {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 10px;
-        border-bottom: 1px solid #f4f4f4;
-    }
-
-    .user-list-item:last-child {
-        border-bottom: none;
-    }
-
-    .user-info {
-        display: flex;
-        align-items: center;
-    }
-
-    .user-role-badge {
-        font-size: 0.8em;
-        margin-left: 10px;
-    }
-</style>
-
-
 <!-- Main content -->
 <section class="content">
 
@@ -78,11 +15,11 @@ include "cfg/secure.php";
             <div class="small-box bg-1">
                 <div class="inner">
                     <?php
-                    $query = mysqli_query($sqlconn, "SELECT COUNT(*) as total FROM prestasi");
-                    $row = $query ? mysqli_fetch_assoc($query) : null;
-                    $prestasi = $row ? $row['total'] : 0;
+                        $query = mysqli_query($sqlconn, "SELECT COUNT(*) as total FROM prestasi");
+                        $row = $query ? mysqli_fetch_assoc($query) : null;
+                        $prestasi = $row ? $row['total'] : 0;
                     ?>
-                    <h3><?php echo $prestasi; ?></h3>
+                    <h3 class="text-white"><?php echo $prestasi; ?></h3>
                     <p>Laporan Prestasi</p>
                 </div>
                 <div class="icon"><i class="ion ion-trophy"></i></div>
@@ -95,11 +32,11 @@ include "cfg/secure.php";
             <div class="small-box bg-3">
                 <div class="inner">
                     <?php
-                    $query = mysqli_query($sqlconn, "SELECT COUNT(*) as total FROM legalisir");
-                    $row = $query ? mysqli_fetch_assoc($query) : null;
-                    $legalisir = $row ? $row['total'] : 0;
+                        $query = mysqli_query($sqlconn, "SELECT COUNT(*) as total FROM legalisir");
+                        $row = $query ? mysqli_fetch_assoc($query) : null;
+                        $legalisir = $row ? $row['total'] : 0;
                     ?>
-                    <h3><?php echo $legalisir; ?></h3>
+                    <h3 class="text-white"><?php echo $legalisir; ?></h3>
                     <p>Laporan Legalisir</p>
                 </div>
                 <div class="icon"><i class="ion ion-archive"></i></div>
@@ -107,162 +44,65 @@ include "cfg/secure.php";
             </div>
         </div>
 
-        <!-- Box 3: Siswa -->
+        <!-- Box 3: Siswa (Only for Level 1) -->
+        <?php if (isset($lv) && $lv == '1') { ?>
         <div class="col-lg-2 col-6">
             <div class="small-box bg-4">
                 <div class="inner">
                     <?php
-                    $query = mysqli_query($sqlconn, "SELECT COUNT(*) as total FROM siswa");
-                    $row = $query ? mysqli_fetch_assoc($query) : null;
-                    $siswa = $row ? $row['total'] : 0;
-                    ?>
-                    <h3><?php echo $siswa; ?></h3>
+    $query = mysqli_query($sqlconn, "SELECT COUNT(*) as total FROM siswa");
+    $row = $query ? mysqli_fetch_assoc($query) : null;
+    $siswa = $row ? $row['total'] : 0;
+?>
+                    <h3 class="text-white"><?php echo $siswa; ?></h3>
                     <p>Manajemen PD</p>
                 </div>
                 <div class="icon"><i class="ion ion-person-stalker"></i></div>
-                <a href="?siswa" class="small-box-footer">More info <i class="fa fa-arrow-circle-right"></i></a>
+                <a href="datasiswa" class="small-box-footer">More info <i class="fa fa-arrow-circle-right"></i></a>
             </div>
         </div>
 
-        <!-- Box 4: User -->
+        <!-- Box 4: User (Only for Level 1) -->
         <div class="col-lg-2 col-6">
             <div class="small-box bg-5">
                 <div class="inner">
                     <?php
-                    $query = mysqli_query($sqlconn, "SELECT COUNT(*) as total FROM usera");
-                    $row = $query ? mysqli_fetch_assoc($query) : null;
-                    $user = $row ? $row['total'] : 0;
-                    ?>
-                    <h3><?php echo $user; ?></h3>
+    $query = mysqli_query($sqlconn, "SELECT COUNT(*) as total FROM usera");
+    $row = $query ? mysqli_fetch_assoc($query) : null;
+    $user = $row ? $row['total'] : 0;
+?>
+                    <h3 class="text-white"><?php echo $user; ?></h3>
                     <p>Manajemen User</p>
                 </div>
                 <div class="icon"><i class="ion ion-person-stalker"></i></div>
-                <a href="?user" class="small-box-footer">More info <i class="fa fa-arrow-circle-right"></i></a>
+                <a href="usermanagement" class="small-box-footer">More info <i class="fa fa-arrow-circle-right"></i></a>
             </div>
         </div>
+        <?php
+}?>
 
     </div>
     <!-- /.row (stat cards) -->
 
-    <?php
-    // =====================================================================
-// Statistik Prestasi Mendalam: Juara & Semester per Tahun Pelajaran
-// =====================================================================
-    $tp_labels = [];
-    $smt1_counts = [];
-    $smt2_counts = [];
-    $juara_stats = [];
-    $total_all_prestasi = 0;
-
-    $q_stats = mysqli_query($sqlconn, "SELECT dbname, tahun FROM dbset ORDER BY tahun ASC");
-    if ($q_stats) {
-        while ($r_s = mysqli_fetch_array($q_stats)) {
-            $db_n = $r_s['dbname'];
-            $db_t = $r_s['tahun'];
-
-            try {
-                $c_db = @new mysqli("localhost", "root", "", $db_n);
-                if (!$c_db->connect_error) {
-                    $table_check = $c_db->query("SHOW TABLES LIKE 'prestasi'");
-                    if ($table_check && $table_check->num_rows > 0) {
-                        $tp_labels[] = "TP " . $db_t;
-                        $s1 = 0;
-                        $s2 = 0;
-
-                        $res_pres = $c_db->query("SELECT juara, tgl_kegiatan, bulan FROM prestasi");
-                        if ($res_pres) {
-                            while ($row = $res_pres->fetch_assoc()) {
-                                $total_all_prestasi++;
-
-                                $j = $row['juara'];
-                                if (!isset($juara_stats[$j]))
-                                    $juara_stats[$j] = 0;
-                                $juara_stats[$j]++;
-
-                                $month = 0;
-                                if (!empty($row['tgl_kegiatan']) && $row['tgl_kegiatan'] !== '0000-00-00') {
-                                    $month = (int) date('n', strtotime($row['tgl_kegiatan']));
-                                } else {
-                                    $m_map = [
-                                        'Januari' => 1,
-                                        'Februari' => 2,
-                                        'Maret' => 3,
-                                        'April' => 4,
-                                        'Mei' => 5,
-                                        'Juni' => 6,
-                                        'Juli' => 7,
-                                        'Agustus' => 8,
-                                        'September' => 9,
-                                        'Oktober' => 10,
-                                        'November' => 11,
-                                        'Desember' => 12
-                                    ];
-                                    $month = $m_map[$row['bulan']] ?? 0;
-                                }
-                                if ($month >= 7 || $month == 0)
-                                    $s1++;
-                                else
-                                    $s2++;
-                            }
-                        }
-                        $smt1_counts[] = $s1;
-                        $smt2_counts[] = $s2;
-                    }
-                    $c_db->close();
-                }
-            } catch (Exception $e) {
-                // Ignore connection errors if database doesn't exist
-            }
-        }
-    }
-
-    $rank_labels = [];
-    $rank_values = [];
-    arsort($juara_stats);
-    foreach ($juara_stats as $key => $val) {
-        $rank_labels[] = "Juara " . $key;
-        $rank_values[] = $val;
-    }
-
-    // =====================================================================
-// Data dropdown Tahun Pelajaran untuk Grafik Rata-rata Nilai
-// =====================================================================
-    $tp_list = [];
-    $q_tp = mysqli_query($sqlconn, "SELECT dbname, tahun FROM dbset ORDER BY tahun DESC");
-    if ($q_tp) {
-        while ($r_tp = mysqli_fetch_assoc($q_tp)) {
-            $tp_list[] = $r_tp;
-        }
-    }
-    ?>
-
     <!-- Panels row: Welcome, History Log | User Online + Statistics -->
     <div class="row">
+
 
         <!-- Left col -->
         <section class="col-lg-5 connectedSortable">
 
             <!-- Welcome Card -->
             <div class="card">
-                <div class="card-header bg-menu-gradient">
-                    <div class="card-tools">
-                        <button type="button" class="btn btn-tool" data-card-widget="collapse">
-                            <i class="fas fa-minus"></i>
-                        </button>
-                    </div>
-                    <h4 class="card-title">
-                        <i class="fas fa-chart-pie mr-1"></i>
-                        Selamat Datang, <b><?php echo $nama; ?></b>
-                    </h4>
+                <div class="card-header box-shadow-0 bg-gradient-x-info">
+                    <h5 class="card-title text-white">Selamat Datang, <b><?php echo $nama; ?></b></h5>
                 </div>
                 <div class="card-body border">
                     <div class="card">
                         <div class="card-header border">
-                            <b class="card-title"><i class="fas fa-info-circle mr-1"></i> &nbsp;Informasi
-                                Terbaru</b>
+                            <h5 class="font-weight-bold"><i class="fas fa-info-circle mr-1"></i> &nbsp;Informasi Terbaru</h5>
                         </div>
                         <div class="card-body border">
-                            Harap Teliti Sebelum Menginput Prestasi Siswa Terima Kasih
+                            Harap Teliti Sebelum Menginput Prestasi Siswa. Terima Kasih.
                         </div>
                     </div>
                 </div>
@@ -271,40 +111,30 @@ include "cfg/secure.php";
 
             <!-- History Log Card -->
             <div class="card direct-chat">
-                <div class="card-header bg-menu-gradient">
-                    <h3 class="card-title">
-                        <i class="fas fa-history mr-1"></i> History Log
-                    </h3>
-                    <div class="card-tools">
-                        <button type="button" class="btn btn-tool" data-card-widget="collapse">
-                            <i class="fas fa-minus"></i>
-                        </button>
-                    </div>
+                <div class="card-header box-shadow-0 bg-gradient-x-info">
+                    <h5 class="card-title text-white">History Log</h5>
                 </div>
                 <div class="card-body">
                     <div class="direct-chat-messages">
                         <?php
-                        if (isset($log1) && isset($log5)) {
-                            $i = isset($log5['n1']) ? $log5['n1'] : 0;
-                            while ($log2 = mysqli_fetch_array($log1)) {
-                                ?>
-                                <div class="direct-chat-msg">
-                                    <div class="direct-chat-infos clearfix">
-                                        <span
-                                            class="direct-chat-name float-left"><?php echo htmlspecialchars($log2['nama']); ?></span>
-                                        <span class="direct-chat-timestamp float-right"><?php echo $log2['waktu']; ?></span>
+                            if (isset($log1) && $log1 && mysqli_num_rows($log1) > 0) {
+                                while ($log2 = mysqli_fetch_array($log1)) {
+                        ?>
+                                    <div class="direct-chat-msg">
+                                        <div class="direct-chat-infos clearfix">
+                                            <span class="direct-chat-name float-left"><?php echo htmlspecialchars($log2['nama']); ?></span>
+                                            <span class="direct-chat-timestamp float-right"><?php echo $log2['waktu']; ?></span>
+                                        </div>
+                                        <img class="direct-chat-img" src="images/info.png" alt="message user image">
+                                        <div class="direct-chat-text">
+                                            <?php echo htmlspecialchars($log2['info']); ?>
+                                        </div>
                                     </div>
-                                    <img class="direct-chat-img" src="images/info.png" alt="message user image">
-                                    <div class="direct-chat-text">
-                                        <?php echo htmlspecialchars($log2['info']); ?>
-                                    </div>
-                                </div>
-                                <?php
-                                $i--;
+                        <?php
+                                }
+                            } else {
+                                echo '<div class="p-3 text-center text-muted">No history logs available</div>';
                             }
-                        } else {
-                            echo '<div class="p-3 text-center text-muted">No history logs available</div>';
-                        }
                         ?>
                     </div>
                 </div>
@@ -315,128 +145,11 @@ include "cfg/secure.php";
         <!-- /.Left col -->
 
         <!-- Right col -->
-        <section class="col-lg-5 connectedSortable">
-
-            <!-- User Online Card 
-            <div class="card mb-3">
-                <div class="card-header bg-menu-gradient">
-                    <h3 class="card-title">
-                        <i class="fas fa-users mr-1"></i> User Online
-                    </h3>
-                    <?php
-                    $timeout = 300;
-                    $current_time = time();
-
-                    if (isset($sqlconn) && $sqlconn) {
-                        $check_col = mysqli_query($sqlconn, "SHOW COLUMNS FROM usera LIKE 'userid'");
-                        $user_col = ($check_col && mysqli_num_rows($check_col) > 0) ? 'userid' : 'username';
-
-                        if (isset($_SESSION['skradm'])) {
-                            $user_id_txn = $_SESSION['skradm'];
-                            $upd = mysqli_query($sqlconn, "UPDATE usera SET last_activity = '$current_time' WHERE $user_col = '$user_id_txn'");
-                            if (!$upd) {
-                                $db_error = "Error updating status. " . mysqli_error($sqlconn);
-                            }
-                        }
-
-                        $page = isset($_GET['online_page']) ? (int) $_GET['online_page'] : 1;
-                        $limit = 5;
-                        $offset = ($page - 1) * $limit;
-
-                        $online_count = 0;
-                        $count_query = mysqli_query($sqlconn, "SELECT COUNT(*) as total FROM usera WHERE last_activity > ($current_time - $timeout)");
-                        if ($count_query) {
-                            $row = mysqli_fetch_assoc($count_query);
-                            $online_count = $row['total'];
-                        } else {
-                            $db_error = mysqli_error($sqlconn);
-                        }
-                        $total_pages = ceil($online_count / $limit);
-                    } else {
-                        $online_count = 0;
-                        $total_pages = 0;
-                        $db_error = "Database connection not available.";
-                    }
-                    ?>
-                    <div class="card-tools">
-                        <span class="badge badge-light"
-                            title="<?php echo $online_count; ?> Users Online"><?php echo $online_count; ?></span>
-                        <button type="button" class="btn btn-tool" data-card-widget="collapse">
-                            <i class="fas fa-minus"></i>
-                        </button>
-                    </div>
-                </div>
-                <div class="card-body p-0">
-                    <ul class="nav flex-column">
-                        <?php
-                        if (isset($db_error)) {
-                            echo '<li class="nav-item p-3 text-danger">';
-                            echo '<strong>Database Error:</strong> ' . htmlspecialchars($db_error) . '<br>';
-                            if (strpos($db_error, 'Unknown column') !== false) {
-                                echo '<small>Tabel <code>usera</code> tidak memiliki kolom <code>last_activity</code>.<br>Jalankan: <code>ALTER TABLE usera ADD COLUMN last_activity INT(11);</code></small>';
-                            }
-                            echo '</li>';
-                        } else {
-                            $query_online = mysqli_query($sqlconn, "SELECT * FROM usera WHERE last_activity > ($current_time - $timeout) ORDER BY last_activity DESC LIMIT $limit OFFSET $offset");
-                            if ($query_online && mysqli_num_rows($query_online) > 0) {
-                                while ($user = mysqli_fetch_assoc($query_online)) {
-                                    $display_time = date('H:i', strtotime($user['lastlogin']));
-                                    ?>
-                                    <li class="nav-item user-list-item">
-                                        <div class="user-info d-flex align-items-center">
-                                            <span class="online-indicator" title="Online"></span>
-                                            <div class="d-flex flex-column ml-2">
-                                                <span class="font-weight-bold"
-                                                    style="line-height: 1.2;"><?php echo htmlspecialchars($user['nama']); ?></span>
-                                                <small class="text-muted mt-1">
-                                                    <span class="badge badge-success user-role-badge"
-                                                        style="font-size: 12px; padding: 2px 5px;">
-                                                        <?php echo ($user['level'] == '1') ? 'ADMIN' : 'STAFF'; ?>
-                                                    </span>
-                                                </small>
-                                            </div>
-                                        </div>
-                                        <small class="text-muted"><i
-                                                class="far fa-clock mr-1"></i><?php echo $display_time; ?></small>
-                                    </li>
-                                    <?php
-                                }
-                            } else {
-                                echo '<li class="nav-item p-3 text-center text-muted">No users online right now.</li>';
-                            }
-                        }
-                        ?>
-                    </ul>
-                </div>
-                <?php if (!isset($db_error) && $online_count > 0): ?>
-                    <div class="card-footer clearfix">
-                        <ul class="pagination pagination-sm m-0 float-right">
-                            <li class="page-item <?php echo ($page <= 1) ? 'disabled' : ''; ?>">
-                                <a class="page-link" href="?online_page=<?php echo $page - 1; ?>">&laquo;</a>
-                            </li>
-                            <li class="page-item disabled">
-                                <a class="page-link" href="#">Hal <?php echo $page; ?> /
-                                    <?php echo ($total_pages > 0 ? $total_pages : 1); ?></a>
-                            </li>
-                            <li class="page-item <?php echo ($page >= $total_pages) ? 'disabled' : ''; ?>">
-                                <a class="page-link" href="?online_page=<?php echo $page + 1; ?>">&raquo;</a>
-                            </li>
-                        </ul>
-                    </div>
-                    <?php
-                endif; ?>
-            </div>
-            <!-- /.User Online Card -->
-
-
+        <section class="col-lg-7 connectedSortable">
             <!-- Grafik Juara Berprestasi -->
             <div class="card">
-                <div class="card-header bg-menu-gradient">
-                    <h3 class="card-title"><i class="fas fa-trophy mr-1"></i> Grafik Siswa Berprestasi</h3>
-                    <div class="card-tools">
-                        <button type="button" class="btn btn-tool" data-card-widget="collapse"><i
-                                class="fas fa-minus"></i></button>
-                    </div>
+                <div class="card-header box-shadow-0 bg-gradient-x-info">
+                    <h5 class="card-title text-white">Grafik Siswa Berprestasi</h5>
                 </div>
                 <div class="card-body">
                     <!-- Filter Row -->

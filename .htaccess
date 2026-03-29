@@ -5,8 +5,8 @@
     Header set Access-Control-Allow-Headers "Content-Type"
 </IfModule>
 
-# Disable directory listing
-Options -Indexes
+# Disable directory listing & MultiViews (prevent direct PHP file resolution)
+Options -Indexes -MultiViews
 
 # Pretty URLs
 <IfModule mod_rewrite.c>

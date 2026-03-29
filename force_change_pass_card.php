@@ -76,19 +76,20 @@
             
             <form id="formForceChangePassCard">
                 <!-- Hidden field for Old Password logic -->
-                <?php 
-                $valPassL = 'smpn171**';
-                $default_pass = 'smpn171**';
-                
-                // Deterministic check for the old password to match backend verification
-                if (isset($passworddb)) {
-                    if (password_verify($default_pass, $passworddb) || $passworddb === md5($default_pass)) {
-                        $valPassL = $default_pass;
-                    } elseif (isset($user) && (password_verify($user, $passworddb) || $passworddb === md5($user))) {
-                        $valPassL = $user;
-                    }
-                }
-                ?>
+                <?php
+$valPassL = 'smpn171**';
+$default_pass = 'smpn171**';
+
+// Deterministic check for the old password to match backend verification
+if (isset($passworddb)) {
+    if (password_verify($default_pass, $passworddb) || $passworddb === md5($default_pass)) {
+        $valPassL = $default_pass;
+    }
+    elseif (isset($user) && (password_verify($user, $passworddb) || $passworddb === md5($user))) {
+        $valPassL = $user;
+    }
+}
+?>
                 <input type="hidden" id="cardPassL" name="passL" value="<?php echo htmlspecialchars($valPassL); ?>">
                 
                 <div class="mb-3">
@@ -254,7 +255,7 @@ $(document).ready(function() {
                     // Success!
                     toastr.success('Password berhasil diubah. Mengalihkan ke halaman login...');
                     setTimeout(function() {
-                        window.location.href = 'ceklogout.php';
+                        window.location.href = 'exit.php';
                     }, 3000);
                 } else if (response === '6') { 
                     toastr.error('Password lama salah/tidak valid. Silakan hubungi admin.');

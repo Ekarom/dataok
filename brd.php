@@ -686,9 +686,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['action'])) {
     <section class="content">
         <div class="row">
             <div class="col-12">
-                <div class="card">
-                    <div class="card-header bg-menu-gradient">
-                        <b class="blinking-text">Jangan lupa Backup Database sebelum melakukan hal lain..!!!</b>
+                <div class="card shadow-sm border-0 mb-4">
+                    <div class="card-header box-shadow-0 bg-gradient-x-info">
+                        <h5 class="card-title text-white mb-0 blinking-text">Jangan lupa Backup Database sebelum melakukan hal lain..!!!</h5>
                     </div>
                     <!-- /.panel-heading -->
 
@@ -705,8 +705,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['action'])) {
                         }
                         ?>
 
-                    <div class="card card-primary card-tabs">
-                        <div class="card-header bg-menu-gradient p-0 pt-1 border-bottom-0">
+                    <div class="card card-primary card-tabs shadow-sm border-0">
+                        <div class="card-header box-shadow-0 bg-gradient-x-info p-0 pt-1 border-bottom-0">
                                 <ul class="nav nav-tabs" id="custom-tabs-three-tab" role="tablist">
                                     <li class="nav-item">
                                         <a class="nav-link" id="dbset-tab-link" data-toggle="pill" href="#dbset"

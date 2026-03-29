@@ -17,33 +17,36 @@ $db_conn = new mysqli($server, $username, $password, $database);
 
 $db_list = [];
 if ($db_conn->connect_error) {
-  $db_list[] = ["name" => "Koneksi Gagal", "display" => "Koneksi DB Gagal"];
-} else {
-  // Ambil daftar database
-  $result = $db_conn->query("SHOW DATABASES");
-  if ($result) {
-    while ($row = $result->fetch_array(MYSQLI_NUM)) {
-      $db_name = $row[0];
-      // Filter database yang berawalan 'pnet_pd' atau 'dnet_ad' (Maintain compatibility)
-      if (strpos($db_name, 'dnet_ad') === 0) {
-        // Display adjustment
-        if (strpos($db_name, 'dnet_ad') === 0) {
-            $display_name = substr($db_name, 7);
-            if (substr($display_name, 0, 1) === '_') $display_name = substr($display_name, 1);
-        }
+    $db_list[] = ["name" => "Koneksi Gagal", "display" => "Koneksi DB Gagal"];
+}
+else {
+    // Ambil daftar database
+    $result = $db_conn->query("SHOW DATABASES");
+    if ($result) {
+        while ($row = $result->fetch_array(MYSQLI_NUM)) {
+            $db_name = $row[0];
+            // Filter database yang berawalan 'pnet_pd' atau 'dnet_ad' (Maintain compatibility)
+            if (strpos($db_name, 'dnet_ad') === 0) {
+                // Display adjustment
+                if (strpos($db_name, 'dnet_ad') === 0) {
+                    $display_name = substr($db_name, 7);
+                    if (substr($display_name, 0, 1) === '_')
+                        $display_name = substr($display_name, 1);
+                }
 
-        if (empty($display_name)) {
-          $display_name = $db_name;
-        } else {
-             if (is_numeric($display_name) && strlen($display_name) == 4) {
-                 $display_name = $display_name . "/" . ($display_name + 1);
-             }
+                if (empty($display_name)) {
+                    $display_name = $db_name;
+                }
+                else {
+                    if (is_numeric($display_name) && strlen($display_name) == 4) {
+                        $display_name = $display_name . "/" . ($display_name + 1);
+                    }
+                }
+                $db_list[] = ["name" => $db_name, "display" => $display_name];
+            }
         }
-        $db_list[] = ["name" => $db_name, "display" => $display_name];
-      }
     }
-  }
-  $db_conn->close();
+    $db_conn->close();
 }
 
 // Ensure Connection is available for profile info (logo, etc)
@@ -56,7 +59,8 @@ $remaining_seconds = 0;
 $ip_address = $_SERVER['REMOTE_ADDR'];
 if (!empty($_SERVER['HTTP_CLIENT_IP'])) {
     $ip_address = $_SERVER['HTTP_CLIENT_IP'];
-} elseif (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
+}
+elseif (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
     $ip_address = $_SERVER['HTTP_X_FORWARDED_FOR'];
 }
 $ip_address = mysqli_real_escape_string($sqlconn, $ip_address);
@@ -94,7 +98,7 @@ if ($check_table && mysqli_num_rows($check_table) > 0) {
     
     <!-- Styles -->
     <link rel="stylesheet" type="text/css" href="plugins/css/util.css">
-    <link rel="stylesheet" type="text/css" href="plugins/css/main.css">
+    <link rel="stylesheet" type="text/css" href="plugins/css/main2.css">
     
     <!-- Scripts -->
     <script src="https://www.google.com/recaptcha/api.js" async defer></script>
@@ -294,7 +298,8 @@ if ($check_table && mysqli_num_rows($check_table) > 0) {
                                 <option value="<?php echo htmlspecialchars($db_item['name']); ?>">
                                     <?php echo htmlspecialchars($db_item['display']); ?>
                                 </option>
-                            <?php endforeach; ?>
+                            <?php
+endforeach; ?>
                         </select>
                     </div>
 
@@ -323,20 +328,20 @@ if ($check_table && mysqli_num_rows($check_table) > 0) {
 
 // Pastikan tidak ada spasi sebelum tag php
 
-        if($is_blocked || (isset($_GET['salah']) && $_GET['salah'] == 3)){
-            // --- KASUS 1: user diblokir ---
-                // Ambil waktu tunggu dari URL parameter 't' atau dari deteksi IP
-                $wait_time = isset($_GET['wait']) ? (int)$_GET['wait'] : (isset($_GET['t']) ? (int)$_GET['t'] : $remaining_seconds);
-                $minutes = floor($wait_time / 60);
-                $seconds = $wait_time % 60;
-                $sPadded = $seconds < 10 ? '0' . $seconds : $seconds;
+if ($is_blocked || (isset($_GET['salah']) && $_GET['salah'] == 3)) {
+    // --- KASUS 1: user diblokir ---
+    // Ambil waktu tunggu dari URL parameter 't' atau dari deteksi IP
+    $wait_time = isset($_GET['wait']) ? (int)$_GET['wait'] : (isset($_GET['t']) ? (int)$_GET['t'] : $remaining_seconds);
+    $minutes = floor($wait_time / 60);
+    $seconds = $wait_time % 60;
+    $sPadded = $seconds < 10 ? '0' . $seconds : $seconds;
 
-                echo "<div class='error-gradient-border' style='color: red; padding: 10px; border: 1px solid red; background: #ffe6e6; margin-bottom: 10px;'>
+    echo "<div class='error-gradient-border' style='color: red; padding: 10px; border: 1px solid red; background: #ffe6e6; margin-bottom: 10px;'>
                         <strong>AKSES DIBLOKIR!</strong><br>
                         Anda salah memasukkan password sebanyak 3x.<br>
                         Silahkan tunggu: <span id='countdown' style='font-weight:bold; font-size:1.2em;'>$minutes menit $sPadded detik</span>
                       </div>";
-                echo "<script>
+    echo "<script>
                     var timeLeft = $wait_time;
                     var elem = document.getElementById('countdown');
                     var loginBtn = document.getElementById('login-btn');
@@ -361,59 +366,59 @@ if ($check_table && mysqli_num_rows($check_table) > 0) {
                         }
                     }, 1000);
                 </script>";
-        }
-        elseif(isset($_GET['salah'])){
-            // --- KASUS 2: Error umum/akses langsung (salah=2) ---
-            if($_GET['salah'] == 2){
-                echo "<div class='error-gradient-border' style='color: red; padding: 10px;'><strong>Error!</strong> Akses tidak valid atau koneksi gagal.</div>";
-            }
-            // --- KASUS 3: Password salah, tapi belum diblokir (salah=1) ---
-            elseif($_GET['salah'] == 1){
-                // Ambil sisa percobaan dari URL parameter 'sisa'
-                $remaining = isset($_GET['attempts']) ? (int)$_GET['attempts'] : (isset($_GET['sisa']) ? (int)$_GET['sisa'] : 0);
-                echo "<div class='error-gradient-border' style='color: orange; padding: 10px; border: 1px solid orange; background: #fff8e1; margin-bottom: 10px;'>
+}
+elseif (isset($_GET['salah'])) {
+    // --- KASUS 2: Error umum/akses langsung (salah=2) ---
+    if ($_GET['salah'] == 2) {
+        echo "<div class='error-gradient-border' style='color: red; padding: 10px;'><strong>Error!</strong> Akses tidak valid atau koneksi gagal.</div>";
+    }
+    // --- KASUS 3: Password salah, tapi belum diblokir (salah=1) ---
+    elseif ($_GET['salah'] == 1) {
+        // Ambil sisa percobaan dari URL parameter 'sisa'
+        $remaining = isset($_GET['attempts']) ? (int)$_GET['attempts'] : (isset($_GET['sisa']) ? (int)$_GET['sisa'] : 0);
+        echo "<div class='error-gradient-border' style='color: orange; padding: 10px; border: 1px solid orange; background: #fff8e1; margin-bottom: 10px;'>
                         <strong>LOGIN GAGAL!</strong><br>
                         Username atau Password salah.<br>
                         Sisa percobaan: <strong>$remaining kali</strong> lagi sebelum diblokir selama 5 menit.
                       </div>";
-            }
-            // --- KASUS 4: reCAPTCHA tidak dicentang (salah=4) ---
-            elseif($_GET['salah'] == 4){
-                echo "<div class='error-gradient-border' style='color: red; padding: 10px; border: 1px solid red; background: #ffe6e6; margin-bottom: 10px;'>
+    }
+    // --- KASUS 4: reCAPTCHA tidak dicentang (salah=4) ---
+    elseif ($_GET['salah'] == 4) {
+        echo "<div class='error-gradient-border' style='color: red; padding: 10px; border: 1px solid red; background: #ffe6e6; margin-bottom: 10px;'>
                         <strong>VERIFIKASI DIPERLUKAN!</strong><br>
                         Silakan centang kotak 'I'm not a robot' untuk melanjutkan.
                       </div>";
-            }
-            // --- KASUS 5: reCAPTCHA verifikasi gagal (salah=5) ---
-            elseif($_GET['salah'] == 5){
-                echo "<div class='error-gradient-border' style='color: red; padding: 10px; border: 1px solid red; background: #ffe6e6; margin-bottom: 10px;'>
+    }
+    // --- KASUS 5: reCAPTCHA verifikasi gagal (salah=5) ---
+    elseif ($_GET['salah'] == 5) {
+        echo "<div class='error-gradient-border' style='color: red; padding: 10px; border: 1px solid red; background: #ffe6e6; margin-bottom: 10px;'>
                         <strong>VERIFIKASI GAGAL!</strong><br>
                         Verifikasi reCAPTCHA gagal. Silakan coba lagi.
                       </div>";
-            }
-            // --- KASUS 6: reCAPTCHA connection error (salah=6) ---
-            elseif($_GET['salah'] == 6){
-                echo "<div class='error-gradient-border' style='color: red; padding: 10px; border: 1px solid red; background: #ffe6e6; margin-bottom: 10px;'>
+    }
+    // --- KASUS 6: reCAPTCHA connection error (salah=6) ---
+    elseif ($_GET['salah'] == 6) {
+        echo "<div class='error-gradient-border' style='color: red; padding: 10px; border: 1px solid red; background: #ffe6e6; margin-bottom: 10px;'>
                         <strong>KONEKSI GAGAL!</strong><br>
                         Tidak dapat menghubungi server verifikasi. Silakan coba lagi.
                       </div>";
-            }
-            // --- KASUS 7: Barcode belum discan (salah=7) ---
-            elseif($_GET['salah'] == 7){
-                echo "<div class='error-gradient-border' style='color: red; padding: 10px; border: 1px solid red; background: #ffe6e6; margin-bottom: 10px;'>
+    }
+    // --- KASUS 7: Barcode belum discan (salah=7) ---
+    elseif ($_GET['salah'] == 7) {
+        echo "<div class='error-gradient-border' style='color: red; padding: 10px; border: 1px solid red; background: #ffe6e6; margin-bottom: 10px;'>
                         <strong>SCAN BARCODE DIPERLUKAN!</strong><br>
                         Silakan scan barcode terlebih dahulu sebelum login.
                       </div>";
-            }
-            // --- KASUS 8: Database tidak dipilih (salah=8) ---
-            elseif($_GET['salah'] == 8){
-                echo "<div class='error-gradient-border' style='color: orange; padding: 10px; border: 1px solid orange; background: #fff8e1; margin-bottom: 10px;'>
+    }
+    // --- KASUS 8: Database tidak dipilih (salah=8) ---
+    elseif ($_GET['salah'] == 8) {
+        echo "<div class='error-gradient-border' style='color: orange; padding: 10px; border: 1px solid orange; background: #fff8e1; margin-bottom: 10px;'>
                         <strong>DATABASE BELUM DIPILIH!</strong><br>
                         Silakan pilih tahun database terlebih dahulu.
                       </div>";
-            }
-           
-        }
+    }
+
+}
 
 
 ?>

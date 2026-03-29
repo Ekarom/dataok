@@ -58,7 +58,7 @@ if (!is_numeric($user_id)) {
 }
 
 // Check if user exists
-$check_query = mysqli_query($sqlconn, "SELECT status, userid FROM usera WHERE id = '$user_id'");
+$check_query = mysqli_query($sqlconn, "SELECT status, userid, nama FROM usera WHERE id = '$user_id'");
 
 if (!$check_query) {
     $response['message'] = 'Database query error: ' . mysqli_error($sqlconn);
@@ -82,14 +82,16 @@ $update_query = mysqli_query($sqlconn, "UPDATE usera SET status = '$new_status' 
 
 if ($update_query) {
     // Log the action
-    $status_text = ($new_status == "1") ? "Active" : "Inactive";
-    write_log("EDIT", "Changed user status ID: $user_id to $status_text");
-    
+    $status_text = ($new_status == "1") ? "Aktif" : "Non-Aktif";
+    $userid_target = $user_data['nama'] ?? $user_data['userid'];
+    write_log("EDIT", "User: $userid_target - Berhasil Di Ubah Status Menjadi $status_text");
+
     // Prepare success response
     $response['success'] = true;
     $response['new_status'] = (int)$new_status;
-    $response['message'] = 'User status successfully changed to ' . $status_text;
-} else {
+    $response['message'] = "User: $userid_target - Berhasil Di Ubah Status Menjadi $status_text";
+}
+else {
     $response['message'] = 'Failed to update status: ' . mysqli_error($sqlconn);
 }
 

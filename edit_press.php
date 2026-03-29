@@ -190,9 +190,9 @@ if (isset($_REQUEST['urut'])) {
 
                     <!-- Input Form Column -->
                     <div class="col-md-8">
-                        <div class="card h-100">
-                            <div class="card-header bg-menu-gradient d-flex align-items-center">
-                                <h3 class="card-title text-white">Edit Prestasi</h3>
+                        <div class="card shadow-sm border-0 h-100">
+                            <div class="card-header box-shadow-0 bg-gradient-x-info d-flex align-items-center">
+                                <h5 class="card-title text-white">Edit Prestasi</h5>
                                 <div class="card-tools ml-auto">
                                     <a href="arsipdata/inputprestasi" class="btn btn-warning btn-sm rounded-pill">
                                         <i class="fa fa-arrow-left mr-1"></i> Kembali

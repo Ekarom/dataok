@@ -7,18 +7,15 @@
  	Author: PIXINVENT
  	Author URL: http://www.themeforest.net/user/pixinvent
  ================================================================================================ */
-
-
 /* Feather icons */
 @font-face {
     font-family: feather;
     src: url(https://pixinvent.com/modern-admin-clean-bootstrap-4-dashboard-html-template/app-assets/vendors/fonts/feather.eot?t=1525787366991);
-    src: url(https://pixinvent.com/modern-admin-clean-bootstrap-4-dashboard-html-template/app-assets/vendors/fonts/feather.eot?t=1525787366991#iefix) format('embedded-opentype'), url(https://pixinvent.com/modern-admin-clean-bootstrap-4-dashboard-html-template/app-assets/fonts/feather/fonts/feather.woff?9xfrq8) format('woff'), url(https://pixinvent.com/modern-admin-clean-bootstrap-4-dashboard-html-template/app-assets/fonts/feather.ttf?t=1525787366991) format('truetype'), url(https://pixinvent.com/modern-admin-clean-bootstrap-4-dashboard-html-template/app-assets/fonts/feather.svg?t=1525787366991#feather) format('svg')
+    src: url(https://pixinvent.com/modern-admin-clean-bootstrap-4-dashboard-html-template/app-assets/vendors/fonts/feather.eot?t=1525787366991#iefix) format('embedded-opentype'),url(https://pixinvent.com/modern-admin-clean-bootstrap-4-dashboard-html-template/app-assets/fonts/feather/fonts/feather.woff?9xfrq8) format('woff'),url(https://pixinvent.com/modern-admin-clean-bootstrap-4-dashboard-html-template/app-assets/fonts/feather.ttf?t=1525787366991) format('truetype'),url(https://pixinvent.com/modern-admin-clean-bootstrap-4-dashboard-html-template/app-assets/fonts/feather.svg?t=1525787366991#feather) format('svg')
 }
 
-[class*=" ft-"],
-[class^=ft-] {
-    font-family: feather !important;
+[class*=" ft-"],[class^=ft-] {
+    font-family: feather!important;
     speak: none;
     font-style: normal;
     font-weight: 400;
@@ -1123,27 +1120,25 @@
  *
  * Made with love by Icons8 [ https://icons8.com/ ] using FontCustom [ https://github.com/FontCustom/fontcustom ]
  */
-.la,
-.la-stack {
+.la,.la-stack {
     display: inline-block
 }
 
-.la-fw,
-.la-li {
+.la-fw,.la-li {
     text-align: center
 }
 
 @font-face {
     font-family: LineAwesome;
     src: url(https://pixinvent.com/modern-admin-clean-bootstrap-4-dashboard-html-template/app-assets/fonts/line-awesome/fonts/line-awesome.eot?v=1.1.);
-    src: url(https://pixinvent.com/modern-admin-clean-bootstrap-4-dashboard-html-template/app-assets/fonts/line-awesome/fonts/line-awesome.eot??v=1.1.#iefix) format("embedded-opentype"), url(https://pixinvent.com/modern-admin-clean-bootstrap-4-dashboard-html-template/app-assets/fonts/line-awesome/fonts/line-awesome.woff2?v=1.1.) format("woff2"), url(https://pixinvent.com/modern-admin-clean-bootstrap-4-dashboard-html-template/app-assets/fonts/line-awesome/fonts/line-awesome.woff?v=1.1.) format("woff"), url(https://pixinvent.com/modern-admin-clean-bootstrap-4-dashboard-html-template/app-assets/fonts/line-awesome/fonts/line-awesome.ttf?v=1.1.) format("truetype"), url(https://pixinvent.com/modern-admin-clean-bootstrap-4-dashboard-html-template/app-assets/fonts/line-awesome/fonts/line-awesome.svg?v=1.1.#fa) format("svg");
+    src: url(https://pixinvent.com/modern-admin-clean-bootstrap-4-dashboard-html-template/app-assets/fonts/line-awesome/fonts/line-awesome.eot??v=1.1.#iefix) format("embedded-opentype"),url(https://pixinvent.com/modern-admin-clean-bootstrap-4-dashboard-html-template/app-assets/fonts/line-awesome/fonts/line-awesome.woff2?v=1.1.) format("woff2"),url(https://pixinvent.com/modern-admin-clean-bootstrap-4-dashboard-html-template/app-assets/fonts/line-awesome/fonts/line-awesome.woff?v=1.1.) format("woff"),url(https://pixinvent.com/modern-admin-clean-bootstrap-4-dashboard-html-template/app-assets/fonts/line-awesome/fonts/line-awesome.ttf?v=1.1.) format("truetype"),url(https://pixinvent.com/modern-admin-clean-bootstrap-4-dashboard-html-template/app-assets/fonts/line-awesome/fonts/line-awesome.svg?v=1.1.#fa) format("svg");
     font-weight: 400;
     font-style: normal
 }
 
-@media screen and (-webkit-min-device-pixel-ratio:0) {
+@media screen and (-webkit-min-device-pixel-ratio: 0) {
     @font-face {
-        font-family: LineAwesome;
+        font-family:LineAwesome;
         src: url(https://pixinvent.com/modern-admin-clean-bootstrap-4-dashboard-html-template/app-assets/fonts/line-awesome/fonts/line-awesome.svg?v=1.1.#fa) format("svg")
     }
 }
@@ -1280,23 +1275,19 @@
 
 .la-flip-horizontal {
     filter: progid:DXImageTransform.Microsoft.BasicImage(rotation=0, mirror=1);
-    -webkit-transform: scale(-1, 1);
-    -ms-transform: scale(-1, 1);
-    transform: scale(-1, 1)
+    -webkit-transform: scale(-1,1);
+    -ms-transform: scale(-1,1);
+    transform: scale(-1,1)
 }
 
 .la-flip-vertical {
     filter: progid:DXImageTransform.Microsoft.BasicImage(rotation=2, mirror=1);
-    -webkit-transform: scale(1, -1);
-    -ms-transform: scale(1, -1);
-    transform: scale(1, -1)
+    -webkit-transform: scale(1,-1);
+    -ms-transform: scale(1,-1);
+    transform: scale(1,-1)
 }
 
-:root .la-flip-horizontal,
-:root .la-flip-vertical,
-:root .la-rotate-180,
-:root .la-rotate-270,
-:root .la-rotate-90 {
+:root .la-flip-horizontal,:root .la-flip-vertical,:root .la-rotate-180,:root .la-rotate-270,:root .la-rotate-90 {
     filter: none
 }
 
@@ -1308,8 +1299,7 @@
     vertical-align: middle
 }
 
-.la-stack-1x,
-.la-stack-2x {
+.la-stack-1x,.la-stack-2x {
     position: absolute;
     left: 0;
     width: 100%;
@@ -1744,23 +1734,19 @@
     content: "\f167"
 }
 
-.la-caret-square-o-down:before,
-.la-toggle-down:before {
+.la-caret-square-o-down:before,.la-toggle-down:before {
     content: "\f168"
 }
 
-.la-caret-square-o-left:before,
-.la-toggle-left:before {
+.la-caret-square-o-left:before,.la-toggle-left:before {
     content: "\f169"
 }
 
-.la-caret-square-o-right:before,
-.la-toggle-right:before {
+.la-caret-square-o-right:before,.la-toggle-right:before {
     content: "\f16a"
 }
 
-.la-caret-square-o-up:before,
-.la-toggle-up:before {
+.la-caret-square-o-up:before,.la-toggle-up:before {
     content: "\f16b"
 }
 
@@ -2120,8 +2106,7 @@
     content: "\f1c4"
 }
 
-.la-empire:before,
-.la-ge:before {
+.la-empire:before,.la-ge:before {
     content: "\f1c5"
 }
 
@@ -2193,8 +2178,7 @@
     content: "\f1d6"
 }
 
-.la-facebook-f:before,
-.la-facebook:before {
+.la-facebook-f:before,.la-facebook:before {
     content: "\f1d7"
 }
 
@@ -2390,8 +2374,7 @@
     content: "\f207"
 }
 
-.la-futbol-o:before,
-.la-soccer-ball-o:before {
+.la-futbol-o:before,.la-soccer-ball-o:before {
     content: "\f208"
 }
 
@@ -2483,8 +2466,7 @@
     content: "\f21e"
 }
 
-.la-gittip:before,
-.la-gratipay:before {
+.la-gittip:before,.la-gratipay:before {
     content: "\f21f"
 }
 
@@ -2760,8 +2742,7 @@
     content: "\f263"
 }
 
-.la-life-ring:before,
-.la-support:before {
+.la-life-ring:before,.la-support:before {
     content: "\f264"
 }
 
@@ -3033,13 +3014,11 @@
     content: "\f2a7"
 }
 
-.la-paper-plane:before,
-.la-send:before {
+.la-paper-plane:before,.la-send:before {
     content: "\f2a8"
 }
 
-.la-paper-plane-o:before,
-.la-send-o:before {
+.la-paper-plane-o:before,.la-send-o:before {
     content: "\f2a9"
 }
 
@@ -3271,8 +3250,7 @@
     content: "\f2e2"
 }
 
-.la-feed:before,
-.la-rss:before {
+.la-feed:before,.la-rss:before {
     content: "\f2e3"
 }
 
@@ -3412,8 +3390,7 @@
     content: "\f305"
 }
 
-.la-sort:before,
-.la-unsorted:before {
+.la-sort:before,.la-unsorted:before {
     content: "\f306"
 }
 
@@ -3433,13 +3410,11 @@
     content: "\f30a"
 }
 
-.la-sort-asc:before,
-.la-sort-up:before {
+.la-sort-asc:before,.la-sort-up:before {
     content: "\f30b"
 }
 
-.la-sort-desc:before,
-.la-sort-down:before {
+.la-sort-desc:before,.la-sort-down:before {
     content: "\f30c"
 }
 
@@ -3495,9 +3470,7 @@
     content: "\f319"
 }
 
-.la-star-half-empty:before,
-.la-star-half-full:before,
-.la-star-half-o:before {
+.la-star-half-empty:before,.la-star-half-full:before,.la-star-half-o:before {
     content: "\f31a"
 }
 
@@ -3601,8 +3574,7 @@
     content: "\f333"
 }
 
-.la-television:before,
-.la-tv:before {
+.la-television:before,.la-tv:before {
     content: "\f334"
 }
 
@@ -3658,8 +3630,7 @@
     content: "\f341"
 }
 
-.la-remove:before,
-.la-times:before {
+.la-remove:before,.la-times:before {
     content: "\f342"
 }
 
@@ -3691,8 +3662,7 @@
     content: "\f349"
 }
 
-.la-intersex:before,
-.la-transgender:before {
+.la-intersex:before,.la-transgender:before {
     content: "\f34a"
 }
 
@@ -6073,15 +6043,14 @@
  * (c) 2018 Hyunje Jun
  * @license MIT
  */
-.ps__rail-x,
-.ps__rail-y {
+.ps__rail-x,.ps__rail-y {
     display: none;
     opacity: 0;
     position: absolute
 }
 
 .ps {
-    overflow: hidden !important;
+    overflow: hidden!important;
     overflow-anchor: none;
     -ms-overflow-style: none;
     touch-action: auto;
@@ -6089,88 +6058,71 @@
 }
 
 .ps__rail-x {
-    transition: background-color .2s linear, opacity .2s linear;
-    -webkit-transition: background-color .2s linear, opacity .2s linear;
+    transition: background-color .2s linear,opacity .2s linear;
+    -webkit-transition: background-color .2s linear,opacity .2s linear;
     height: 15px;
     bottom: 0
 }
 
 .ps__rail-y {
-    transition: background-color .2s linear, opacity .2s linear;
-    -webkit-transition: background-color .2s linear, opacity .2s linear;
+    transition: background-color .2s linear,opacity .2s linear;
+    -webkit-transition: background-color .2s linear,opacity .2s linear;
     width: 15px;
     right: 0
 }
 
-.ps--active-x>.ps__rail-x,
-.ps--active-y>.ps__rail-y {
+.ps--active-x>.ps__rail-x,.ps--active-y>.ps__rail-y {
     display: block;
     background-color: transparent
 }
 
-.ps--focus>.ps__rail-x,
-.ps--focus>.ps__rail-y,
-.ps--scrolling-x>.ps__rail-x,
-.ps--scrolling-y>.ps__rail-y,
-.ps:hover>.ps__rail-x,
-.ps:hover>.ps__rail-y {
+.ps--focus>.ps__rail-x,.ps--focus>.ps__rail-y,.ps--scrolling-x>.ps__rail-x,.ps--scrolling-y>.ps__rail-y,.ps:hover>.ps__rail-x,.ps:hover>.ps__rail-y {
     opacity: .6
 }
 
-.ps .ps__rail-x.ps--clicking,
-.ps .ps__rail-x:focus,
-.ps .ps__rail-x:hover,
-.ps .ps__rail-y.ps--clicking,
-.ps .ps__rail-y:focus,
-.ps .ps__rail-y:hover {
+.ps .ps__rail-x.ps--clicking,.ps .ps__rail-x:focus,.ps .ps__rail-x:hover,.ps .ps__rail-y.ps--clicking,.ps .ps__rail-y:focus,.ps .ps__rail-y:hover {
     background-color: #eee;
     opacity: .9
 }
 
-.ps__thumb-x,
-.ps__thumb-y {
+.ps__thumb-x,.ps__thumb-y {
     background-color: #aaa;
     border-radius: 6px;
     position: absolute
 }
 
 .ps__thumb-x {
-    transition: background-color .2s linear, height .2s ease-in-out;
-    -webkit-transition: background-color .2s linear, height .2s ease-in-out;
+    transition: background-color .2s linear,height .2s ease-in-out;
+    -webkit-transition: background-color .2s linear,height .2s ease-in-out;
     height: 6px;
     bottom: 2px
 }
 
 .ps__thumb-y {
-    transition: background-color .2s linear, width .2s ease-in-out;
-    -webkit-transition: background-color .2s linear, width .2s ease-in-out;
+    transition: background-color .2s linear,width .2s ease-in-out;
+    -webkit-transition: background-color .2s linear,width .2s ease-in-out;
     width: 6px;
     right: 2px
 }
 
-.ps__rail-x.ps--clicking .ps__thumb-x,
-.ps__rail-x:focus>.ps__thumb-x,
-.ps__rail-x:hover>.ps__thumb-x {
+.ps__rail-x.ps--clicking .ps__thumb-x,.ps__rail-x:focus>.ps__thumb-x,.ps__rail-x:hover>.ps__thumb-x {
     background-color: #999;
     height: 11px
 }
 
-.ps__rail-y.ps--clicking .ps__thumb-y,
-.ps__rail-y:focus>.ps__thumb-y,
-.ps__rail-y:hover>.ps__thumb-y {
+.ps__rail-y.ps--clicking .ps__thumb-y,.ps__rail-y:focus>.ps__thumb-y,.ps__rail-y:hover>.ps__thumb-y {
     background-color: #999;
     width: 11px
 }
 
-@supports (-ms-overflow-style:none) {
+@supports (-ms-overflow-style: none) {
     .ps {
-        overflow: auto !important
+        overflow:auto!important
     }
 }
 
-@media screen and (-ms-high-contrast:active),
-(-ms-high-contrast:none) {
+@media screen and (-ms-high-contrast:active),(-ms-high-contrast:none) {
     .ps {
-        overflow: auto !important
+        overflow: auto!important
     }
 }

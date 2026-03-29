@@ -13,10 +13,9 @@ function random_strings($length_of_string) {
         <div class="container-fluid">
             <div class="row justify-content-center">
                 <div class="col-md-8">
-                    <div class="card">
-                        <div class="card-header bg-menu-gradient">
-                            <h3 class="card-title">
-                            </h3>
+                    <div class="card shadow-sm border-0">
+                        <div class="card-header box-shadow-0 bg-gradient-x-info">
+                            <h5 class="card-title text-white">Import Data User</h5>
                         </div> 
                         
                         <div class="card-body">
@@ -71,7 +70,7 @@ function random_strings($length_of_string) {
 
                                 <?php
                                 include "excel_reader2.php";
-                                $data = new AbstractSpreadsheetReader($_FILES['userfile']['tmp_name']); // Assuming constructor name or alias
+                                $data = new Spreadsheet_Excel_Reader($_FILES['userfile']['tmp_name']);
                                 // **FIX**: The original file used `new __constructor`. `excel_reader2.php` usually defines `Spreadsheet_Excel_Reader`.
                                 // Let's check `excel_reader2.php` content later if this fails, but usually it's `Spreadsheet_Excel_Reader`.
                                 // However, keeping close to original logic but safer.

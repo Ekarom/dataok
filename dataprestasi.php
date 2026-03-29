@@ -6,17 +6,17 @@ include_once "cfg/konek.php";
     <div class="row">
         <div class="col-12">
             <div class="card">
-                <div class="card-header box-shadow-0 bg-gradient-x-warning">
-                    <h3 class="card-title">Data Prestasi Siswa</h3>
+                <div class="card-header box-shadow-0 bg-gradient-x-info">
+                    <h4 class="card-title text-white">Input Prestasi Peserta Didik</h4>
                 </div>
                 <div class="card-body">
-                    <table id="tableDataPrestasi" class="table table-striped table-hover" style="width:100%"> 
-                        <thead>
+<table class="table table-bordered" style="width:100%">
+                        <thead class="bg-gradient-x-secondary">
                             <tr>
                                 <th>No</th>
                                 <th>NIS</th>
                                 <th>NISN</th>
-                                <th>Nama Siswa</th>
+                                <th>Nama Peserta Didik</th>
                                 <th>Status</th>
                                 <th>Aksi</th>
                             </tr>
@@ -70,13 +70,15 @@ else {
     <!-- Global scripts provided by index.php -->
     <script>
         $(document).ready(function() {
-            var table = $('#tableDataPrestasi').DataTable( {
-                scrollY:        450,
-                scrollX:        true,
-                scrollCollapse: true,
-                paging:         false
-            });
-
+            $('table.table').DataTable( {
+            scrollY:        450,
+            scrollX:        true,
+            scrollCollapse: true,
+            paging:         false,
+            // fixedColumns:   {
+            //     leftColumns: 3
+            // }
+        } );
             // Tambahkan styling tambahan untuk kolom pencarian agar lebih premium
             $('.dataTables_filter input').addClass('form-control form-control-sm').css({
                 'display': 'inline-block',

@@ -1,7 +1,7 @@
 <?php
 // Catatan: Asumsikan cfg/konek.php dan cfg/secure.php sudah terinclude.
-include "cfg/konek.php";
-include "cfg/secure.php";
+include_once "cfg/konek.php";
+include_once "cfg/secure.php";
 
 // --- VALIDASI KONEKSI DATABASE ---
 // Jika koneksi (asumsi variabel $sqlconn dari konek.php) gagal, hentikan eksekusi
@@ -24,22 +24,19 @@ $lv = isset($level) ? $level : '';
 // --- FUNGSI MENAMPILKAN MODAL PESAN KESALAHAN/SUKSES (PENGGANTI ALERT) ---
 function display_notification($type, $message)
 {
-    // Escape message for JS
-    $safe_message = addslashes($message);
+    // Map 'danger' to 'error' for Toastr
+    $toast_type = ($type == 'danger') ? 'error' : $type;
+
+    // Set session variables for index.php to pick up
+    $_SESSION['toast_type'] = $toast_type;
+    $_SESSION['toast_msg'] = $message;
 
     // Determine redirection URL
-    $redirect = "Management/User Staff & Admin";
+    $redirect = "management/usermanagement";
 
-    // Check if we are already on the correct module (to avoid loops or unnecessary redirects)
-    $current_modul = isset($_REQUEST['modul']) ? $_REQUEST['modul'] : '';
-
-    // Output JS alert and redirect
-    if ($current_modul !== 'user') {
-        echo "<script>alert('$safe_message'); location.href = '$redirect';</script>";
-    }
-    else {
-        echo "<script>alert('$safe_message'); location.href = '$redirect';</script>";
-    }
+    // Redirect via JS
+    echo "<script>location.href = '$redirect';</script>";
+    exit();
 }
 
 // --- AKSI: UPDATE STATUS (Aktif/Non-Aktif) ---
@@ -47,17 +44,17 @@ if (isset($_REQUEST['aksi1'])) {
     $id_req = mysqli_real_escape_string($sqlconn, $_REQUEST['id']);
 
     // Menggunakan $id_req alih-alih $id
-    $sqlcek = mysqli_query($sqlconn, "SELECT status FROM usera WHERE id = '$id_req'");
+    $sqlcek = mysqli_query($sqlconn, "SELECT status, nama FROM usera WHERE id = '$id_req'");
     if ($sta = mysqli_fetch_array($sqlcek)) {
         $status = $sta['status'];
+        $nama_target = $sta['nama'];
         $ubah = ($status == "1") ? "0" : "1";
         mysqli_query($sqlconn, "UPDATE usera SET status = '$ubah' WHERE id = '$id_req'");
         $st_text = ($ubah == "1") ? "Aktif" : "Non-Aktif";
-        write_log("EDIT", "Mengubah status user ID: $id_req menjadi $st_text");
-        display_notification('success', 'Status user berhasil diubah.');
-    }
-    else {
-        display_notification('danger', 'Gagal menemukan user.');
+        write_log("EDIT", "Mengubah status User: $nama_target menjadi $st_text");
+        display_notification('success', 'Status User berhasil diubah.');
+    } else {
+        display_notification('danger', 'Gagal menemukan User.');
     }
 }
 
@@ -69,12 +66,15 @@ if (isset($_REQUEST['resetp'])) {
     // Hash password default
     $pass = password_hash($default_pass, PASSWORD_DEFAULT);
 
+    // Ambil data user sebelum reset untuk log
+    $cek = mysqli_query($sqlconn, "SELECT userid, nama FROM usera WHERE id = '$id_req'");
+    $d = mysqli_fetch_array($cek);
+    $userid_target = $d['nama'];
     // Menggunakan $id_req alih-alih $id
     if (mysqli_query($sqlconn, "UPDATE usera SET password = '$pass' WHERE id = '$id_req'")) {
-        write_log("RESET", "Reset password user ID: $id_req");
+        write_log("RESET", "User: $userid_target - Berhasil Di Reset Password");
         display_notification('success', 'Password berhasil direset menjadi: ' . $default_pass);
-    }
-    else {
+    } else {
         display_notification('danger', 'Gagal mereset password: ' . mysqli_error($sqlconn));
     }
 }
@@ -83,12 +83,16 @@ if (isset($_REQUEST['resetp'])) {
 if (isset($_REQUEST['resetga'])) {
     $id_req = mysqli_real_escape_string($sqlconn, $_REQUEST['id']);
 
+    // Ambil data user sebelum reset untuk log
+    $cek = mysqli_query($sqlconn, "SELECT userid FROM usera WHERE id = '$id_req'");
+    $d = mysqli_fetch_array($cek);
+    $userid_target = $d['nama'];
+
     // Menggunakan placeholder kolom 'googleauth' - silakan sesuaikan jika berbeda
     if (mysqli_query($sqlconn, "UPDATE usera SET googleauth = NULL WHERE id = '$id_req'")) {
-        write_log("RESET", "Reset Google Authenticator user ID: $id_req");
+        write_log("RESET", "User: $userid_target - Berhasil Di Reset Google Authenticator");
         display_notification('success', 'Google Authenticator berhasil direset.');
-    }
-    else {
+    } else {
         display_notification('danger', 'Gagal mereset Google Authenticator: ' . mysqli_error($sqlconn));
     }
 }
@@ -115,12 +119,10 @@ if (isset($_POST['tambah'])) {
     $sqlcek = mysqli_num_rows($cek_user);
 
     if ($sqlcek > 0) {
-        display_notification('danger', 'user ID SUDAH ADA, silakan ganti yang lain.');
-    }
-    elseif (empty($userid) || empty($raw_pass)) {
-        display_notification('danger', 'user ID dan Password Harus diisi!');
-    }
-    else {
+        display_notification('danger', 'User ID SUDAH ADA, silakan ganti yang lain.');
+    } elseif (empty($userid) || empty($raw_pass)) {
+        display_notification('danger', 'User ID dan Password Harus diisi!');
+    } else {
         // Enkripsi Password
         $password = password_hash($raw_pass, PASSWORD_DEFAULT);
 
@@ -132,10 +134,9 @@ if (isset($_POST['tambah'])) {
                 VALUES ('$userid', '$password', '$nama', $nik_value, '$lv_user', '$status', '$ip_user', '$idu_user')";
 
         if (mysqli_query($sqlconn, $sql)) {
-            write_log("ADD", "Menambah user baru: $userid ($nama)");
-            display_notification('success', 'user Berhasil Ditambahkan');
-        }
-        else {
+            write_log("ADD", "Menambah User: $nama");
+            display_notification('success', 'User Berhasil Ditambahkan');
+        } else {
             // Tampilkan error database yang sebenarnya
             $db_error = mysqli_error($sqlconn);
             $error_message = empty($db_error)
@@ -147,7 +148,7 @@ if (isset($_POST['tambah'])) {
     }
 }
 
-// --- AKSI: UPDATE user (Simpan Edit) ---
+// --- AKSI: UPDATE User (Simpan Edit) ---
 if (isset($_POST['simpan'])) {
     $id_req = mysqli_real_escape_string($sqlconn, $_POST['id']);
     $userid = mysqli_real_escape_string($sqlconn, $_POST['userid']);
@@ -180,9 +181,8 @@ if (isset($_POST['simpan'])) {
 
     if (mysqli_query($sqlconn, $sql)) {
         write_log("EDIT", "Update data user ID: $id_req ($userid)");
-        display_notification('success', 'Data user Berhasil Diupdate');
-    }
-    else {
+        display_notification('success', 'Data User Berhasil Diupdate');
+    } else {
         display_notification('danger', 'Error Update: ' . mysqli_error($sqlconn) . " (Query: " . $sql . ")");
     }
 }
@@ -192,8 +192,9 @@ if (isset($_REQUEST['aksi']) && $_REQUEST['aksi'] == 'hapus') {
     $id_req = mysqli_real_escape_string($sqlconn, $_REQUEST['urut']);
 
     // Hapus file foto jika ada
-    $cek = mysqli_query($sqlconn, "SELECT poto FROM usera WHERE id = '$id_req'");
+    $cek = mysqli_query($sqlconn, "SELECT poto, nama FROM usera WHERE id = '$id_req'");
     if ($cek1 = mysqli_fetch_array($cek)) {
+        $nama_target = $cek1['nama'];
         // Periksa apakah ada nama file poto dan apakah file tersebut ada
         if (!empty($cek1['poto']) && file_exists("up/profil/" . $cek1['poto'])) {
             unlink("up/profil/" . $cek1['poto']);
@@ -201,262 +202,131 @@ if (isset($_REQUEST['aksi']) && $_REQUEST['aksi'] == 'hapus') {
     }
 
     if (mysqli_query($sqlconn, "DELETE FROM usera WHERE id = '$id_req'")) {
-        write_log("DELETE", "Menghapus user ID: $id_req");
-        display_notification('success', 'Data user berhasil dihapus!');
-    }
-    else {
+        write_log("DELETE", "Menghapus User: $nama_target");
+        display_notification('success', 'Data User berhasil dihapus!');
+    } else {
         display_notification('danger', 'Gagal menghapus data: ' . mysqli_error($sqlconn));
     }
 }
 ?>
 
-    <!-- Konten Utama -->
-    <section class="content">
-        <div class="row">
-            <div class="col-12">
-                <div class="card table-responsive">
-                    <div class="card-header bg-menu-gradient">
-                        <?php if ($lv == "1") { ?>
-                            <div class="btn-group">
-                                <button type="button" class="btn btn-primary btn-flat btn-sm" data-toggle="modal" data-target="#gTam">
-                                    <i class="fa fa-plus-circle"></i> &nbsp; Tambah user
-                                </button>
-                                <a href="file/down_excel_user.php" target="_blank" class="btn btn-primary btn-flat btn-sm">
-                                    <i class="fas fa-download"></i> &nbsp;Download Data
-                                </a>
-                                <a href="uploaduser" class="btn btn-primary btn-flat btn-sm">
-                                    <i class="fas fa-upload"></i> &nbsp;Upload Data user
-                                </a>
-                            </div>
+<!-- Konten Utama -->
+<section class="content">
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-sm border-0">
+                <div class="card-header box-shadow-0 bg-gradient-x-info">
+                    <div class="card-title text-white">Management User</div>
+                    <?php if ($lv == "1") { ?>
+
                         <?php
-}?>
-                    </div>
-                    
-                     <div class="card-body text-nowrap">
-                        <table width="100%" id="example2" class="table table-striped table-hover table-sm">
-                            <thead>
-                                <tr align="center">
-                                    <th width="2%">No</th>
-                                    <th width="3%">Username</th>
-                                    <th width="5%">Nama</th>
-                                    <th width="5%">NRK/NIKKI</th>
-                                    <th width="3%">Level</th>
-                                    <th width="10%">Last Login</th>
-                                    <th width="5%">IP</th>
-                                    <th width="3%">Status</th>
-                                    <th width="5%">Reset</th>
-                                    <th width="3%">Edit</th>
-                                    <th width="3%">Hapus</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php
-$sql = mysqli_query($sqlconn, "SELECT * FROM usera ORDER BY id ASC");
-$no = 0;
-while ($s = mysqli_fetch_array($sql)) {
-    $stts = $s['status'];
-    $login = $s['level'];
-    $no++;
-?>
+                    } ?>
+                </div>
 
-                                    <tr>
-                                        <td align="center"><?php echo $no; ?></td>
-                                        <td><?php echo htmlspecialchars($s['userid']); ?></td>
-                                        <td><?php echo htmlspecialchars($s['nama']); ?></td>
-                                        <td><?php echo htmlspecialchars($s['nik']); ?></td>
-                                        <td align="center">
-                                            <?php
-    if ($login == "1") {
-        echo "<span class='badge bg-menu-gradient'>Admin</span>";
-    }
-    elseif ($login == "2") {
-        echo "<span class='badge bg-menu-gradient'>Staff</span>";
-    }
-    else {
-        echo "<span class='badge bg-menu-gradient'>user</span>";
-    }
-?>
-                                        </td>
-                                        <td><?php echo $s['lastlogin']; ?></td>
-                                        <td><?php echo $s['ip']; ?></td>
-                                        
-                                        <!-- Tombol Status -->
-                                        <td align="center">
+                <div class="card-body">
+                    <a href="tambah_usera" class="btn btn-warning btn-flat btn-sm">Tambah User</a>
+                    <table class="table table-bordered" style="width:100%">
+                        <thead class="bg-gradient-x-secondary">
+                            <tr>
+                                <th width="2%">No</th>
+                                <th width="3%">Username</th>
+                                <th width="5%">Nama</th>
+                                <th width="5%">NRK/NIKKI</th>
+                                <th width="3%">Level</th>
+                                <th width="10%">Last Login</th>
+                                <th width="5%">IP</th>
+                                <th width="3%">Status</th>
+                                <th width="5%">Reset</th>
+                                <th width="10%">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php
+                            $sql = mysqli_query($sqlconn, "SELECT * FROM usera ORDER BY id ASC");
+                            $no = 0;
+                            while ($s = mysqli_fetch_array($sql)) {
+                                $stts = $s['status'];
+                                $login = $s['level'];
+                                $no++;
+                                ?>
+
+                                <tr>
+                                    <td align="center"><?php echo $no; ?></td>
+                                    <td><?php echo htmlspecialchars($s['userid']); ?></td>
+                                    <td><?php echo htmlspecialchars($s['nama']); ?></td>
+                                    <td><?php echo htmlspecialchars($s['nik']); ?></td>
+                                    <td align="center">
+                                        <?php
+                                        if ($login == "1") {
+                                            echo "<span class='badge bg-gradient-x-info badge-square text-white'>Admin</span>";
+                                        } elseif ($login == "2") {
+                                            echo "<span class='badge bg-gradient-x-info badge-square text-white'>Staff</span>";
+                                        } else {
+                                            echo "<span class='badge bg-gradient-x-info badge-square text-white'>User</span>";
+                                        }
+                                        ?>
+                                    </td>
+                                    <td><?php echo $s['lastlogin']; ?></td>
+                                    <td><?php echo $s['ip']; ?></td>
+
+                                    <!-- Tombol Status -->
+                                    <td>
+                                        <div class="btn-group">
                                             <?php if ($stts == "1") { ?>
-                                                <button type="button" class="btn btn-sm btn-success" onclick="toggleStatus(<?php echo $s['id']; ?>, 1)" title="Click to deactivate">
-                                                    <i class="fas fa-toggle-on"></i> Active
-                                                </button>
-                                            <?php
-    }
-    else { ?>
-                                                <button type="button" class="btn btn-sm btn-danger" onclick="toggleStatus(<?php echo $s['id']; ?>, 0)" title="Click to activate">
-                                                    <i class="fas fa-toggle-off"></i> Inactive
-                                                </button>
-                                            <?php
-    }?>
-                                        </td>
-                                        
-                                        <!-- Tombol Reset Password -->
-                                        <td align="center">
-                                            <a href="usermanagement?resetp=reset&id=<?php echo $s['id']; ?>" onclick="if (confirm('Reset password menjadi = smpn171**?')) { window.location.href='usermanagement?resetp=reset&id=<?php echo $s['id']; ?>'; } return false;">
-                                                <button type="button" class="btn btn-danger btn-sm" title="Default Password = smpn171**"><i class="fa fa-key"></i></button>
-                                            </a>
-                                            <a href="usermanagement?resetga=reset&id=<?php echo $s['id']; ?>" onclick="if (confirm('Reset Google Authenticator user ini?')) { window.location.href='usermanagement?resetga=reset&id=<?php echo $s['id']; ?>'; } return false;">
-                                                <button type="button" class="btn btn-warning btn-sm" title="Reset Google Authenticator"><i class="fab fa-google"></i></button>
-                                            </a>
-                                        </td>
-
-                                        <!-- Tombol Edit -->
-                                        <td align="center">
-                                            <a href='#myEdit' data-toggle='modal' data-id='<?php echo $s['id']; ?>'>
-                                                <button type="button" class="btn btn-info btn-sm"><i class="fa fa-edit"></i></button>
-                                            </a>
-                                        </td>
-                                        
-                                        <!-- Tombol Hapus -->
-                                        <td align="center">
-                                            <?php if ($lv != '1') { ?>
-                                                <button type="button" class="btn btn-danger btn-sm" onclick="alert('Akses Ditolak. Hubungi Admin.');"><i class="fa fa-trash"></i></button>
-                                            <?php
-    }
-    else { ?>
-                                                <a href="usermanagement?aksi=hapus&urut=<?php echo $s['id']; ?>" onclick="if (confirm('Yakin ingin menghapus user ini?')) { window.location.href='usermanagement?aksi=hapus&urut=<?php echo $s['id']; ?>'; } return false;">
-                                                    <button type="button" class="btn btn-danger btn-sm"><i class="fa fa-trash"></i></button>
+                                                <a href="management/usermanagement?aksi1=ubah&id=<?php echo $s['id']; ?>"
+                                                    class="badge bg-gradient-x-success badge-square" title="Non Aktifkan">
+                                                    Aktif
                                                 </a>
-                                            <?php
-    }?>
-                                        </td>
-                                    </tr>
+                                            <?php } else { ?>
+                                                <a href="management/usermanagement?aksi1=ubah&id=<?php echo $s['id']; ?>"
+                                                    class="badge bg-gradient-x-danger badge-square" title="Aktifkan">
+                                                    Tidak Aktif
+                                                </a>
+                                            <?php } ?>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group">
+                                            <a href="management/usermanagement?resetp=reset&id=<?php echo $s['id']; ?>"
+                                                onclick="if (confirm('Reset password menjadi = smpn171**?')) { window.location.href='management/usermanagement?resetp=reset&id=<?php echo $s['id']; ?>'; } return false;"
+                                                class="badge badge-warning badge-square">Rst Pass</a>
+                                            <a href="management/usermanagement?resetga=reset&id=<?php echo $s['id']; ?>"
+                                                onclick="if (confirm('Reset Google Authenticator user ini?')) { window.location.href='management/usermanagement?resetga=reset&id=<?php echo $s['id']; ?>'; } return false;"
+                                                class="badge badge-danger badge-square">Rst GA</a>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group">
+                                            <a href="edit_usera?urut=<?php echo $s['id']; ?>"
+                                                class="badge badge-primary badge-square">Edit</a>
+                                            <?php if ($lv != '1') { ?>
+                                                <button type="button" class="badge badge-secondary badge-square"
+                                                    onclick="toastr.error('Akses Ditolak. Hubungi Admin.');">Hapus</button>
+                                                <?php
+                                            } else { ?>
+                                                <a href="management/usermanagement?aksi=hapus&urut=<?php echo $s['id']; ?>"
+                                                    class="badge badge-danger badge-square"
+                                                    onclick="if (confirm('Yakin ingin menghapus user ini?')) { window.location.href='management/usermanagement?aksi=hapus&urut=<?php echo $s['id']; ?>'; } return false;">Hapus</a>
+                                                <?php
+                                            } ?>
+                                        </div>
+                                    </td>
+                                </tr>
 
                                 <?php
-}?>
-                            </tbody>
-                        </table>
-                    </div>
+                            } ?>
+                        </tbody>
+                    </table>
                 </div>
-            </div>
-        </div>
-    </section>
-</div>
-
-<!-- MODAL TAMBAH user -->
-<div class="modal fade" id="gTam" role="dialog" data-backdrop="static">
-    <div class="modal-dialog modal-lg" role="document">
-        <div class="modal-content">
-            <div class="modal-header bg-menu-gradient">
-                <h6 class="modal-title w-100 text-center"><i class="fa fa-user-plus"></i> Tambah Data user</h6>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <!-- Form Start -->
-            <form action="usermanagement" method="post">
-                <div class="modal-body">
-                    <input type="hidden" name="tambah" value="yes">
-                    
-                    <!-- Row 1: Level user & username -->
-                    <div class="row">
-                        <!-- Level user -->
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label><i class="fas fa-user-shield"></i> Level user</label>
-                                <select class="form-control select2 class-level" name="level" required style="width: 100%;">
-                                    <option value="">Pilih Level</option>
-                                    <option value="1">Admin</option>
-                                    <option value="2">Staf</option>
-                                    <option value="3">user</option>
-                                </select>
-                            </div>
-                        </div>
-                        
-                        <!-- username -->
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label><i class="fas fa-user"></i> username</label>
-                                <input type="text" class="form-control" name="userid" placeholder="username Login" required>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Row 2: Nama Lengkap & NIP/NIKI -->
-                    <div class="row">
-                        <!-- Nama Lengkap -->
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label><i class="fas fa-id-card"></i> Nama Lengkap</label>
-                                <input type="text" class="form-control" name="nama" placeholder="Nama Lengkap" required>
-                            </div>
-                        </div>
-                        
-                        <!-- NIP/NIKI/- -->
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label><i class="fas fa-address-card"></i> NIP/NIKI/-</label>
-                                <input type="text" class="form-control" name="nik" placeholder="NIP/NIKI/Strip">
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Row 3: Status -->
-                    <div class="row">
-                        <!-- Status -->
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label><i class="fas fa-toggle-on"></i> Status</label>
-                                <div class="mt-2">
-                                    <div class="form-check form-check-inline">
-                                        <input class="form-check-input" type="radio" name="status" id="status1" value="1" checked style="transform: scale(1.5); margin-right: 10px;">
-                                        <label class="form-check-label" for="status1">Aktif</label>
-                                    </div>
-                                    <div class="form-check form-check-inline ml-3">
-                                        <input class="form-check-input" type="radio" name="status" id="status0" value="0" style="transform: scale(1.5); margin-right: 10px;">
-                                        <label class="form-check-label" for="status0">Non Aktif</label>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary btn-flat" data-dismiss="modal"><i class="fa fa-close"></i> Tutup</button>
-                    <button type="submit" class="btn btn-primary btn-flat"><i class="fa fa-save"></i> Simpan</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<!-- MODAL EDIT user -->
-<div class="modal fade" id="myEdit" role="dialog" data-backdrop="static">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-body">
-                <div class="fetched-data"></div>
             </div>
         </div>
     </div>
+</section>
 </div>
+
 
 <!-- Script Handling -->
 <script type="text/javascript">
-    $(document).ready(function() {
-        // Modal Edit Listener
-        $('#myEdit').on('show.bs.modal', function(e) {
-            var rowid = $(e.relatedTarget).data('id');
-            // Fetch form edit via AJAX
-            $.ajax({
-                type: 'post',
-                url: 'edit_usera.php', 
-                data: 'urut=' + rowid,
-                success: function(data) {
-                    $('.fetched-data').html(data);
-                },
-                error: function() {
-                    $('.fetched-data').html('<div class="alert alert-danger">Error: Gagal memuat form edit. Pastikan file edit_usera.php ada dan dapat diakses.</div>');
-                }
-            });
-        });
-    });
 
     // Toggle Status Function with AJAX
     function toggleStatus(userId, currentStatus) {
@@ -477,7 +347,7 @@ while ($s = mysqli_fetch_array($sql)) {
                 current_status: currentStatus
             },
             dataType: 'json',
-            success: function(response) {
+            success: function (response) {
                 console.log('Success Response:', response);
                 if (response.success) {
                     // Update button appearance based on new status
@@ -493,7 +363,7 @@ while ($s = mysqli_fetch_array($sql)) {
                         button.title = 'Click to activate';
                     }
                     button.disabled = false;
-                    
+
                     // Show success notification
                     if (typeof toastr !== 'undefined') {
                         toastr.success(response.message);
@@ -504,7 +374,7 @@ while ($s = mysqli_fetch_array($sql)) {
                     // Restore original button state on error
                     button.innerHTML = originalHTML;
                     button.disabled = false;
-                    
+
                     // Show error notification
                     if (typeof toastr !== 'undefined') {
                         toastr.error(response.message || 'Failed to update status');
@@ -513,18 +383,18 @@ while ($s = mysqli_fetch_array($sql)) {
                     }
                 }
             },
-            error: function(xhr, status, error) {
+            error: function (xhr, status, error) {
                 console.error('AJAX Error Details:', {
                     status: xhr.status,
                     statusText: xhr.statusText,
                     responseText: xhr.responseText,
                     error: error
                 });
-                
+
                 // Restore original button state on error
                 button.innerHTML = originalHTML;
                 button.disabled = false;
-                
+
                 // Show detailed error notification
                 let errorMsg = 'Error: Unable to connect to server.';
                 if (xhr.status === 403) {
@@ -534,7 +404,7 @@ while ($s = mysqli_fetch_array($sql)) {
                 } else if (xhr.status === 500) {
                     errorMsg = 'Server error (500). Please try again later.';
                 }
-                
+
                 if (typeof toastr !== 'undefined') {
                     toastr.error(errorMsg);
                 } else {
@@ -543,13 +413,38 @@ while ($s = mysqli_fetch_array($sql)) {
             }
         });
     }
-</script>
+    $(document).ready(function () {
+        $('table.table').DataTable({
+            scrollY: 450,
+            scrollX: true,
+            scrollCollapse: true,
+            paging: false,
+            // fixedColumns:   {
+            //     leftColumns: 3
+            // }
+        });
+        // Tambahkan styling tambahan untuk kolom pencarian agar lebih premium
+        $('.dataTables_filter input').addClass('form-control form-control-sm').css({
+            'display': 'inline-block',
+            'width': '200px',
+            'margin-left': '10px',
+            'border': '1px solid #ced4da'
+        });
+    });
+    // Initialize Select2 with Placeholders (with existence check)
+    const initS2 = () => {
+        if (typeof $.fn.select2 !== 'undefined') {
+            $("#leveluser").select2({
+                placeholder: "Pilih Level User",
+                allowClear: false,
+                width: '100%',
+                minimumResultsForSearch: 0
+            });
+        } else {
+            console.warn("Select2 not found, retrying...");
+            setTimeout(initS2, 100);
+        }
+    };
+    initS2();
 
-<!-- Bootstrap 4 -->
-<script src="plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
-<!-- Global scripts provided by index.php -->
-<script>
-  $(document).ready(function () {
-    $('#example2').DataTable();
-  });
 </script>

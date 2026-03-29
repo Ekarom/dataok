@@ -69,18 +69,6 @@ if ($total_prestasi == 0) {
 }
 ?>
 <style>
-    .form-control:disabled, .form-control[readonly] {
-        background-color: #f8f9fa;
-        opacity: 1;
-        cursor: not-allowed;
-    }
-    .card-title {
-        font-weight: 600;
-    }
-    .bg-menu-gradient {
-        background: linear-gradient(135deg, #2c3e50 0%, #01b2d1 100%);
-        color: #fff;
-    }
     .profile-card {
         border-top: 3px solid #01b2d1;
     }
@@ -106,13 +94,6 @@ if ($total_prestasi == 0) {
     .alert-view {
         border-radius: 10px;
         font-size: 0.9rem;
-    }
-    .border-pemenang {
-        border: 4px solid #ffd700 !important;
-        box-shadow: 0 0 15px rgba(255, 215, 0, 0.4), inset 0 0 10px rgba(255, 255, 255, 0.5);
-        background: #fff;
-        position: relative;
-        z-index: 2;
     }
     .award-frame-wrapper {
         position: relative;
@@ -177,11 +158,13 @@ if ($total_prestasi == 0) {
     <section class="content">
         <div class="container-fluid">
             <div class="card shadow-sm border-0">
-                <div class="card-header bg-menu-gradient" >
-                    <h5>Detail Data Prestasi Siswa</h5>
-                    <a href="arsipdata/inputprestasi" class="btn btn-primary btn-sm rounded-pill">
-                        Kembali
-                    </a>
+                <div class="card-header box-shadow-0 bg-gradient-x-info d-flex align-items-center justify-content-between">
+                    <h5 class="card-title text-white mb-0">Detail Data Prestasi Siswa</h5>
+                    <div class="card-action">
+                        <a href="arsipdata/inputprestasi" class="btn btn-warning btn-sm rounded-pill shadow-sm">
+                            <i class="fas fa-arrow-left mr-1"></i> Kembali
+                        </a>
+                    </div>
                 </div>
                 <div class="card-body view-form-container" style="background-color: #f8f9fa;">
                     <form>
@@ -207,12 +190,12 @@ if ($total_prestasi == 0) {
                                     </center>
                                     <div class="mt-4">
                                         <span style="font-size: 16px; font-weight: bold; text-decoration: underline; color: #495057;">Nama Lengkap</span>
-                                        <div class="mt-1 badge bg-menu-gradient px-3 py-2" style="font-size: 14px; font-weight: bold; width: 100%; white-space: normal;"><?php echo $nama; ?></div>
+                                        <div class="mt-1 badge bg-gradient-x-info text-white" style="font-size: 14px; font-weight: bold; width: 100%; white-space: normal;"><?php echo $nama; ?></div>
                                         
                                         <hr style="border-top: 1px dashed #ced4da; margin: 15px 0;">
                                         
                                         <span style="font-size: 16px; font-weight: bold; text-decoration: underline; color: #495057;">Kelas</span>
-                                        <div class="mt-1 badge bg-menu-gradient px-3 py-2" style="font-size: 14px; font-weight: bold; width: 100%;"><?php echo $kelas; ?></div>
+                                        <div class="mt-1 badge bg-gradient-x-info text-white" style="font-size: 14px; font-weight: bold; width: 100%;"><?php echo $kelas; ?></div>
                                     </div>
                                 </div>
                             </div>
@@ -256,9 +239,9 @@ if ($total_prestasi == 0) {
                                                     $berkas_html = '-';
                                                     if (!empty($rp['pdf'])) {
                                                         $berkas_link = "file/prestasi/" . $rp['pdf'];
-                                                        $berkas_html = '<button type="button" class="badge badge-primary badge-square btn-view-pdf" data-url="'.$berkas_link.'" data-title="'.$rp['prestasi'].'" title="Lihat Berkas"><i class="fa fa-file-alt"></i></button>';
+                                                        $berkas_html = '<button type="button" class="badge badge-primary badge-square" data-url="'.$berkas_link.'" data-title="'.$rp['prestasi'].'" title="Lihat Berkas"><i class="fa fa-file"></i></button>';
                                                     }
-                                                    $btn_hapus = '<button type="button" class="badge badge-primary badge-square btn-hapus" data-id="'.$rp['id'].'" data-name="'.$rp['prestasi'].'" title="Hapus Data"><i class="fa fa-trash"></i></button>';
+                                                    $btn_hapus = '<button type="button" class="badge badge-danger badge-square" data-id="'.$rp['id'].'" data-name="'.$rp['prestasi'].'" title="Hapus Data"><i class="fa fa-trash"></i></button>';
                                                 ?>
                                                     <tr>
                                                         <td class="text-center"><?php echo $noP++; ?></td>
@@ -367,9 +350,9 @@ $(document).ready(function() {
 <!-- Modal PDF Viewer -->
 <div class="modal fade" id="modalPDF" tabindex="-1" role="dialog" aria-labelledby="pdfModalLabel" aria-hidden="true" data-backdrop="static">
     <div class="modal-dialog modal-lg" role="document">
-        <div class="modal-content">
-            <div class="modal-header bg-info">
-                <b>Detail Dokumen Prestasi (<?php echo $nama ?>)</b>
+        <div class="modal-content border-0">
+            <div class="modal-header box-shadow-0 bg-gradient-x-info">
+                <h5 class="modal-title text-white">Detail Dokumen Prestasi (<?php echo $nama ?>)</h5>
             </div>
             <div class="modal-body p-0">
                 <iframe id="pdfViewer" src="" frameborder="0" width="100%" height="600px"></iframe>

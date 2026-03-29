@@ -160,7 +160,7 @@
                 <!-- Left Column: Profile Card -->
                 <div class="col-md-3">
                     <!-- Profile Image Card -->
-                    <div class="card card-navy card-outline">
+                    <div class="card shadow-sm border-0">
                         <div class="card-body box-profile">
                             <div class="text-center">
                                 <div class="profile-img-container" onclick="document.getElementById('photo1').click();" title="Klik untuk ganti foto">
@@ -226,9 +226,9 @@
                     </div>
                     
                     <!-- About Me Card -->
-                    <div class="card">
-                        <div class="card-header bg-menu-gradient">
-                            <h3 class="card-title">About Me</h3>
+                    <div class="card shadow-sm border-0">
+                        <div class="card-header box-shadow-0 bg-gradient-x-info">
+                            <h5 class="card-title text-white">About Me</h5>
                         </div>
                         <div class="card-body">
                             <!-- Name -->
@@ -267,8 +267,8 @@
                 
                 <!-- Right Column: Staff Level Info -->
                 <div class="col-md-9">
-                    <div class="card">
-                        <div class="card-header bg-menu-gradient p-2">
+                    <div class="card shadow-sm border-0">
+                        <div class="card-header box-shadow-0 bg-gradient-x-info p-2">
                             <ul class="nav nav-pills">
                                 <li class="nav-item">
                                     <a class="nav-link active" href="#activity" data-toggle="tab">Staff LV</a>
@@ -305,9 +305,9 @@
 <!-- Modal: Change Password -->
 <div class="modal fade" id="gantiPassModal" tabindex="-1" aria-labelledby="gantiPassModalLabel" aria-hidden="true">
     <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header bg-menu-gradient">
-                <h6 class="modal-title">Ganti Password Baru</h6>
+        <div class="modal-content border-0">
+            <div class="modal-header box-shadow-0 bg-gradient-x-info">
+                <h5 class="modal-title text-white">Ganti Password Baru</h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>

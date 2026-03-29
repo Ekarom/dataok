@@ -30,8 +30,8 @@ $where_sql = count($where_clauses) > 0 ? "WHERE " . implode(" AND ", $where_clau
     <!-- Filter Section -->
     <section class="content px-3">
         <div class="card shadow-sm border-0 mb-4">
-            <div class="card-header bg-white py-3">
-                <h3 class="card-title">Filter Log</h3>
+            <div class="card-header box-shadow-0 bg-gradient-x-info">
+                <h5 class="card-title text-white">Filter Log</h5>
             </div>
             <div class="card-body">
                 <form method="GET" action="index.php" class="row align-items-end gx-3 gy-2">
@@ -58,7 +58,10 @@ $where_sql = count($where_clauses) > 0 ? "WHERE " . implode(" AND ", $where_clau
         </div>
 
         <!-- Table Section -->
-        <div class="card">
+        <div class="card shadow-sm border-0">
+            <div class="card-header box-shadow-0 bg-gradient-x-info">
+                <h5 class="card-title text-white">Activity Logs</h5>
+            </div>
             <div class="card-body table-responsive p-0">
                 <table class="table table-striped projects">
                     <thead>

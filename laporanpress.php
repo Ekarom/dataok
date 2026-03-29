@@ -11,13 +11,13 @@
                     
                     <!-- Filter Section -->
                     <div class="card">
-                        <div class="card-header bg-menu-gradient">
-                            <h3 class="card-title text-bold"><i class="fas fa-filter mr-1"></i> Rekap Prestasi</h3>
+                        <div class="card-header box-shadow-0 bg-gradient-x-info">
+                            <h5 class="card-title text-white">Laporan Data Prestasi Peserta Didik</h5>
                         </div>
                         <div class="card-body">
                             <div class="row">
                                 <div class="col-md-2 mb-2">
-                                    <select id="rekap_triwulan" class="form-control form-control-sm" onchange="updateMonthsByQuarter(this.value)">
+                                    <select id="rekap_triwulan" class="form-control" onchange="updateMonthsByQuarter(this.value)">
                                         <option value="">- Triwulan -</option>
                                         <option value="1">Triwulan I</option>
                                         <option value="2">Triwulan II</option>
@@ -26,7 +26,8 @@
                                     </select>
                                 </div>
                                 <div class="col-md-2 mb-2">
-                                    <select id="rekap_m1" class="form-control form-control-sm">
+                                    <select class="form-control " id="rekap_m1">
+                                        <option value="">- Pilih Bulan -</option>
                                         <option value="Januari">Januari</option>
                                         <option value="Februari">Februari</option>
                                         <option value="Maret">Maret</option>
@@ -41,11 +42,12 @@
                                         <option value="Desember">Desember</option>
                                     </select>
                                 </div>
-                                <div class="col-md-1 text-center py-2">
-                                    <span class="text-muted">s/d</span>
+                                <div class="col text-center">
+                                    <b>s/d</b>
                                 </div>
                                 <div class="col-md-2 mb-2">
-                                    <select id="rekap_m2" class="form-control form-control-sm">
+                                    <select class="form-control" id="rekap_m2">
+                                        <option value="">- Pilih Bulan -</option>
                                         <option value="Januari">Januari</option>
                                         <option value="Februari">Februari</option>
                                         <option value="Maret">Maret</option>
@@ -57,11 +59,11 @@
                                         <option value="September">September</option>
                                         <option value="Oktober">Oktober</option>
                                         <option value="November">November</option>
-                                        <option value="Desember" selected>Desember</option>
+                                        <option value="Desember">Desember</option>
                                     </select>
                                 </div>
                                 <div class="col-md-3 mb-2">
-                                    <select id="rekap_kejuaraan" class="form-control form-control-sm">
+                                    <select class="form-control" id="rekap_kejuaraan">
                                         <option value="">- Semua Kejuaraan -</option>
                                         <?php
 $q_kej = mysqli_query($sqlconn, "SELECT DISTINCT prestasi FROM prestasi WHERE prestasi != '' ORDER BY prestasi ASC");
@@ -72,21 +74,18 @@ while ($rk = mysqli_fetch_array($q_kej)) {
                                     </select>
                                 </div>
                                 <div class="col-md-1 mb-2">
-                                    <input type="number" id="rekap_y" class="form-control form-control-sm" value="<?php echo date('Y'); ?>">
+                                    <input type="number" id="rekap_y" class="form-control" value="<?php echo date('Y'); ?>">
                                 </div>
-                                <div class="col-md-1">
-                                    <button type="button" class="btn btn-dark btn-block btn-sm" onclick="printRekapTriwulan()">
+                                <div class="col-md-1 mb-2">
+                                    <button type="button" class="btn btn-dark btn-block" onclick="printRekapTriwulan()">
                                         <i class="fa fa-print"></i>
                                     </button>
                                 </div>
-                            </div> <!-- End Filter Row -->
-                            
-                            <hr class="my-4">
-                            
-                            <div class="table-responsive">
-                                   <table id="example2" class="table table-striped table-hover table-sm" style="width:100%">
-                                    <thead>
-                                        <tr>
+                            </div>                            
+<div class="card-body">
+<table class="table table-bordered" style="width:100%">
+                        <thead class="bg-gradient-x-secondary">
+                            <tr>
                                             <th width="3%">No</th>
                                             <th width="15%">Nama Peserta Didik</th>
                                             <th width="5%">Kelas</th>
@@ -156,18 +155,58 @@ if ($sql) {
 </div>
 
 <script>
-$(document).ready(function() {
-    $('#example2').DataTable({
-        "paging": true,
-        "lengthChange": false,
-        "searching": true,
-        "ordering": true,
-        "info": true,
-        "autoWidth": false,
-            "responsive": true,
-    });
-});
+            // Initialize Select2 with Placeholders (with existence check)
+        const initS2 = () => {
+            if (typeof $.fn.select2 !== 'undefined') {
+                $("#rekap_kejuaraan").select2({
+                    placeholder: "Pilih Jenis Prestasi",
+                    allowClear: false,
+                    width: '100%',
+                    minimumResultsForSearch: 0
+                });
+                $("#rekap_m1").select2({
+                    placeholder: "Pilih Bulan Awal",
+                    allowClear: false,
+                    width: '100%',
+                    minimumResultsForSearch: 0
+                });
+                $("#rekap_m2").select2({
+                    placeholder: "Pilih Bulan Akhir",
+                    allowClear: false,
+                    width: '100%',
+                    minimumResultsForSearch: 0
+                });
+                $("#rekap_triwulan").select2({
+                    placeholder: "Pilih Triwulan",
+                    allowClear: false,
+                    width: '100%',
+                    minimumResultsForSearch: 0
+                });
+            } else {
+                console.warn("Select2 not found, retrying...");
+                setTimeout(initS2, 100);
+            }
+        };
+        initS2();
 
+        $(document).ready(function() {
+            $('table.table').DataTable( {
+            scrollY:        450,
+            scrollX:        true,
+            scrollCollapse: true,
+            paging:         false,
+            // fixedColumns:   {
+            //     leftColumns: 3
+            // }
+        } );
+            // Tambahkan styling tambahan untuk kolom pencarian agar lebih premium
+            $('.dataTables_filter input').addClass('form-control form-control-sm').css({
+                'display': 'inline-block',
+                'width': '200px',
+                'margin-left': '10px',
+                'border': '1px solid #ced4da'
+            });
+        });
 function updateMonthsByQuarter(q) {
     if (!q) return;
     const m1 = $('#rekap_m1');
