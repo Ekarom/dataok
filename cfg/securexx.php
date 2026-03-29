@@ -1,7 +1,7 @@
 <?php
 
 if (!isset($_SESSION['skradm'])) {
-  header("Location: login.php");
+  header("Location: ./");
 } else {
   $cekv = mysqli_query($sqlconn, "SELECT * FROM version ORDER BY id DESC LIMIT 1");
   if (!$cekv) {
@@ -36,7 +36,7 @@ if (!isset($_SESSION['skradm'])) {
 
 
   if (isset($_SESSION['skradm'])) {
-    //header("Location: login.php");
+    //header("Location: ./");
 
 
     $usc = $_SESSION['skradm'];

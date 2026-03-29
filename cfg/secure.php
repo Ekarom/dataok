@@ -1,7 +1,7 @@
 <?php
 
 if (!isset($_SESSION['skradm'])) {
-  header("Location: login.php");
+  header("Location: ./");
   exit();
 } else {
   // Ensure connection exists
@@ -47,7 +47,7 @@ if (!isset($_SESSION['skradm'])) {
 
 
   if (isset($_SESSION['skradm'])) {
-    //header("Location: login.php");
+    //header("Location: ./");
 
 
     $usc = $_SESSION['skradm'] ?? '';

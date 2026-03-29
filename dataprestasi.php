@@ -7,10 +7,10 @@ include_once "cfg/konek.php";
         <div class="col-12">
             <div class="card">
                 <div class="card-header box-shadow-0 bg-gradient-x-warning">
-                    <h3 class="card-title">Data Prestasi Siswa</h3>
+                    <h3 class="card-title text-white">Data Prestasi Siswa</h3>
                 </div>
                 <div class="card-body">
-<table class="table table-bordered" style="width:100%">
+                    <table class="table table-bordered" style="width:100%">
                         <thead class="bg-gradient-x-secondary">
                             <tr>
                                 <th>No</th>
@@ -23,43 +23,40 @@ include_once "cfg/konek.php";
                         </thead>
                         <tbody>
                             <?php
-// Mengambil data siswa diurutkan berdasarkan nama (pd)
-// Menggunakan subquery untuk cek status apakah sudah upload prestasi
-$sqlSiswa = mysqli_query($sqlconn, "SELECT pd, nis, nisn, kelas, id, (SELECT COUNT(*) FROM prestasi WHERE prestasi.pd = siswa.pd AND prestasi.kelas = siswa.kelas) as jml_p FROM siswa ORDER BY pd ASC");
+                            // Mengambil data siswa diurutkan berdasarkan nama (pd)
+                            // Menggunakan subquery untuk cek status apakah sudah upload prestasi
+                            $sqlSiswa = mysqli_query($sqlconn, "SELECT pd, nis, nisn, kelas, id, (SELECT COUNT(*) FROM prestasi WHERE prestasi.pd = siswa.pd AND prestasi.kelas = siswa.kelas) as jml_p FROM siswa ORDER BY pd ASC");
 
-if ($sqlSiswa) {
-    $noS = 1;
-    while ($ds = mysqli_fetch_array($sqlSiswa)) {
-        $has_prestasi = ($ds['jml_p'] > 0);
-        $status_badge = $has_prestasi
-            ? '<span class="badge bg-success badge-square">Sudah Upload</span>'
-            : '<span class="badge bg-danger badge-square">Belum Upload</span>';
-?>
-                                <tr>
-                                    <td class="text-center"><?php echo $noS++; ?></td>
-                                    <td class="text-center"><?php echo htmlspecialchars($ds['nis']); ?></td>
-                                    <td class="text-center"><?php echo htmlspecialchars($ds['nisn']); ?></td>
-                                    <td class="text-left px-3"><?php echo htmlspecialchars($ds['pd']); ?></td>
-                                    <td class="text-center"><?php echo $status_badge; ?></td>
+                            if ($sqlSiswa) {
+                                $noS = 1;
+                                while ($ds = mysqli_fetch_array($sqlSiswa)) {
+                                    $has_prestasi = ($ds['jml_p'] > 0);
+                                    $status_badge = $has_prestasi
+                                        ? '<span class="badge bg-gradient-x-success badge-square">Sudah Upload</span>'
+                                        : '<span class="badge bg-gradient-x-danger badge-square">Belum Upload</span>';
+                                    ?>
+                                    <tr>
+                                        <td class="text-center"><?php echo $noS++; ?></td>
+                                        <td class="text-center"><?php echo htmlspecialchars($ds['nis']); ?></td>
+                                        <td class="text-center"><?php echo htmlspecialchars($ds['nisn']); ?></td>
+                                        <td class="text-left px-3"><?php echo htmlspecialchars($ds['pd']); ?></td>
+                                        <td class="text-center"><?php echo $status_badge; ?></td>
 
-                                    <td class="text-center">
-                                        <div class="btn-group">
-                                            <a href="viewpress?urut=<?php echo $ds['id']; ?>" class="badge badge-success badge-square">
-                                                Detail
-                                            </a>
-                                            <a href="arsipdata/inputprestasi?nis=<?php echo $ds['id']; ?>" class="badge badge-primary badge-square">
-                                                Input
-                                            </a>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <?php
-    }
-}
-else {
-    echo "<tr><td colspan='6' class='text-center'>Error: " . mysqli_error($sqlconn) . "</td></tr>";
-}
-?>
+                                        <td class="text-center">
+                                            <div class="btn-group">
+                                                <a href="viewpress?urut=<?php echo $ds['id']; ?>"
+                                                    class="badge badge-info badge-square text-white">Detail</a>
+                                                <a href="arsipdata/inputprestasi?nis=<?php echo $ds['id']; ?>"
+                                                    class="badge badge-primary badge-square text-white">Input</a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <?php
+                                }
+                            } else {
+                                echo "<tr><td colspan='6' class='text-center'>Error: " . mysqli_error($sqlconn) . "</td></tr>";
+                            }
+                            ?>
                         </tbody>
                     </table>
                 </div>
@@ -67,24 +64,24 @@ else {
         </div>
     </div>
 </section>
-    <!-- Global scripts provided by index.php -->
-    <script>
-        $(document).ready(function() {
-            $('table.table').DataTable( {
-            scrollY:        450,
-            scrollX:        true,
+<!-- Global scripts provided by index.php -->
+<script>
+    $(document).ready(function () {
+        $('table.table').DataTable({
+            scrollY: 450,
+            scrollX: true,
             scrollCollapse: true,
-            paging:         false,
+            paging: false,
             // fixedColumns:   {
             //     leftColumns: 3
             // }
-        } );
-            // Tambahkan styling tambahan untuk kolom pencarian agar lebih premium
-            $('.dataTables_filter input').addClass('form-control form-control-sm').css({
-                'display': 'inline-block',
-                'width': '200px',
-                'margin-left': '10px',
-                'border': '1px solid #ced4da'
-            });
         });
-        </script>
+        // Tambahkan styling tambahan untuk kolom pencarian agar lebih premium
+        $('.dataTables_filter input').addClass('form-control form-control-sm').css({
+            'display': 'inline-block',
+            'width': '200px',
+            'margin-left': '10px',
+            'border': '1px solid #ced4da'
+        });
+    });
+</script>

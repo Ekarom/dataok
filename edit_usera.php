@@ -61,14 +61,13 @@ $log = $r['level'];
         <!-- Form Edit -->
         <div class="col-md-9">
             <div class="card shadow-sm border-0">
-                <div class="card-header box-shadow-0 bg-gradient-x-info">
+                <div class="card-header box-shadow-0 bg-gradient-x-info d-flex align-items-center justify-content-between">
                     <h5 class="card-title text-white mb-0">Form Edit Data User</h5>
-                    <br>
-                    <br>
-                    <a href="management/usermanagement" class="btn btn-warning btn-sm rounded-pill">
-                        Kembali
-                    </a>
-
+                    <div class="card-tools">
+                        <a href="management/usermanagement" class="btn btn-warning btn-sm rounded-pill px-3 shadow-sm">
+                            <i class="fas fa-arrow-left mr-1"></i> Kembali
+                        </a>
+                    </div>
                 </div>
 
                 <div class="card-body">

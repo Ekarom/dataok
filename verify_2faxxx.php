@@ -20,7 +20,7 @@ date_default_timezone_set("Asia/Jakarta");
 
 if (!isset($_SESSION['temp_login'])) {
 
-    header("Location: login.php");
+    header("Location: ./");
 
     exit();
 
@@ -223,7 +223,7 @@ if (isset($_POST['verify_code'])) {
 
             unset($_SESSION['2fa_attempts']);
 
-            header("Location: login.php?salah=6"); // Error code 6: 2FA failed
+            header("Location: ./?salah=6"); // Error code 6: 2FA failed
 
             exit();
 
@@ -291,7 +291,7 @@ if (isset($_POST['cancel'])) {
 
     unset($_SESSION['2fa_attempts']);
 
-    header("Location: login.php");
+    header("Location: ./");
 
     exit();
 

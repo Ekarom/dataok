@@ -153,17 +153,24 @@ if ($sql) {
 </div>
 
 <script>
-$(document).ready(function() {
-    $('#example2').DataTable({
-        "paging": true,
-        "lengthChange": false,
-        "searching": true,
-        "ordering": true,
-        "info": true,
-        "autoWidth": false,
-            "responsive": true,
-    });
-});
+        $(document).ready(function() {
+            $('table.table').DataTable( {
+            scrollY:        450,
+            scrollX:        true,
+            scrollCollapse: true,
+            paging:         false,
+            // fixedColumns:   {
+            //     leftColumns: 3
+            // }
+        } );
+            // Tambahkan styling tambahan untuk kolom pencarian agar lebih premium
+            $('.dataTables_filter input').addClass('form-control form-control-sm').css({
+                'display': 'inline-block',
+                'width': '200px',
+                'margin-left': '10px',
+                'border': '1px solid #ced4da'
+            });
+        });
 
 function updateMonthsByQuarter(q) {
     if (!q) return;

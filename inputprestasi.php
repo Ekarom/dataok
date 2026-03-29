@@ -183,15 +183,31 @@ if (isset($s['photo']) && $s['photo'] != "" && file_exists("file/fotopd/" . $s['
                         <div class="form-group row">
                             <label for="bulan" class="col-sm-4 col-form-label">Lampiran Berkas</label>
                             <div class="col-sm-8">
-                                <input type="file" name="file[]" id="fileInput" class="form-control" accept=".pdf" multiple onchange="handleFileSelect()">
+                                <div id="drop-area" class="border-dashed-2 rounded p-3 text-center mb-2"
+                                    style="border: 2px dashed #ddd; background: #f9f9f9; transition: all 0.3s ease;">
+                                    <i class="fas fa-cloud-upload-alt fa-2x text-info mb-2"></i>
+                                    <p class="mb-1 text-sm">Klik atau seret file PDF/Gambar ke sini</p>
+                                    <small class="text-muted d-block mb-3">Maksimal 2 file, masing-masing max 2MB</small>
+                                    <input type="file" name="file[]" id="fileInput" class="form-control d-none"
+                                        accept=".pdf,image/*" multiple onchange="handleFileSelect(this)">
+                                    <button type="button" class="btn btn-outline-info btn-sm rounded-pill px-3"
+                                        onclick="document.getElementById('fileInput').click()">
+                                        Pilih Berkas
+                                    </button>
+                                </div>
+                                <!-- File List Container -->
+                                <div id="file-list-display" class="d-none mb-2"></div>
+                                <div id="total-size-display-container" class="text-right text-xs text-muted d-none">
+                                    Total Ukuran: <span id="total-size-display">0 B</span>
+                                </div>
                             </div>
                         </div>
-                    <div class="card-footer text-right">
-                        <button type="button" id="btnIncomplete" class="btn btn-secondary disabled"
-                            style="cursor: ;">Lengkapi Data</button>
-                        <button type="submit" id="btnSave" name="save" class="btn btn-success" style="display: none;"><i
-                                class="fa fa-save"></i> Simpan Perubahan</button>
-                    </div>
+                        <div class="card-footer text-right">
+                            <button type="button" id="btnIncomplete" class="btn btn-secondary disabled"
+                                style="cursor: not-allowed;">Lengkapi Data</button>
+                            <button type="submit" id="btnSave" name="save" class="btn btn-success" style="display: none;"><i
+                                    class="fa fa-save"></i> Simpan Perubahan</button>
+                        </div>
                 </div>
             </div>
         </div>
@@ -290,8 +306,12 @@ if (isset($s['photo']) && $s['photo'] != "" && file_exists("file/fotopd/" . $s['
 
         if (window.selectedFiles.length > 0) {
             listContainer.classList.remove('d-none');
+            const totalContainer = document.getElementById('total-size-display-container');
+            if (totalContainer) totalContainer.classList.remove('d-none');
         } else {
             listContainer.classList.add('d-none');
+            const totalContainer = document.getElementById('total-size-display-container');
+            if (totalContainer) totalContainer.classList.add('d-none');
         }
 
         window.selectedFiles.forEach((file, index) => {

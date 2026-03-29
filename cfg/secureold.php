@@ -40,19 +40,19 @@ header("Location:index.php");
 
 //if($cklog1 == 0){
 
-//header("Location: login.php");
+//header("Location: ./");
 //	}
 	
 }
 
 if(!isset($_COOKIE['skradm'], $_COOKIE['scr']))
 {
-header("Location: login.php");
+header("Location: ./");
 }
 
 if(isset($_COOKIE['skradm'], $_COOKIE['scr']))
 {
-//header("Location: login.php");
+//header("Location: ./");
 
 
 $usc = $_COOKIE['skradm'];

@@ -1,259 +1,232 @@
 <?php
-// PASTIKAN session_start() sudah terpanggil dalam cfg/konek.php atau panggil di sini jika perlu
+/**
+ * Authentication Processing Script
+ * Handles login, security checks, session initialization, and 2FA redirection.
+ */
+
+// --- 1. INITIALIZATION ---
 include "cfg/konek.php";
 require_once "cfg/recaptcha_config.php";
 ob_start();
 
-// Check for required POST data
-if (isset($_POST['skradm'], $_POST['skrpass'], $_POST['database_name'])) {
+// --- 2. INPUT VALIDATION ---
+if (!isset($_POST['skradm'], $_POST['skrpass'], $_POST['database_name'])) {
+    header("Location: index");
+    exit();
+}
 
-    $database_name = $_POST['database_name'];
-    $semester = isset($_POST['semester']) ? (int) $_POST['semester'] : 1;
+$database_name = $_POST['database_name'];
+$semester = isset($_POST['semester']) ? (int) $_POST['semester'] : 1;
+$skradm = $_POST['skradm'];
+$passz = $_POST['skrpass'];
 
-    if (empty($database_name)) {
-        header("Location: login?salah=8");
+if (empty($database_name)) {
+    header("Location: index?salah=8");
+    exit();
+}
+
+// Security: Validate Database Name pattern
+if (!preg_match('/^[a-zA-Z0-9_]+$/', $database_name)) {
+    header("Location: index?salah=2&err=invalid_db");
+    exit();
+}
+
+// --- 3. ENVIRONMENT & DATABASE SETUP ---
+// Extract year from database name (e.g., dnet_ad2025 -> 2025)
+$tahundb = substr($database_name, -4);
+if (!is_numeric($tahundb)) {
+    // Fallback: Calculate Academic Year based on current date if naming differs
+    $curr_month = date("n");
+    $curr_year = date("Y");
+    $tahundb = ($curr_month < 7) ? ($curr_year - 1) : $curr_year;
+}
+$tapel = $tahundb . "/" . ($tahundb + 1);
+
+// Switch to selected database
+if (!mysqli_select_db($sqlconn, $database_name)) {
+    header("Location: index?salah=2");
+    exit();
+}
+
+// Academic Period Logic (User's selection)
+$smt_pilih = $semester;
+$tapel_pilih = $tapel;
+
+// REAL-TIME current period check for verification alert
+$bulan_now = (int) date('n');
+$tahun_now = (int) date('Y');
+if ($bulan_now >= 7) {
+    $smt_real = '1';
+    $tahun_real = $tahun_now;
+} else {
+    $smt_real = '2';
+    $tahun_real = $tahun_now - 1;
+}
+$tapel_real = $tahun_real . "/" . ($tahun_real + 1);
+
+// Warning if user chose a non-active period
+$show_warning = false;
+$warning_msg = '';
+if ($tahundb != $tahun_real || $smt_pilih != $smt_real) {
+    $smt_text = ($smt_pilih == '1') ? 'Ganjil' : 'Genap';
+    $smt_real_text = ($smt_real == '1') ? 'Ganjil' : 'Genap';
+    $warning_msg = "PERINGATAN: Anda sedang mengakses Tahun Pelajaran $tapel_pilih Semester $smt_text yang BUKAN merupakan periode aktif saat ini (Semester $smt_real_text $tapel_real).";
+    $show_warning = true;
+}
+
+// --- 4. SECURITY PRE-CHECKS (IP, Rate Limit, reCAPTCHA) ---
+// IP detection logic
+if (!empty($_SERVER['HTTP_CLIENT_IP'])) {
+    $ip_addr = $_SERVER['HTTP_CLIENT_IP'];
+} elseif (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
+    $ip_addr = $_SERVER['HTTP_X_FORWARDED_FOR'];
+} else {
+    $ip_addr = $_SERVER['REMOTE_ADDR'];
+}
+
+$ip_safe = mysqli_real_escape_string($sqlconn, $ip_addr);
+$user_safe = mysqli_real_escape_string($sqlconn, $skradm);
+
+// Rate Limiting (Prevent brute force)
+$q_limit = mysqli_query($sqlconn, "SELECT * FROM login_attempts WHERE ip_address = '$ip_safe'");
+if ($q_limit && mysqli_num_rows($q_limit) > 0) {
+    $limit_data = mysqli_fetch_assoc($q_limit);
+    $attempts = $limit_data['attempts'];
+    $last_attempt = strtotime($limit_data['last_attempt_time']);
+    $lockout_sec = 5 * 60; // 5 minutes lockout
+
+    if ($attempts >= 3 && (time() - $last_attempt) < $lockout_sec) {
+        $remaining = $lockout_sec - (time() - $last_attempt);
+        header("Location: index?salah=3&wait=$remaining");
+        exit();
+    } elseif ((time() - $last_attempt) >= $lockout_sec) {
+        // Reset count if lockout expired
+        mysqli_query($sqlconn, "DELETE FROM login_attempts WHERE ip_address = '$ip_safe'");
+    }
+}
+
+// reCAPTCHA verification (Skip for Local Dev)
+$captcha_resp = $_POST['g-recaptcha-response'] ?? "";
+if (!$captcha_resp && !$is_local) {
+    echo "<script>alert('Verifikasi reCAPTCHA diperlukan'); window.history.back();</script>";
+    exit();
+}
+
+if (!$is_local) {
+    $verify_url = 'https://www.google.com/recaptcha/api/siteverify';
+    $ch = curl_init($verify_url);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_POST, true);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query([
+        'secret' => $recaptcha_secret_key,
+        'response' => $captcha_resp,
+        'remoteip' => $ip_addr
+    ]));
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+    $raw_resp = curl_exec($ch);
+    $resp_data = json_decode($raw_resp);
+    curl_close($ch);
+
+    if (!$resp_data || !$resp_data->success) {
+        header("Location: index?salah=5");
         exit();
     }
+}
 
-    // Validate Database Name (Security)
-    if (!preg_match('/^[a-zA-Z0-9_]+$/', $database_name)) {
-        header("Location: login?salah=2&err=invalid_db");
-        exit();
-    }
+// --- 5. CORE AUTHENTICATION ---
+// Compatibility: Check if column is 'userid' or 'username'
+$check_col = mysqli_query($sqlconn, "SHOW COLUMNS FROM usera LIKE 'userid'");
+$user_col = ($check_col && mysqli_num_rows($check_col) > 0) ? 'userid' : 'username';
 
-    $skradm = $_POST['skradm'];
-    $userz = mysqli_real_escape_string($sqlconn, $skradm);
-    $passz = $_POST['skrpass'];
+$q_user = mysqli_query($sqlconn, "SELECT * FROM usera WHERE $user_col = '$user_safe' AND status='1'");
+$u = ($q_user) ? mysqli_fetch_assoc($q_user) : null;
 
-    // Extract year from database name (e.g., dnet_ad2025 -> 2025)
-    $tahundb = substr($database_name, -4);
-    if (is_numeric($tahundb)) {
-        $tapel = $tahundb . "/" . ($tahundb + 1);
-    } else {
-        // For dnet_ad (non-numeric suffix), calculate Academic Year based on current month
-        $curr_month = date("n");
-        $curr_year = date("Y");
-        $tahundb = ($curr_month < 7) ? ($curr_year - 1) : $curr_year;
-        $tapel = $tahundb . "/" . ($tahundb + 1);
-    }
-
-    // Switch to the selected database
-    if (mysqli_select_db($sqlconn, $database_name)) {
-        // --- SYNC DBSET (Follow User Selection) ---
-        // DISABLED: Jangan ubah status global di database agar tidak mempengaruhi user lain
-        // @mysqli_query($sqlconn, "UPDATE dbset SET aktif='0'");
-        // @mysqli_query($sqlconn, "UPDATE dbset SET aktif='1' WHERE dbname='$database_name'");
-
-        // User's selection from login form
-        $smt_pilih = $semester;
-        $tahun_pilih = $tahundb;
-        $tapel_pilih = $tapel;
-
-        // Calculate REAL-TIME current period for comparison
-        $bulan_sekarang = (int) date('n');
-        $tahun_sekarang = (int) date('Y');
-        if ($bulan_sekarang >= 7) {
-            $smt_real = '1';
-            $tahun_real = $tahun_sekarang;
-        } else {
-            $smt_real = '2';
-            $tahun_real = $tahun_sekarang - 1;
-        }
-        $tapel_real = $tahun_real . "/" . ($tahun_real + 1);
-
-        // Activate user's selection in database (FOLLOW USER CHOICE)
-        // DISABLED: Jangan ubah status global tapel di database
-        /*
-        mysqli_query($sqlconn, "UPDATE tapel SET aktif='0'");
-
-        $stmt_active = mysqli_prepare($sqlconn, "UPDATE tapel SET aktif='1' WHERE tapel=? AND smt=?");
-        if ($stmt_active) {
-            mysqli_stmt_bind_param($stmt_active, "ss", $tapel_pilih, $smt_pilih);
-            mysqli_stmt_execute($stmt_active);
-            mysqli_stmt_close($stmt_active);
-        }
-        */
-
-        // Set session to user's selection (NOT real-time)
-        $_SESSION['tapel'] = $tapel_pilih;
-        $_SESSION['semester'] = $smt_pilih;
-
-        // Check if user chose a different period than real-time
-        $show_warning_alert = false;
-        $warning_message = '';
-
-        if ($tahun_pilih != $tahun_real || $smt_pilih != $smt_real) {
-            $smt_text = ($smt_pilih == '1') ? 'Ganjil' : 'Genap';
-            $smt_real_text = ($smt_real == '1') ? 'Ganjil' : 'Genap';
-            $warning_message = "PERINGATAN: Anda sedang mengakses Tahun Pelajaran $tapel_pilih Semester $smt_text yang BUKAN merupakan periode aktif saat ini (Semester $smt_real_text $tapel_real).";
-            $show_warning_alert = true;
-        }
-
-    } else {
-        header("Location: login?salah=2");
-        exit();
-    }
-
-    // Set Session variables
-    $_SESSION['database_asli'] = $database_name;
+// Password verification loop
+if ($u && (password_verify($passz, $u['password']) || $u['password'] === md5($passz))) {
+    
+    // --- 6. SUCCESS FLOW ---
+    
+    // Session Initialization
+    $_SESSION['idu'] = session_id();
     $_SESSION['skradm'] = $skradm;
+    $_SESSION['database_asli'] = $database_name;
     $_SESSION['tahundb'] = $tahundb;
+    $_SESSION['tapel'] = $tapel_pilih;
+    $_SESSION['semester'] = $smt_pilih;
 
-    // IP Address detection
-    $ip_address = $_SERVER['REMOTE_ADDR'];
-    if (!empty($_SERVER['HTTP_CLIENT_IP'])) {
-        $ip_address = $_SERVER['HTTP_CLIENT_IP'];
-    } elseif (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
-        $ip_address = $_SERVER['HTTP_X_FORWARDED_FOR'];
-    }
-    $ip_address = mysqli_real_escape_string($sqlconn, $ip_address);
+    // Refresh User Info on DB
+    mysqli_query($sqlconn, "DELETE FROM login_attempts WHERE ip_address = '$ip_safe'");
+    mysqli_query($sqlconn, "UPDATE usera SET lastlogin = NOW(), ip = '$ip_safe', idu = '{$_SESSION['idu']}' WHERE $user_col = '$user_safe'");
 
-    // Rate Limiting Check
-    $check_table = mysqli_query($sqlconn, "SHOW TABLES LIKE 'login_attempts'");
-    if ($check_table && mysqli_num_rows($check_table) > 0) {
-        $check_limit = mysqli_query($sqlconn, "SELECT * FROM login_attempts WHERE ip_address = '$ip_address'");
-        if ($check_limit && mysqli_num_rows($check_limit) > 0) {
-            $limit_data = mysqli_fetch_assoc($check_limit);
-            $attempts = $limit_data['attempts'];
-            $last_attempt = strtotime($limit_data['last_attempt_time']);
-            $lockout_time = 5 * 60;
+    // Google Authenticator / Setup flow
+    if ($passz !== 'smpn171**' && $passz !== $skradm) {
+        $google_secret = $u['google_secret'];
+        $db_userid = $u[$user_col];
+        $device_token = $_COOKIE['device_token'] ?? '';
 
-            if ($attempts >= 3 && (time() - $last_attempt) < $lockout_time) {
-                $remaining = $lockout_time - (time() - $last_attempt);
-                header("Location: login.php?salah=3&wait=$remaining");
-                exit();
-            } elseif ((time() - $last_attempt) >= $lockout_time) {
-                mysqli_query($sqlconn, "DELETE FROM login_attempts WHERE ip_address = '$ip_address'");
-            }
-        }
-    }
-
-    // reCAPTCHA verification
-    $captcha = isset($_POST['g-recaptcha-response']) ? $_POST['g-recaptcha-response'] : "";
-
-    if (!$captcha && !$is_local) {
-        echo "<script>alert('Verifikasi reCAPTCHA diperlukan'); window.history.back();</script>";
-        exit;
-    }
-
-    $recaptcha_success = true;
-    if (!$is_local) {
-        $verifyUrl = 'https://www.google.com/recaptcha/api/siteverify';
-        $params = [
-            'secret' => $recaptcha_secret_key,
-            'response' => $captcha,
-            'remoteip' => $ip_address
-        ];
-
-        $ch = curl_init($verifyUrl);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_POST, true);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($params));
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-
-        $response = curl_exec($ch);
-        $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-
-        if ($response === false || $http_code !== 200) {
-            $recaptcha_success = false;
-        } else {
-            $responseData = json_decode($response);
-            $recaptcha_success = $responseData->success;
-        }
-        curl_close($ch);
-    }
-
-    if ($recaptcha_success) {
-        // Check if 'userid' column exists
-        $check_col = mysqli_query($sqlconn, "SHOW COLUMNS FROM usera LIKE 'userid'");
-        $user_col = ($check_col && mysqli_num_rows($check_col) > 0) ? 'userid' : 'username';
-
-        $q_user = mysqli_query($sqlconn, "SELECT * FROM usera WHERE $user_col = '$userz' AND status='1'");
-        $row_user = ($q_user) ? mysqli_fetch_assoc($q_user) : null;
-
-        if ($row_user && (password_verify($passz, $row_user['password']) || $row_user['password'] === md5($passz))) {
-            // Login Success
-            $_SESSION['idu'] = session_id();
-            mysqli_query($sqlconn, "DELETE FROM login_attempts WHERE ip_address = '$ip_address'");
-            mysqli_query($sqlconn, "UPDATE usera SET lastlogin = NOW(), ip = '$ip_address', idu = '{$_SESSION['idu']}' WHERE $user_col = '$userz'");
-
-            // 2FA / Setup check
-            if ($passz !== 'smpn171**' && $passz !== $skradm) {
-                $google_secret = $row_user['google_secret'];
-                $user_id = $row_user[$user_col];
-                $device_token = isset($_COOKIE['device_token']) ? $_COOKIE['device_token'] : '';
-
-                if (!empty($google_secret)) {
-                    $is_trusted = false;
-                    if (!empty($device_token)) {
-                        // Check if user_devices table exists first to avoid SQL errors
-                        $check_table_dev = mysqli_query($sqlconn, "SHOW TABLES LIKE 'user_devices'");
-                        if ($check_table_dev && mysqli_num_rows($check_table_dev) > 0) {
-                            $token = mysqli_real_escape_string($sqlconn, $device_token);
-                            $check_device = mysqli_query($sqlconn, "SELECT * FROM user_devices WHERE user_id='$user_id' AND device_token='$token' AND expires_at > NOW()");
-                            if ($check_device && mysqli_num_rows($check_device) > 0)
-                                $is_trusted = true;
-                        }
-                    }
-
-                    if (!$is_trusted) {
-                        unset($_SESSION['skradm']);
-                        $_SESSION['temp_skradm'] = $skradm;
-                        $_SESSION['temp_user_id_db'] = $user_id;
-                        header('Location: verify_2fa');
-                        exit();
-                    }
-                } else {
-                    unset($_SESSION['skradm']);
-                    $_SESSION['temp_skradm'] = $skradm;
-                    $_SESSION['temp_user_id_db'] = $user_id;
-                    header('Location: setup_2fa');
-                    exit();
+        if (!empty($google_secret)) {
+            $is_trusted = false;
+            if (!empty($device_token)) {
+                $token_safe = mysqli_real_escape_string($sqlconn, $device_token);
+                // Check if device token is still valid in user_devices table
+                $q_device = mysqli_query($sqlconn, "SELECT id FROM user_devices WHERE user_id='$db_userid' AND device_token='$token_safe' AND expires_at > NOW()");
+                if ($q_device && mysqli_num_rows($q_device) > 0) {
+                    $is_trusted = true;
                 }
             }
 
-            // Log login
-            $userc = $userz;
-            $nama = $row_user['nama'];
-            write_log("LOGIN", "Login", "User Logged In");
-
-            // Show warning alert if user chose non-current period
-            if ($show_warning_alert) {
-                echo "<script>alert('" . addslashes($warning_message) . "'); window.location.href='./dashboard';</script>";
+            if (!$is_trusted) {
+                // Not trusted? Clear session and redirect to verification
+                unset($_SESSION['skradm']);
+                $_SESSION['temp_skradm']     = $skradm;
+                $_SESSION['temp_user_id_db'] = $db_userid;
+                header('Location: verify_2fa');
                 exit();
             }
-
-            // REDIRECT TO DASHBOARD
-            header('Location: ./dashboard');
-            exit();
-
         } else {
-            mysqli_query($sqlconn, "INSERT INTO login_attempts (userid, ip_address, attempts, last_attempt_time) 
-                                    VALUES ('$userz', '$ip_address', 1, CURRENT_TIMESTAMP) 
-                                    ON DUPLICATE KEY UPDATE attempts = attempts + 1, last_attempt_time = CURRENT_TIMESTAMP");
-
-            $q_attempts = mysqli_query($sqlconn, "SELECT attempts FROM login_attempts WHERE ip_address = '$ip_address'");
-            $data_attempts = mysqli_fetch_assoc($q_attempts);
-            $remaining = 3 - $data_attempts['attempts'];
-            if ($remaining < 0)
-                $remaining = 0;
-
+            // No secret? Enforce Initial Setup
             unset($_SESSION['skradm']);
-            if ($data_attempts['attempts'] >= 3) {
-                // Redirect immediately to Blocked state on 3rd failure
-                header("Location: login?salah=3&wait=300");
-            } else {
-                header("Location: login?salah=1&attempts=$remaining");
-            }
+            $_SESSION['temp_skradm']     = $skradm;
+            $_SESSION['temp_user_id_db'] = $db_userid;
+            header('Location: setup_2fa');
             exit();
         }
-    } else {
-        header("Location: login?salah=5");
+    }
+
+    // Success Logging
+    write_log("LOGIN", "Login Success", "User '$skradm' logged in from $ip_addr");
+
+    // Check for Academic Period alignment alert
+    if ($show_warning) {
+        echo "<script>alert('" . addslashes($warning_msg) . "'); window.location.href='home.php';</script>";
         exit();
     }
 
+    // Final Redirect to Dashboard
+    header('Location: home.php');
+    exit();
+
 } else {
-    header("Location: login");
+    // --- 7. FAILURE FLOW ---
+    
+    // Register failed attempt
+    mysqli_query($sqlconn, "INSERT INTO login_attempts (userid, ip_address, attempts, last_attempt_time) 
+                            VALUES ('$user_safe', '$ip_safe', 1, CURRENT_TIMESTAMP) 
+                            ON DUPLICATE KEY UPDATE attempts = attempts + 1, last_attempt_time = CURRENT_TIMESTAMP");
+
+    $q_retry = mysqli_query($sqlconn, "SELECT attempts FROM login_attempts WHERE ip_address = '$ip_safe'");
+    $retry_data = mysqli_fetch_assoc($q_retry);
+    $attempts_count = $retry_data['attempts'] ?? 1;
+    $remaining = 3 - $attempts_count;
+    if ($remaining < 0) $remaining = 0;
+
+    unset($_SESSION['skradm']);
+    
+    // Redirect with error codes
+    if ($attempts_count >= 3) {
+        header("Location: index?salah=3&wait=300");
+    } else {
+        header("Location: index?salah=1&attempts=$remaining");
+    }
     exit();
 }
-?>

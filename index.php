@@ -1,860 +1,521 @@
 <?php
-session_start();
+// Database connection configuration
+// $server = "localhost";
+// $username = "arsip";
+// $password = "BHmD8VlJELecRqw4S5OAYXDpc";
+// $database = "";
 
-include "cfg/konek.php";
-include "cfg/secure.php";
-include "cfg/tapel.php";
+$server = "localhost";
+$username = "root";
+$password = "";
+$database = "";
 
-// Ambil daftar kelas untuk modal daftar hadir
-$dh_kelas_list = [];
-$rk_dh = @mysqli_query($sqlconn, "SELECT DISTINCT kelas FROM siswa WHERE kelas != '' ORDER BY kelas ASC");
-if ($rk_dh) {
-    while ($k = mysqli_fetch_assoc($rk_dh)) {
-        $dh_kelas_list[] = $k['kelas'];
+// Connect to server for database listing
+$db_conn = new mysqli($server, $username, $password, $database);
+
+// Self-healing removed as it conflicts with explicit period selection and is handled better in proses./
+
+$db_list = [];
+if ($db_conn->connect_error) {
+    $db_list[] = ["name" => "Koneksi Gagal", "display" => "Koneksi DB Gagal"];
+} else {
+    // Ambil daftar database
+    $result = $db_conn->query("SHOW DATABASES");
+    if ($result) {
+        while ($row = $result->fetch_array(MYSQLI_NUM)) {
+            $db_name = $row[0];
+            // Filter database yang berawalan 'pnet_pd' atau 'dnet_ad' (Maintain compatibility)
+            if (strpos($db_name, 'dnet_ad') === 0) {
+                // Display adjustment
+                if (strpos($db_name, 'dnet_ad') === 0) {
+                    $display_name = substr($db_name, 7);
+                    if (substr($display_name, 0, 1) === '_')
+                        $display_name = substr($display_name, 1);
+                }
+
+                if (empty($display_name)) {
+                    $display_name = $db_name;
+                } else {
+                    if (is_numeric($display_name) && strlen($display_name) == 4) {
+                        $display_name = $display_name . "/" . ($display_name + 1);
+                    }
+                }
+                $db_list[] = ["name" => $db_name, "display" => $display_name];
+            }
+        }
+    }
+    $db_conn->close();
+}
+
+// Ensure Connection is available for profile info (logo, etc)
+require_once "cfg/konek.php";
+require_once "cfg/recaptcha_config.php";
+
+// --- CHECK LOCKOUT STATUS ON PAGE LOAD ---
+$is_blocked = false;
+$remaining_seconds = 0;
+$ip_address = $_SERVER['REMOTE_ADDR'];
+if (!empty($_SERVER['HTTP_CLIENT_IP'])) {
+    $ip_address = $_SERVER['HTTP_CLIENT_IP'];
+} elseif (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
+    $ip_address = $_SERVER['HTTP_X_FORWARDED_FOR'];
+}
+$ip_address = mysqli_real_escape_string($sqlconn, $ip_address);
+
+$check_table = mysqli_query($sqlconn, "SHOW TABLES LIKE 'login_attempts'");
+if ($check_table && mysqli_num_rows($check_table) > 0) {
+    $check_limit = mysqli_query($sqlconn, "SELECT * FROM login_attempts WHERE ip_address = '$ip_address'");
+    if ($check_limit && mysqli_num_rows($check_limit) > 0) {
+        $limit_data = mysqli_fetch_assoc($check_limit);
+        $attempts = $limit_data['attempts'];
+        $last_attempt = strtotime($limit_data['last_attempt_time']);
+        $lockout_time = 5 * 60;
+
+        if ($attempts >= 3 && (time() - $last_attempt) < $lockout_time) {
+            $is_blocked = true;
+            $remaining_seconds = $lockout_time - (time() - $last_attempt);
+        }
     }
 }
-
-// --- ROUTING LOGIC ---
-$route_key = key($_GET);
-if (empty($route_key)) {
-    $route = "dashboard";
-} else {
-    $route = urldecode((string) $route_key);
-}
-
-// --- BREADCRUMB & PAGE TITLE LOGIC ---
-$breadcrumb_map = [
-    'dashboard' => 'Dashboard',
-    'datasiswa' => 'Data Siswa',
-    'arsipdata' => 'Arsip Data',
-    'arsipdata/inputprestasi' => 'Input Prestasi',
-    'arsipdata/inputlegalisir' => 'Input Legalisir',
-    'print' => 'Print',
-    'print/laporanprestasi' => 'Laporan Prestasi',
-    'print/laporanlegalisir' => 'Laporan Legalisir',
-    'management' => 'Management',
-    'management/usermanagement' => 'User Staff & Admin',
-    'management/datasekolah' => 'Data Sekolah',
-    'management/settings' => 'Settings',
-    'management/profil' => 'Profile',
-    'management/uploadsiswa' => 'Upload Excel Siswa',
-    'management/uploaduser' => 'Upload Data User',
-    'management/uploadfoto' => 'Upload Foto (ZIP)',
-    'system' => 'System',
-    'system/database' => 'Database',
-    'system/checkupdate' => 'Check Update',
-    'system/activitylog' => 'Activity Log',
-    'dataprestasi' => 'Input Prestasi',
-    'inputprestasi' => 'Input Prestasi',
-    'viewpress' => 'Detail Prestasi',
-    'editpress' => 'Edit Prestasi',
-    'editlegalisir' => 'Edit Legalisir',
-    'viewlegalisir' => 'Detail Legalisir',
-    'edit_usera' => 'Edit Data User',
-    'tambah_usera' => 'Tambah User Baru'
-];
-
-$breadcrumb_items = [];
-$route_parts = explode('/', $route);
-$route_last = end($route_parts);
-if (isset($breadcrumb_map[$route])) {
-    $name = $breadcrumb_map[$route];
-} else {
-    // If not in map, clean up the route name
-    $name = str_replace(['-', '/', '_', '.php'], ' ', $route_last);
-    $name = ucwords(trim($name));
-    if (empty($name))
-        $name = 'Dashboard';
-}
-
-$breadcrumb_items[] = [
-    'name' => $name,
-    'url' => $route,
-    'active' => true
-];
-
-$page_title = end($breadcrumb_items)['name'] ?? 'Dashboard';
-
-$user = $_SESSION['skradm'];
-
-// mengambil data berdasarkan id
-// dan menampilkan data ke dalam form modal bootstrap
-$user_safe = mysqli_real_escape_string($sqlconn, $user ?? '');
-$sqlp = mysqli_query($sqlconn, "SELECT * FROM usera WHERE userid = '$user_safe'");
-$p = ($sqlp && mysqli_num_rows($sqlp) > 0) ? mysqli_fetch_array($sqlp) : [];
-$poto = $p['poto'] ?? '';
-$lv = $p['level'] ?? '';
-$nuser = $p['userid'] ?? '';
-$nama = $p['nama'] ?? '';
-$passworddb = $p['password'] ?? '';
-
-$sqlp_siswa = mysqli_query($sqlconn, "SELECT * FROM siswa WHERE pd = '$user_safe'");
-$p_siswa = ($sqlp_siswa && mysqli_num_rows($sqlp_siswa) > 0) ? mysqli_fetch_array($sqlp_siswa) : [];
-$photo = $p_siswa['photo'] ?? '';
-
-// Check for default password (smpn171**) OR Username as Password
-$triggerForceChange = false;
-$default_pass = 'smpn171**';
-
-// Check if password matches default OR matches username (common initial setup)
-if (
-    password_verify($default_pass, $passworddb) ||
-    $passworddb === md5($default_pass) ||
-    password_verify($user, $passworddb) ||
-    $passworddb === md5($user)
-) {
-    $triggerForceChange = true;
-}
-
-// Redirect or block module access if force change is needed (optional, effectively handled by modal)
-// But we want to ensure they can't simply ignore the modal via inspector, so maybe strictness?
-// For now, the modal is backdrop static, which is good enough for UI level enforcement.
-
+// ------------------------------------------
 
 ?>
+
 <!DOCTYPE html>
-<html lang="id">
+<html lang="en">
 
 <head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Arsip Data</title>
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>S.A.D | <?php echo htmlspecialchars($page_title, ENT_QUOTES, 'UTF-8'); ?></title>
-    <base href="/coba/">
 
-    <!-- Favicon -->
-    <link rel="shortcut icon" type="image/x-icon" href="">
-
-    <!-- Base & Icons -->
+    <!-- Icons -->
+    <link rel="icon" type="image/png" href="images/<?php echo $sklogo; ?>">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-    <link rel="stylesheet" href="https://code.ionicframework.com/ionicons/2.0.1/css/ionicons.min.css">
-    <link rel="stylesheet"
+    <link rel="stylesheet" type="text/css"
         href="https://cdnjs.cloudflare.com/ajax/libs/material-design-iconic-font/2.2.0/css/material-design-iconic-font.min.css">
 
-    <!-- Vendor CSS -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/admin-lte@3.2.0/dist/css/adminlte.min.css">
-    <link rel="stylesheet" href="plugins/css/select2.min.css">
-    <link rel="stylesheet" href="plugins/css/datatables.min.css">
+    <!-- Styles -->
+    <link rel="stylesheet" type="text/css" href="plugins/css/util.css">
+    <link rel="stylesheet" type="text/css" href="plugins/css/main2.css">
 
-    <!-- Core Bootstrap & Extensions -->
-    <link rel="stylesheet" href="plugins/css/bootstrap.min.css">
-    <link rel="stylesheet" href="plugins/css/bootstrap-extended.min.css">
-    <link rel="stylesheet" href="plugins/css/components.min.css">
-    <link rel="stylesheet" href="plugins/css/colors.min.css">
-    <link rel="stylesheet" href="plugins/css/palette-gradient.min.css">
-    <link rel="stylesheet" href="https://cdn.datatables.net/1.10.19/css/jquery.dataTables.min.css">
+    <!-- Scripts -->
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+    <style>
+        /* The container must be positioned relative: */
+        .custom-select {
+            position: relative;
+            font-family: Arial;
+        }
 
+        .custom-select select {
+            display: none;
+            /*hide original SELECT element: */
+        }
 
-    <!-- Custom CSS -->
-    <link rel="stylesheet" href="plugins/css/main.css">
-    <link rel="stylesheet" href="custom.css">
+        .select-selected {
+            background-color: rgba(0, 0, 0, 0.5);
+        }
 
-    <!-- Google Fonts -->
-    <link
-        href="https://fonts.googleapis.com/css?family=Open+Sans:300,400,600,700|Quicksand:300,400,500,700|Poppins:300,400,500,600,700"
-        rel="stylesheet">
+        /* Style the arrow inside the select element: */
+        .select-selected:after {
+            position: absolute;
+            content: "";
+            top: 14px;
+            right: 10px;
+            width: 0;
+            height: 0;
+            border: 6px solid transparent;
+            border-color: #fff transparent transparent transparent;
+        }
 
-    <!-- Core Scripts -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
-<<<<<<< HEAD
-=======
+        /* Point the arrow upwards when the select box is open (active): */
+        .select-selected.select-arrow-active:after {
+            border-color: transparent transparent #fff transparent;
+            top: 7px;
+        }
 
-    <!-- Custom & Plugin CSS --->
-    <link rel="stylesheet" href="plugins/css/select2.min.css">
-    <link rel="stylesheet" href="plugins/css/datatables.min.css">
-    <!--<link rel="stylesheet" href="https://cdn.datatables.net/1.10.19/css/jquery.dataTables.min.css">
-    <link rel="stylesheet" href="https://cdn.datatables.net/fixedcolumns/3.2.6/css/fixedColumns.dataTables.min.css">-->
-    <link rel="stylesheet" href="plugins/css/bootstrap-extended.min.css">
-    <link rel="stylesheet" href="plugins/css/main.css">
-    <link rel="stylesheet" href="custom.css">
-    <link rel="stylesheet" href="plugins/css/colors.min.css">
-    <link rel="stylesheet" href="plugins/css/palette-gradient.min.css">
-    <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,300i,400,400i,600,600i,700,700i%7CQuicksand:300,400,500,700%7CPoppins:300,400,500,600,700" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/material-design-iconic-font/2.2.0/css/material-design-iconic-font.min.css">
->>>>>>> 4edc61980be6bcf6772bccd84d6da818fdbfb793
+        /* style the items (options), including the selected item: */
+        .select-items div,
+        .select-selected {
+            color: #ffffff;
+            padding: 8px 16px;
+            border: 1px solid transparent;
+            border-color: transparent transparent rgba(0, 0, 0, 0.1) transparent;
+            cursor: pointer;
+        }
+
+        /* Style items (options): */
+        .select-items {
+            position: absolute;
+            background-color: rgba(0, 0, 0, 0.8);
+            top: 100%;
+            left: 0;
+            right: 0;
+            z-index: 99;
+        }
+
+        /* Hide the items when the select box is closed: */
+        .select-hide {
+            display: none;
+        }
+
+        .select-items div:hover,
+        .same-as-selected {
+            background-color: rgba(66, 135, 245, 0.8);
+        }
+
+        select option {
+            margin: 40px;
+            background: rgba(0, 0, 0, 0.8);
+            color: #fff;
+            text-shadow: 0 1px 0 rgba(0, 0, 0, 0.4);
+        }
+
+        .eye-icon {
+            position: absolute;
+            right: 14px;
+            top: 5px;
+            transform: translateY(50%);
+            cursor: pointer;
+            color: #ff0000;
+            z-index: 1;
+            font-size: 16px;
+        }
+
+        .eye-icon:hover {
+            color: #0010ff;
+        }
+
+        .form-group {
+            position: relative;
+        }
+
+        input[type="password"],
+        input[type="text"] {
+            padding-right: 30px;
+        }
+
+        /* Animated gradient border for error messages */
+        .error-gradient-border {
+            position: relative;
+            background-color: transparent;
+            padding: 17px;
+            border-radius: 10px;
+            margin-top: 10px;
+            color: #fc0505ff;
+            font-size: 14px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .error-gradient-border strong {
+            color: #ff0000;
+            font-weight: bold;
+        }
+
+        .error-gradient-border::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, #ff0000, #ff6600, #000000ff, #ff0000, #ff6600);
+            background-size: 400% 400%;
+            border-radius: 10px;
+            z-index: -2;
+            animation: gradientMove 5s ease infinite;
+        }
+
+        .error-gradient-border::after {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            right: 2px;
+            bottom: 2px;
+            background-color: rgba(0, 0, 0, 0.9);
+            border-radius: 8px;
+            z-index: -1;
+        }
+
+        .error-gradient-border {
+            z-index: 1;
+        }
+
+        .container-login100 {
+            background-position: center;
+            background-size: cover;
+            background-repeat: no-repeat;
+        }
+
+        .login100-form-btn:disabled {
+            background-color: #cccccc;
+            color: #666666;
+            cursor: not-allowed;
+            border-color: #999999;
+        }
+
+        @keyframes gradientMove {
+            0% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+    </style>
 </head>
 
-<body class="hold-transition sidebar-mini layout-fixed">
-    <div class="wrapper">
-        <!-- Navbar -->
-        <nav class="main-header navbar navbar-expand bg-menu-gradient">
-            <!-- Left navbar links -->
-            <ul class="navbar-nav align-items-center">
-                <li class="nav-item">
-                    <a class="nav-link" data-widget="pushmenu" href="#" role="button"><i class="fas fa-bars"></i></a>
-                </li>
-                <li class="nav-item d-none d-sm-inline-block text-white">
-                    <span class="nav-link">Tahun Pelajaran: <?php echo $tapel ?> | Semester:
-                        <?php echo $semester == '1' ? 'Ganjil' : ($semester == '2' ? 'Genap' : '-'); ?></span>
-                </li>
-            </ul>
-
-            <!-- Right navbar links -->
-            <ul class="navbar-nav ml-auto align-items-center">
-                <li class="nav-item d-none d-sm-inline-block text-white pr-3">
-                    <span class="nav-link">
-                        <script type='text/javascript'>
-                            (function () {
-                                var months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
-                                var myDays = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jum\'at', 'Sabtu'];
-                                var now = new Date();
-                                var dayName = myDays[now.getDay()];
-                                var day = now.getDate();
-                                var monthName = months[now.getMonth()];
-                                var year = now.getFullYear();
-                                document.write(dayName + ', ' + day + ' ' + monthName + ' ' + year + ', ');
-                            })();
-                        </script>
-                        <time id="clock"></time>
-
-                        <script>
-                            (function () {
-                                var clock = document.getElementById('clock');
-                                if (clock) {
-                                    setInterval(function () {
-                                        var now = new Date();
-                                        clock.innerHTML = now.toLocaleTimeString('id-ID', { hour12: false });
-                                    }, 1000);
-                                    // Initial call
-                                    clock.innerHTML = new Date().toLocaleTimeString('id-ID', { hour12: false });
-                                }
-                            })();
-                        </script>
+<body>
+    <div class="container-login100" style="background-image: url('images/<?php echo $skback; ?>');">
+        <div class="wrap-login100">
+            <section id="region-main" class="col-12 h-100" aria-label="Content">
+                <form method="post" action="proses./">
+                    <span class="login100-form-logo">
+                        <i class="zmdi landscape"><img src="images/<?php echo $sklogo; ?>" width="120"
+                                height="110" /></i>
                     </span>
-                </li>
-            </ul>
-            <!-- START: Interactive Tapel Check -->
+
+                    <span class="login100-form-title p-b-34 p-t-27">
+                        Arsip Data<br>
+                        <?php echo $namasek; ?>
+                    </span>
+
+                    <div class="wrap-input100 validate-input" data-validate="Masukan Username">
+                        <input class="input100" type="text" id="skradm" name="skradm" placeholder="Username">
+                        <span class="focus-input100" data-placeholder="&#xf207;"></span>
+                    </div>
+
+                    <div class="wrap-input100 validate-input" data-validate="Masukan Password">
+                        <input class="input100" type="password" id="skrpass" name="skrpass" placeholder="Password">
+                        <span class="focus-input100" data-placeholder="&#xf191;"></span>
+                        <i class="fa fa-eye-slash eye-icon" id="toggle-password"></i>
+                    </div>
+                    <!-- Pilihan Database -->
+                    <div class="wrap-input100 validate-input" data-validate="Database Harus Dipilih">
+                        <select id="database" name="database_name" class="input100 form-control selectpicker"
+                            data-live-search="true" required>
+                            <option value="">Pilih Tahun Pelajaran</option>
+                            <?php foreach ($db_list as $db_item): ?>
+                                <option value="<?php echo htmlspecialchars($db_item['name']); ?>">
+                                    <?php echo htmlspecialchars($db_item['display']); ?>
+                                </option>
+                                <?php
+                            endforeach; ?>
+                        </select>
+                    </div>
+
+                    <!-- Pilihan Semester -->
+                    <div class="wrap-input100 validate-input" data-validate="Semester Harus Dipilih">
+                        <select id="semester" name="semester" class="input100 form-control" required
+                            style="border: none; background: transparent; color: white;">
+                            <option value="" style="color: black;">Pilih Semester:</option>
+                            <option value="1" style="color: black;">Semester 1 (Ganjil)</option>
+                            <option value="2" style="color: black;">Semester 2 (Genap)</option>
+                        </select>
+                        <span class="focus-input100" data-placeholder="&#xf271;"></span>
+                    </div>
+
+                    <div class="g-recaptcha" data-sitekey="<?php echo $recaptcha_site_key; ?>"></div>
+                    <br>
+                    <div class="container-login100-form-btn">
+                        <span class="text-center p-t-90 txt1"></span>
+                        <button id="login-btn" class="login100-form-btn" <?php echo $is_blocked ? 'disabled' : ''; ?>>
+                            Login
+                        </button>
+                    </div>
+                </form>
+            </section>
+
             <?php
-            $show_tapel_modal = false;
-            $expected = get_expected_tapel();
 
-            // Check if this expected tapel/smt exists
-            if (!check_tapel_exists($sqlconn, $expected['tapel'], $expected['smt'])) {
-                $show_tapel_modal = true;
-                $new_tapel = $expected['tapel'];
-                $new_smt = $expected['smt'];
-                $new_tahun = $expected['tahun'];
-            }
-            ?>
+            // Pastikan tidak ada spasi sebelum tag php
+            
+            if ($is_blocked || (isset($_GET['salah']) && $_GET['salah'] == 3)) {
+                // --- KASUS 1: user diblokir ---
+                // Ambil waktu tunggu dari URL parameter 't' atau dari deteksi IP
+                $wait_time = isset($_GET['wait']) ? (int) $_GET['wait'] : (isset($_GET['t']) ? (int) $_GET['t'] : $remaining_seconds);
+                $minutes = floor($wait_time / 60);
+                $seconds = $wait_time % 60;
+                $sPadded = $seconds < 10 ? '0' . $seconds : $seconds;
 
-            <?php if ($show_tapel_modal): ?>
-                <script>
-                    $(document).ready(function () {
-                        // Append modal to body to fix backdrop issue
-                        $('#modalNewTapel').appendTo('body').modal('show');
+                echo "<div class='error-gradient-border' style='color: red; padding: 10px; border: 1px solid red; background: #ffe6e6; margin-bottom: 10px;'>
+                        <strong>AKSES DIBLOKIR!</strong><br>
+                        Anda salah memasukkan password sebanyak 3x.<br>
+                        Silahkan tunggu: <span id='countdown' style='font-weight:bold; font-size:1.2em;'>$minutes menit $sPadded detik</span>
+                      </div>";
+                echo "<script>
+                    var timeLeft = $wait_time;
+                    var elem = document.getElementById('countdown');
+                    var loginBtn = document.getElementById('login-btn');
+                    
+                    if (loginBtn) loginBtn.disabled = true;
 
-                        $('#btnCreateTapel').click(function () {
-                            var tapel = '<?php echo $new_tapel; ?>';
-                            var smt = '<?php echo $new_smt; ?>';
-                            var tahun = '<?php echo $new_tahun; ?>';
-
-                            $.ajax({
-                                type: 'POST',
-                                url: 'create_tapel.php',
-                                data: { tapel: tapel, smt: smt, tahun: tahun },
-                                success: function (response) {
-                                    if (response.trim() == "success") {
-                                        alert("Tahun Pelajaran Baru Berhasil Dibuat dan Diaktifkan! Silahkan Login Ulang untuk memperbaharui sesi.");
-                                        window.location.href = 'exit.php';
-                                    } else {
-                                        alert("Gagal: " + response);
-                                    }
-                                },
-                                error: function () {
-                                    alert("Terjadi kesalahan koneksi.");
-                                }
-                            });
-                        });
-                    });
-                </script>
-
-                <!-- Modal New Tapel -->
-                <div class="modal fade" id="modalNewTapel" tabindex="-1" aria-labelledby="exampleModalLabel"
-                    aria-hidden="true" data-backdrop="static" data-keyboard="false">
-                    <div class="modal-dialog">
-                        <div class="modal-content ">
-                            <div class="modal-header bg-info">
-                                <h5 class="modal-title" id="exampleModalLabel"><i class="fas fa-calendar-alt"></i>
-                                    Deteksi Tahun Pelajaran Baru</h5>
-                            </div>
-                            <div class="modal-body">
-                                <p>Sistem mendeteksi bahwa saat ini sudah memasuki periode:</p>
-                                <h3>Tahun Pelajaran: <b><?php echo $new_tapel; ?></b></h3>
-                                <h3>Semester: <b><?php echo $new_smt == '1' ? '1 (Ganjil)' : '2 (Genap)'; ?></b></h3>
-                                <p>Data ini belum ada di database. Apakah Anda ingin membuatnya dan mengaktifkannya
-                                    sekarang?</p>
-                            </div>
-                            <div class="modal-footer justify-content-between">
-                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Nanti
-                                    Saja</button>
-                                <button type="button" class="btn btn-primary" id="btnCreateTapel"><b>Ya, Buat &
-                                        Aktifkan</b></button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            <?php endif; ?>
-            <!-- END: Interactive Tapel Check -->
-        </nav>
-
-        <!-- ==========================================
-             MAIN SIDEBAR
-             ========================================== -->
-        <aside class="main-sidebar sidebar-dark-primary elevation">
-            <!-- Brand Logo -->
-            <a href="dashboard" class="brand-link d-flex flex-column align-items-center text-center py-2">
-                <img src="images/logo.png" alt="smpn171" class="brand-image img-circle elevation-3 mb-1"
-                    style="opacity: .7; float: none; margin-left: 0;">
-                <span class="brand-text font-weight-light text-wrap" style="line-height: 1.2;">Sistem Arsip Data</span>
-            </a>
-
-            <!-- Sidebar -->
-            <div class="sidebar">
-                <!-- User Panel -->
-                <div class="user-panel mt-1 pb-1 mb-1 d-flex">
-                    <div class="image">
-                        <?php
-                        if (!empty($poto) && file_exists("images/$poto")) {
-                            echo "<img src='images/$poto' class='img-circle elevation-2' alt='User Photo'>";
-                        } else {
-                            echo "<img src='images/default.png' class='img-circle elevation-2' alt='Default Photo'>";
-                        }
-                        ?>
-                    </div>
-                    <div class="info">
-                        <?php
-                        if ($nama !== "") {
-                            if (!$triggerForceChange) {
-                                echo "<a href='profil' class='d-block'>" . $nama . "</a>";
-                            } else {
-                                echo "<span class='d-block text-white'>" . $nama . "</span>";
+                    var timerId = setInterval(function() {
+                        if (timeLeft <= 0) {
+                            clearInterval(timerId);
+                            if (elem) elem.innerHTML = '0 menit 00 detik';
+                            if (loginBtn) {
+                                loginBtn.disabled = false;
+                                loginBtn.innerHTML = 'Login';
                             }
+                            window.location.href = './';
                         } else {
-                            echo "<a class='d-block'>Error</a>";
+                            timeLeft--;
+                            var m = Math.floor(timeLeft / 60);
+                            var s = timeLeft % 60;
+                            var sPadded = s < 10 ? '0' + s : s;
+                            if (elem) elem.innerHTML = m + ' menit ' + sPadded + ' detik';
                         }
-                        ?>
-                    </div>
-                </div>
-
-                <!-- Sidebar Menu -->
-                <nav class="">
-                    <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu"
-                        data-accordion="false">
-                        <?php
-                        // $route already set at the top
-                        if (!$triggerForceChange) {
-                            ?>
-                            <!-- Main Menu Header -->
-                            <li class="nav-header">MENU UTAMA</li>
-
-                            <!-- Data Siswa (Admin Only) -->
-                            <?php if ($lv == "1") { ?>
-                                <li class="nav-item">
-                                    <a href="datasiswa" class="nav-link <?php echo ($route == 'datasiswa') ? 'active' : ''; ?>"
-                                        id="1">
-                                        <i class="nav-icon fas fa-address-card"></i>
-                                        <p>Data Siswa</p>
-                                    </a>
-                                </li>
-                                <!--<li class="nav-item">
-                                    <a href="../compress" class="nav-link" target="_blank">
-                                        <i class=" nav-icon fas fa-tools"></i>
-                                        <p>SAD PDF</p>
-                                    </a>
-                                </li>-->
-                            <?php } ?>
-
-                            <!-- Arsip Data Menu -->
-                            <?php $is_arsip = (strpos($route, 'arsipdata') === 0 || $route == 'dataprestasi' || $route == 'inputlegalisir'); ?>
-                            <li class="nav-item has-treeview <?php echo $is_arsip ? 'menu-open' : ''; ?>">
-                                <a href="arsipdata" class="nav-link <?php echo $is_arsip ? 'active' : ''; ?>" id="2">
-                                    <i class="nav-icon fas fa-edit"></i>
-                                    <p>
-                                        Input
-                                        <i class="right fas fa-angle-left"></i>
-                                    </p>
-                                </a>
-                                <ul class="nav nav-treeview">
-                                    <li class="nav-item">
-                                        <a href="arsipdata/inputprestasi"
-                                            class="nav-link <?php echo ($route == 'arsipdata/inputprestasi' || $route == 'dataprestasi') ? 'active' : ''; ?>"
-                                            id="3">
-                                            <i class="nav-icon fas fa-trophy"></i>
-                                            <p>Input Prestasi</p>
-                                        </a>
-                                    </li>
-                                    <li class="nav-item">
-                                        <a href="arsipdata/inputlegalisir"
-                                            class="nav-link <?php echo ($route == 'arsipdata/inputlegalisir' || $route == 'inputlegalisir') ? 'active' : ''; ?>"
-                                            id="5">
-                                            <i class="nav-icon fas fa-stamp"></i>
-                                            <p>Input Legalisir</p>
-                                        </a>
-                                    </li>
-                                </ul>
-                            </li>
-                            <!-- Administrator Section -->
-                            <li class="nav-header">ADMINISTRATOR</li>
-                            <!-- Print Menu -->
-                            <?php $is_print = (strpos($route, 'print') === 0 || $route == 'laporanprestasi' || $route == 'laporanlegalisir'); ?>
-                            <li class="nav-item has-treeview <?php echo $is_print ? 'menu-open' : ''; ?>">
-                                <a href="print" class="nav-link <?php echo $is_print ? 'active' : ''; ?>" id="6">
-                                    <i class="nav-icon fas fa-print"></i>
-                                    <p>
-                                        Print
-                                        <i class="right fas fa-angle-left"></i>
-                                    </p>
-                                </a>
-                                <ul class="nav nav-treeview">
-                                    <li class="nav-item">
-                                        <a href="#" class="nav-link" data-toggle="modal" data-target="#modalDaftarHadir"
-                                            id="7">
-                                            <i class="nav-icon fas fa-clipboard-list"></i>
-                                            <p>Daftar Hadir</p>
-                                        </a>
-                                    </li>
-                                    <li class="nav-item">
-                                        <a href='print/laporanprestasi'
-                                            class="nav-link <?php echo ($route == 'print/laporanprestasi' || $route == 'laporanprestasi') ? 'active' : ''; ?>"
-                                            id="8">
-                                            <i class="nav-icon fas fa-clipboard-list"></i>
-                                            <p>Laporan Prestasi</p>
-                                        </a>
-                                    </li>
-                                    <li class="nav-item">
-                                        <a href='print/laporanlegalisir'
-                                            class="nav-link <?php echo ($route == 'print/laporanlegalisir' || $route == 'laporanlegalisir') ? 'active' : ''; ?>"
-                                            id="9">
-                                            <i class="nav-icon fas fa-clipboard-list"></i>
-                                            <p>Laporan Legalisir</p>
-                                        </a>
-                                    </li>
-                                </ul>
-                            </li>
-                            <!-- Management Menu -->
-                            <?php if ($lv == "1" || $lv == "2") { ?>
-                                <?php $is_mgt = (strpos($route, 'management') === 0 || in_array($route, ['usermanagement', 'datasekolah', 'pengaturan', 'profil', 'uploadsiswa', 'uploaduser', 'uploadfoto'])); ?>
-                                <li class="nav-item has-treeview <?php echo $is_mgt ? 'menu-open' : ''; ?>">
-                                    <a href="management" class="nav-link <?php echo $is_mgt ? 'active' : ''; ?>" id="9">
-                                        <i class="nav-icon fas fa-layer-group"></i>
-                                        <p>
-                                            Management
-                                            <i class="right fas fa-angle-left"></i>
-                                        </p>
-                                    </a>
-                                    <ul class="nav nav-treeview">
-                                        <?php if ($lv == "1") { ?>
-                                            <li class="nav-item">
-                                                <a href="management/usermanagement"
-                                                    class="nav-link <?php echo ($route == 'management/usermanagement' || $route == 'usermanagement') ? 'active' : ''; ?>"
-                                                    id="10">
-                                                    <i class="nav-icon fas fa-users-cog"></i>
-                                                    <p>User Staff & Admin</p>
-                                                </a>
-                                            </li>
-                                            <li class="nav-item">
-                                                <a href="management/datasekolah"
-                                                    class="nav-link <?php echo ($route == 'management/datasekolah' || $route == 'datasekolah') ? 'active' : ''; ?>"
-                                                    id="11">
-                                                    <i class="nav-icon fas fa-school"></i>
-                                                    <p>Data Sekolah</p>
-                                                </a>
-                                            </li>
-                                            <li class="nav-item">
-                                                <a href="management/settings"
-                                                    class="nav-link <?php echo ($route == 'management/settings' || $route == 'pengaturan') ? 'active' : ''; ?>"
-                                                    id="12">
-                                                    <i class="nav-icon fas fa-cogs"></i>
-                                                    <p>Settings</p>
-                                                </a>
-                                            </li>
-                                        <?php } ?>
-
-                                        <li class="nav-item">
-                                            <a href="management/profil"
-                                                class="nav-link <?php echo ($route == 'management/profil' || $route == 'profil') ? 'active' : ''; ?>"
-                                                id="13">
-                                                <i class="nav-icon fas fa-user-edit"></i>
-                                                <p>Profile</p>
-                                            </a>
-                                        </li>
-
-                                        <?php if ($lv == "1") { ?>
-                                            <li class="nav-item">
-                                                <a href="management/uploadsiswa"
-                                                    class="nav-link <?php echo ($route == 'management/uploadsiswa' || $route == 'uploadsiswa') ? 'active' : ''; ?>"
-                                                    id="14">
-                                                    <i class="nav-icon fas fa-file-excel"></i>
-                                                    <p>Upload Excel Siswa</p>
-                                                </a>
-                                            </li>
-                                            <li class="nav-item">
-                                                <a href="management/uploaduser"
-                                                    class="nav-link <?php echo ($route == 'management/uploaduser' || $route == 'uploaduser') ? 'active' : ''; ?>"
-                                                    id="15">
-                                                    <i class="nav-icon fas fa-file-excel"></i>
-                                                    <p>Upload Data User</p>
-                                                </a>
-                                            </li>
-                                            <li class="nav-item">
-                                                <a href="management/uploadfoto"
-                                                    class="nav-link <?php echo ($route == 'management/uploadfoto' || $route == 'uploadfoto') ? 'active' : ''; ?>"
-                                                    id="16">
-                                                    <i class="nav-icon fas fa-images"></i>
-                                                    <p>Upload Foto (ZIP)</p>
-                                                </a>
-                                            </li>
-                                        <?php } ?>
-
-                                    </ul>
-                                </li>
-                            <?php } ?>
-
-                            <?php if ($lv == "1") { ?>
-                                <!-- System Menu (Admin Only) -->
-                                <?php $is_system = (strpos($route, 'system') === 0 || in_array($route, ['database', 'checkupdate', 'activitylog'])); ?>
-                                <li class="nav-item has-treeview <?php echo $is_system ? 'menu-open' : ''; ?>">
-                                    <a href="system" class="nav-link <?php echo $is_system ? 'active' : ''; ?>" id="17">
-                                        <i class="nav-icon fas fa-cogs"></i>
-                                        <p>
-                                            System
-                                            <i class="right fas fa-angle-left"></i>
-                                        </p>
-                                    </a>
-                                    <ul class="nav nav-treeview">
-                                        <li class="nav-item">
-                                            <a href="system/database"
-                                                class="nav-link <?php echo ($route == 'system/database' || $route == 'database') ? 'active' : ''; ?>"
-                                                id="18">
-                                                <i class="nav-icon fas fa-database"></i>
-                                                <p>Database</p>
-                                            </a>
-                                        </li>
-                                        <li class="nav-item">
-                                            <a href="system/checkupdate"
-                                                class="nav-link <?php echo ($route == 'system/checkupdate' || $route == 'checkupdate') ? 'active' : ''; ?>"
-                                                id="19">
-                                                <i class="nav-icon fas fa-sync-alt"></i>
-                                                <p>Check Update</p>
-                                            </a>
-                                        </li>
-                                        <li class="nav-item">
-                                            <a href="system/activitylog"
-                                                class="nav-link <?php echo ($route == 'system/activitylog' || $route == 'activitylog') ? 'active' : ''; ?>"
-                                                id="20">
-                                                <i class="fas fa-chart-line nav-icon"></i>
-                                                <p>Activity Log</p>
-                                            </a>
-                                        </li>
-                                    </ul>
-                                </li>
-                            <?php } ?>
-
-                            <!-- Logout -->
-                            <li class="nav-item">
-                                <a href="exit.php" class="nav-link">
-                                    <i class="nav-icon fas fa-sign-out-alt"></i>
-                                    <p>Exit</p>
-                                </a>
-                            </li>
-                        <?php } ?>
-        </aside>
-
-        <!-- ==========================================
-             CONTENT WRAPPER - MODULE ROUTING
-             ========================================== -->
-        <?php
-        if (isset($triggerForceChange) && $triggerForceChange) {
-            include "force_change_pass_card.php";
-        } else {
-            ?>
-            <div class="content-wrapper">
-                <!-- Content Header -->
-                <section class="content-header">
-                    <div class="container-fluid">
-                        <div class="row mb-2">
-                            <div class="col-sm-6">
-                                <h1 class="m-0"><?php echo $page_title; ?></h1>
-                            </div>
-                            <div class="col-sm-6">
-                                <ol class="breadcrumb float-sm-right">
-                                    <?php foreach ($breadcrumb_items as $item): ?>
-                                        <?php if ($item['active']): ?>
-                                            <li class="breadcrumb-item active">
-                                                <a href="<?php echo $item['url']; ?>">
-                                                    <?php echo $item['name']; ?>
-                                                </a>
-                                            </li>
-                                        <?php else: ?>
-                                            <li class="breadcrumb-item"><a href="<?php echo $item['url']; ?>">
-                                                    <?php echo $item['name']; ?>
-                                                </a></li>
-                                        <?php endif; ?>
-                                    <?php endforeach; ?>
-                                    <li class="breadcrumb-item">Sistem Arsip Data (S.A.D)</li>
-
-                                </ol>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-                <?php
-                switch ($route) {
-                    case 'dashboard':
-                    case 'arsipdata':
-                    case 'print':
-                    case 'management':
-                    case 'system':
-                    case 'sistem':
-                        include "load.php";
-                        break;
-                    case 'datasiswa':
-                        include "siswa.php";
-                        break;
-                    case 'arsipdata/inputprestasi':
-                    case 'inputprestasi':
-                    case 'dataprestasi':
-                    case 'input':
-                        if (isset($_GET['nis'])) {
-                            include "inputprestasi.php";
-                        } else {
-                            include "dataprestasi.php";
-                        }
-                        break;
-                    case 'arsipdata/inputlegalisir':
-                    case 'inputlegalisir':
-                        $_GET['aksi'] = 'tambah';
-                        include "laporanlegalisir.php";
-                        break;
-                    case 'print/laporanprestasi':
-                    case 'laporanprestasi':
-                    case 'laporan':
-                        include "laporanpress.php";
-                        break;
-                    case 'print/laporanlegalisir':
-                    case 'laporanlegalisir':
-                        include "laporanlegalisir.php";
-                        break;
-                    case 'management/usermanagement':
-                    case 'usermanagement':
-                    case 'user':
-                        include "user.php";
-                        break;
-                    case 'management/datasekolah':
-                    case 'datasekolah':
-                    case 'datasek':
-                        include "datasek.php";
-                        break;
-                    case 'management/settings':
-                    case 'pengaturan':
-                    case 'settings':
-                        include "setting.php";
-                        break;
-                    case 'management/profil':
-                    case 'profil':
-                        include "profil.php";
-                        break;
-                    case 'management/uploadsiswa':
-                    case 'uploadsiswa':
-                        include "upload_siswa.php";
-                        break;
-                    case 'management/uploaduser':
-                    case 'uploaduser':
-                        include "upload_usera.php";
-                        break;
-                    case 'management/uploadfoto':
-                    case 'uploadfoto':
-                        include "upload_foto.php";
-                        break;
-                    case 'system/database':
-                    case 'sistem/database':
-                    case 'database':
-                    case 'brd':
-                        include "brd.php";
-                        break;
-                    case 'system/checkupdate':
-                    case 'sistem/checkupdate':
-                    case 'checkupdate':
-                        include "chckupdate.php";
-                        break;
-                    case 'system/activitylog':
-                    case 'sistem/activitylog':
-                    case 'activitylog':
-                    case 'activity':
-                        include "activity_log.php";
-                        break;
-                    case 'press':
-                        include "prosespress.php";
-                        break;
-                    case 'viewpress':
-                        include "view_pres.php";
-                        break;
-                    case 'editpress':
-                        include "edit_press.php";
-                        break;
-                    case 'legalisir':
-                        include "laporanlegalisir.php";
-                        break;
-                    case 'editlegalisir':
-                        include "edit_legalisir.php";
-                        break;
-                    case 'viewlegalisir':
-                        include "view_legalisir.php";
-                        break;
-                    case 'edit_usera':
-                        include "edit_usera.php";
-                        break;
-                    case 'tambah_usera':
-                        include "tambah_usera.php";
-                        break;
-                    case 'dh':
-                        include "daftar_hadir.php";
-                        break;
-                    case 'logout':
-                        include "logout.php";
-                        break;
-                    case 'modul':
-                        $mod = strtolower($_GET['modul'] ?? '');
-                        if ($mod === 'uploaduser')
-                            include "upload_usera.php";
-                        elseif ($mod === 'uploadfoto')
-                            include "upload_foto.php";
-                        elseif ($mod === 'profile' || $mod === 'profil')
-                            include "profil.php";
-                        elseif ($mod === 'settings' || $mod === 'setting' || $mod === 'pengaturan')
-                            include "setting.php";
-                        elseif ($mod === 'activitylog' || $mod === 'log-aktivitas')
-                            include "activity_log.php";
-                        else
-                            include "load.php";
-                        break;
-                    default:
-                        include "load.php";
-                        break;
+                    }, 1000);
+                </script>";
+            } elseif (isset($_GET['salah'])) {
+                // --- KASUS 2: Error umum/akses langsung (salah=2) ---
+                if ($_GET['salah'] == 2) {
+                    echo "<div class='error-gradient-border' style='color: red; padding: 10px;'><strong>Error!</strong> Akses tidak valid atau koneksi gagal.</div>";
                 }
-                ?>
-            </div>
-            <?php
-        }
-        ?>
+                // --- KASUS 3: Password salah, tapi belum diblokir (salah=1) ---
+                elseif ($_GET['salah'] == 1) {
+                    // Ambil sisa percobaan dari URL parameter 'sisa'
+                    $remaining = isset($_GET['attempts']) ? (int) $_GET['attempts'] : (isset($_GET['sisa']) ? (int) $_GET['sisa'] : 0);
+                    echo "<div class='error-gradient-border' style='color: orange; padding: 10px; border: 1px solid orange; background: #fff8e1; margin-bottom: 10px;'>
+                        <strong>LOGIN GAGAL!</strong><br>
+                        Username atau Password salah.<br>
+                        Sisa percobaan: <strong>$remaining kali</strong> lagi sebelum diblokir selama 5 menit.
+                      </div>";
+                }
+                // --- KASUS 4: reCAPTCHA tidak dicentang (salah=4) ---
+                elseif ($_GET['salah'] == 4) {
+                    echo "<div class='error-gradient-border' style='color: red; padding: 10px; border: 1px solid red; background: #ffe6e6; margin-bottom: 10px;'>
+                        <strong>VERIFIKASI DIPERLUKAN!</strong><br>
+                        Silakan centang kotak 'I'm not a robot' untuk melanjutkan.
+                      </div>";
+                }
+                // --- KASUS 5: reCAPTCHA verifikasi gagal (salah=5) ---
+                elseif ($_GET['salah'] == 5) {
+                    echo "<div class='error-gradient-border' style='color: red; padding: 10px; border: 1px solid red; background: #ffe6e6; margin-bottom: 10px;'>
+                        <strong>VERIFIKASI GAGAL!</strong><br>
+                        Verifikasi reCAPTCHA gagal. Silakan coba lagi.
+                      </div>";
+                }
+                // --- KASUS 6: reCAPTCHA connection error (salah=6) ---
+                elseif ($_GET['salah'] == 6) {
+                    echo "<div class='error-gradient-border' style='color: red; padding: 10px; border: 1px solid red; background: #ffe6e6; margin-bottom: 10px;'>
+                        <strong>KONEKSI GAGAL!</strong><br>
+                        Tidak dapat menghubungi server verifikasi. Silakan coba lagi.
+                      </div>";
+                }
+                // --- KASUS 7: Barcode belum discan (salah=7) ---
+                elseif ($_GET['salah'] == 7) {
+                    echo "<div class='error-gradient-border' style='color: red; padding: 10px; border: 1px solid red; background: #ffe6e6; margin-bottom: 10px;'>
+                        <strong>SCAN BARCODE DIPERLUKAN!</strong><br>
+                        Silakan scan barcode terlebih dahulu sebelum login.
+                      </div>";
+                }
+                // --- KASUS 8: Database tidak dipilih (salah=8) ---
+                elseif ($_GET['salah'] == 8) {
+                    echo "<div class='error-gradient-border' style='color: orange; padding: 10px; border: 1px solid orange; background: #fff8e1; margin-bottom: 10px;'>
+                        <strong>DATABASE BELUM DIPILIH!</strong><br>
+                        Silakan pilih tahun database terlebih dahulu.
+                      </div>";
+                }
 
-        <!-- ==========================================
-             FOOTER
-             ========================================== -->
-        <footer class="main-footer">
-            <div class="text-center">
-                <strong>S.A.D <?php echo isset($ver) ? htmlspecialchars($ver, ENT_QUOTES, 'UTF-8') : '1.0'; ?> -
-                    Copyright &copy; <?php echo date('Y'); ?></strong>
-            </div>
-        </footer>
-    </div>
-    <!-- ./wrapper -->
+            }
 
-    <!-- Modal Daftar Hadir -->
-    <div class="modal fade" id="modalDaftarHadir" tabindex="-1" role="dialog" aria-labelledby="lblDaftarHadir">
-        <div class="modal-dialog modal-md" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="lblDaftarHadir">
-                        <i class="fas fa-clipboard-list mr-2"></i>Cetak Daftar Hadir Siswa
-                    </h5>
-                    <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
-                </div>
-                <div class="modal-body">
-                    <!-- Pilih Kelas -->
-                    <div class="form-group mb-3">
-                        <label class="form-label-sm"><i class="fas fa-chalkboard-teacher mr-1"></i>Pilih Kelas</label>
-                        <select id="dhKelasVal" class="form-control">
-                            <option value="">Semua Kelas</option>
-                            <?php foreach ($dh_kelas_list as $kl): ?>
-                                <option value="<?= htmlspecialchars($kl) ?>"><?= htmlspecialchars($kl) ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-                    <!-- Tanggal otomatis hari ini -->
-                    <input type="hidden" id="dhTanggal" value="<?= date('Y-m-d') ?>">
 
-                    <!-- Pilih Jenis Cetakan -->
-                    <div class="form-group">
-                        <label class="form-label-sm"><i class="fas fa-file-alt mr-1"></i>Jenis Cetakan</label>
-                        <select id="dhJenisCetak" class="form-control">
-                            <option value="Daftar Hadir Siswa">Daftar Hadir Siswa</option>
-                            <option value="Tanda Terima Kartu Pelajar RFID">Tanda Terima Kartu Pelajar</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="modal-footer justify-content-between">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
-                    <button type="button" class="btn btn-primary" id="btnBukaDH">
-                        <i class="fas fa-print mr-1"></i>Tampilkan
-                    </button>
-                </div>
+            ?>
+            <div class="text-center p-t-90 txt1">
+                <?php echo $namasek; ?><br>
+                <span>
+                    S.A.D Versi <?php echo $ver; ?>
+                </span><br>
+                Copyright &copy; <?php echo date("Y"); ?>
             </div>
         </div>
     </div>
 
-    <!-- Scripts -->
     <script>
-        $.widget.bridge('uibutton', $.ui.button)
-    </script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/4.6.2/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/admin-lte/3.2.0/js/adminlte.min.js"></script>
-    <script src="plugins/chart.js/Chart.min.js"></script>
-    <script src="js/vendor.min.js"></script>
-    <script src="js/select2.full.min.js"></script>
-    <script src="plugins/toastr/toastr.min.js"></script>
-    <script src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.min.js"></script>
-    <script src="https://cdn.datatables.net/fixedcolumns/3.2.6/js/dataTables.fixedColumns.min.js"></script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var togglePassword = document.getElementById('toggle-password');
+            var passwordField = document.getElementById('skrpass');
 
-    <script>
-        $(document).ready(function () {
-            // -- Tombol Daftar Hadir Preview/Print
-            $('#btnBukaDH').on('click', function () {
-                var kelas = $('#dhKelasVal').val();
-                var tgl = $('#dhTanggal').val() || '<?= date('Y-m-d') ?>';
-                var judul = $('#dhJenisCetak').val();
-                var url = 'daftar_hadir.php?kelas=' + encodeURIComponent(kelas) + '&tanggal=' + encodeURIComponent(tgl) + '&judul=' + encodeURIComponent(judul);
-                window.open(url, '_blank');
-                $('#modalDaftarHadir').modal('hide');
-            });
+            if (togglePassword && passwordField) {
+                togglePassword.addEventListener('click', function () {
+                    var type = passwordField.getAttribute('type') === 'password' ? 'text' : 'password';
+                    passwordField.setAttribute('type', type);
 
-            // -- Sidebar Menu Auto-Active State
-            $('a[data-toggle="mn"]').click(function () {
-                var id = $(this).attr("id");
-                $('#' + id).siblings().find(".active").removeClass("active");
-                $('#' + id).addClass("active");
-                localStorage.setItem("activeMenu", id);
-            });
-            var activeMenu = localStorage.getItem('activeMenu');
-            if (activeMenu != null) {
-                $('#' + activeMenu).siblings().find(".active").removeClass("active");
-                $('#' + activeMenu).addClass("active");
+                    if (type === 'text') {
+                        this.classList.remove('fa-eye-slash');
+                        this.classList.add('fa-eye');
+                    } else {
+                        this.classList.remove('fa-eye'); this.classList.add('fa-eye-slash');
+                    }
+                });
             }
-        });
 
-        // -- Modal Drag Support
-        if ($.fn.draggable) {
-            $('.modal-dialog').draggable({ handle: ".modal-header" });
-        }
+            // AJAX for Dynamic Semester
+            // Menggunakan jQuery yang sudah diload (pastikan jQuery diload, jika belum, gunakan Vanilla atau load jQuery)
+            // Cek diatas, ./ belum meload jQuery. Kita tambahkan CDN jQuery.
+        });
+    </script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        var BASE_URL = '//data.p171.net/';
+        $(document).ready(function () {
+            // AJAX for Dynamic Semester
+            $('#database').change(function () {
+                var dbName = $(this).val();
+                var semesterSelect = $('#semester');
+
+                // Clear current options
+                semesterSelect.empty();
+                semesterSelect.append('<option value="">Loading...</option>');
+
+                if (dbName) {
+                    $.ajax({
+                        type: 'POST',
+                        url: BASE_URL + 'get_semester.php',
+                        data: { database_name: dbName },
+                        dataType: 'json',
+                        success: function (response) {
+                            semesterSelect.empty();
+                            semesterSelect.append('<option value="">Pilih Semester:</option>');
+
+                            if (response.error) {
+                                console.error(response.error);
+                                // Fallback or show error
+                                semesterSelect.append('<option value="">Error loading semesters</option>');
+                            } else if (response.length > 0) {
+                                $.each(response, function (index, value) {
+                                    var text = (value == 1) ? "Semester 1 (Ganjil)" : "Semester 2 (Genap)";
+                                    semesterSelect.append('<option value="' + value + '" style="color: black;">' + text + '</option>');
+                                });
+                            } else {
+                                semesterSelect.append('<option value="">Data Semester Kosong</option>');
+                            }
+                        },
+                        error: function (xhr, status, error) {
+                            console.error("AJAX Error: " + error);
+                            semesterSelect.empty();
+                            semesterSelect.append('<option value="">Gagal memuat semester</option>');
+                        }
+                    });
+                } else {
+                    semesterSelect.empty();
+                    semesterSelect.append('<option value="">Pilih Semester:</option>');
+                    semesterSelect.append('<option value="1" style="color: black;">Semester 1 (Ganjil)</option>');
+                    semesterSelect.append('<option value="2" style="color: black;">Semester 2 (Genap)</option>');
+                }
+            });
+        });
     </script>
 
-    <!-- Toastr script handler -->
-    <?php if (isset($_SESSION['toast_msg'])): ?>
-        <script>
-            $(document).ready(function () {
-                toastr.options = { "closeButton": true, "progressBar": true, "positionClass": "toast-top-right", "timeOut": "5000" };
-                toastr.<?php echo $_SESSION['toast_type']; ?>("<?php echo addslashes($_SESSION['toast_msg']); ?>");
-            });
-        </script>
-        <?php
-        unset($_SESSION['toast_msg'], $_SESSION['toast_type']);
-        ?>
-    <?php endif; ?>
 </body>
 
 </html>
-<?php
-// End of file
-?>

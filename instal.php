@@ -264,8 +264,8 @@ if ($step == 5 && isset($_POST['save_profil'])) {
             )";
 
             if (mysqli_query($conn, $sql_insert)) {
-                // Redirect ke login.php sesuai request
-                header("Location: login.php");
+                // Redirect ke ./ sesuai request
+                header("Location: ./");
                 exit();
             } else {
                 $message = "Tabel berhasil dibuat, tapi gagal menyimpan data: " . mysqli_error($conn);
@@ -503,7 +503,7 @@ if ($step == 5 && isset($_POST['save_profil'])) {
                 <p class="lead">Website Data Sekolah Siap Digunakan.</p>
                 <div class="alert alert-success mt-3">Database: <strong><?php echo $target_db; ?></strong> berhasil dikonfigurasi.</div>
                 <hr>
-                <a href="login.php" class="btn btn-success btn-lg px-5">Masuk ke Halaman Admin</a>
+                <a href="./" class="btn btn-success btn-lg px-5">Masuk ke Halaman Admin</a>
             </div>
         <?php endif; ?>
 

@@ -25,7 +25,7 @@ $skradm = $_SESSION['temp_skradm'];
 // SECURITY: Escape inputs before query
 $skradm_safe = mysqli_real_escape_string($sqlconn, $skradm);
 
-// Check if 'userid' column exists (Consistency with proseslogin.php)
+// Check if 'userid' column exists (Consistency with proses./)
 $check_col = mysqli_query($sqlconn, "SHOW COLUMNS FROM usera LIKE 'userid'");
 $user_col = ($check_col && mysqli_num_rows($check_col) > 0) ? 'userid' : 'username';
 

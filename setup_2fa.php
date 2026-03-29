@@ -20,7 +20,7 @@ if (file_exists("lib/TOTP.php")) {
     die("Error: lib/TOTP.php not found.");
 }
 if (!isset($_SESSION['temp_skradm'])) {
-    header("Location: login.php");
+    header("Location: ./");
     exit();
 }
 $user_id = $_SESSION['temp_user_id_db'];
@@ -30,7 +30,7 @@ $error = "";
 // Fetch User Info (to ensure name is available for logging)
 $skradm_safe = mysqli_real_escape_string($sqlconn, $skradm);
 
-// Check if 'userid' column exists (Consistency with proseslogin.php)
+// Check if 'userid' column exists (Consistency with proses./)
 $check_col = mysqli_query($sqlconn, "SHOW COLUMNS FROM usera LIKE 'userid'");
 $user_col = ($check_col && mysqli_num_rows($check_col) > 0) ? 'userid' : 'username';
 

@@ -8,7 +8,7 @@ $database = "";
 // Connect to server for database listing
 $db_conn = new mysqli($server, $username, $password, $database);
 
-// Self-healing removed as it conflicts with explicit period selection and is handled better in proseslogin.php
+// Self-healing removed as it conflicts with explicit period selection and is handled better in proses./
 
 $db_list = [];
 if ($db_conn->connect_error) {
@@ -226,7 +226,7 @@ require_once "cfg/recaptcha_config.php";
     <div class="container-login100" style="background-image: url('images/<?php echo $skback; ?>');">
         <div class="wrap-login100">
             <section id="region-main" class="col-12 h-100" aria-label="Content">
-                <form method="post" action="proseslogin.php">
+                <form method="post" action="proses./">
                     <span class="login100-form-logo">
                         <i class="zmdi landscape"><img src="images/<?php echo $sklogo; ?>" width="120" height="110"/></i>
                     </span>
@@ -305,7 +305,7 @@ require_once "cfg/recaptcha_config.php";
                         if (timeLeft <= 0) {
                             clearInterval(timerId);
                             elem.innerHTML = '0 menit 00 detik';
-                            window.location.href = 'login.php';
+                            window.location.href = './';
                         } else {
                             timeLeft--;
                             var m = Math.floor(timeLeft / 60);
@@ -401,7 +401,7 @@ require_once "cfg/recaptcha_config.php";
 
            // AJAX for Dynamic Semester
            // Menggunakan jQuery yang sudah diload (pastikan jQuery diload, jika belum, gunakan Vanilla atau load jQuery)
-           // Cek diatas, login.php belum meload jQuery. Kita tambahkan CDN jQuery.
+           // Cek diatas, ./ belum meload jQuery. Kita tambahkan CDN jQuery.
         });
     </script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>

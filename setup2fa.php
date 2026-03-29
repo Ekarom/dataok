@@ -9,7 +9,7 @@ date_default_timezone_set("Asia/Jakarta");
 
 // Check if user has temp_login session
 if (!isset($_SESSION['temp_login'])) {
-    header("Location: login.php");
+    header("Location: ./");
     exit();
 }
 

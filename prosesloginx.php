@@ -11,13 +11,13 @@ if (isset($_POST['skradm'], $_POST['skrpass'], $_POST['database_name'])) {
     $semester = isset($_POST['semester']) ? (int)$_POST['semester'] : 1;
     
     if (empty($database_name)) {
-        header("Location: login.php?salah=8");
+        header("Location: ./?salah=8");
         exit();
     }
 
     // Validate Database Name (Security)
     if (!preg_match('/^[a-zA-Z0-9_]+$/', $database_name)) {
-        header("Location: login.php?salah=2&err=invalid_db");
+        header("Location: ./?salah=2&err=invalid_db");
         exit();
     }
 
@@ -90,7 +90,7 @@ if (isset($_POST['skradm'], $_POST['skrpass'], $_POST['database_name'])) {
         }
         
     } else {
-        header("Location: login.php?salah=2");
+        header("Location: ./?salah=2");
         exit();
     }
 
@@ -120,7 +120,7 @@ if (isset($_POST['skradm'], $_POST['skrpass'], $_POST['database_name'])) {
 
             if ($attempts >= 3 && (time() - $last_attempt) < $lockout_time) {
                 $remaining = $lockout_time - (time() - $last_attempt);
-                header("Location: login.php?salah=3&wait=$remaining");
+                header("Location: ./?salah=3&wait=$remaining");
                 exit();
             } elseif ((time() - $last_attempt) >= $lockout_time) {
                 mysqli_query($sqlconn, "DELETE FROM login_attempts WHERE ip_address = '$ip_address'");
@@ -237,16 +237,16 @@ if (isset($_POST['skradm'], $_POST['skrpass'], $_POST['database_name'])) {
             if ($remaining < 0) $remaining = 0;
 
             unset($_SESSION['skradm']);
-            header("Location: login.php?salah=1&attempts=$remaining");
+            header("Location: ./?salah=1&attempts=$remaining");
             exit();
         }
     } else {
-        header("Location: login.php?salah=5");
+        header("Location: ./?salah=5");
         exit();
     }
 
 } else {
-    header("Location: login.php");
+    header("Location: ./");
     exit();
 }
 ?>

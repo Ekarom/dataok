@@ -64,7 +64,7 @@ if (isset($_FILES['file_upload']) && isset($_POST['target_column'])) {
 
     // Buat nama file unik
 
-    // FIX: Gunakan folder 'images/' agar sesuai dengan login.php dan konek.php
+    // FIX: Gunakan folder 'images/' agar sesuai dengan ./ dan konek.php
 
     $targetDir = "images/"; 
 
