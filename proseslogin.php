@@ -198,12 +198,12 @@ if ($u && (password_verify($passz, $u['password']) || $u['password'] === md5($pa
 
     // Check for Academic Period alignment alert
     if ($show_warning) {
-        echo "<script>alert('" . addslashes($warning_msg) . "'); window.location.href='home.php';</script>";
+        echo "<script>alert('" . addslashes($warning_msg) . "'); window.location.href='./';</script>";
         exit();
     }
 
     // Final Redirect to Dashboard
-    header('Location: home.php');
+    header('Location: ./');
     exit();
 
 } else {

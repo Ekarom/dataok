@@ -2,6 +2,11 @@
 include_once "cfg/konek.php";
 include_once "cfg/secure.php";
 
+global $sqlconn;
+if (!$sqlconn) {
+    include "cfg/konek.php";
+}
+
 $id = isset($_GET['urut']) ? mysqli_real_escape_string($sqlconn, $_GET['urut']) : '';
 $sql = mysqli_query($sqlconn, "SELECT * FROM usera WHERE id = '$id'");
 $r = mysqli_fetch_array($sql);

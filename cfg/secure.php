@@ -1,7 +1,7 @@
 <?php
 
 if (!isset($_SESSION['skradm'])) {
-  header("Location: ./");
+  header("Location: login");
   exit();
 } else {
   // Ensure connection exists
