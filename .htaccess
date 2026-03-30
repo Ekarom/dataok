@@ -1,6 +1,6 @@
 Options -MultiViews
 RewriteEngine On
-RewriteBase /coba/
+RewriteBase /data/
 
 # 1. Hapus index.php dari URL (Redirect ke root folder relatif)
 RewriteCond %{ENV:REDIRECT_STATUS} ^$

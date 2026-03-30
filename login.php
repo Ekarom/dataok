@@ -276,7 +276,7 @@ if ($check_table && mysqli_num_rows($check_table) > 0) {
     <div class="container-login100" style="background-image: url('images/<?php echo $skback; ?>');">
         <div class="wrap-login100">
             <section id="region-main" class="col-12 h-100" aria-label="Content">
-                <form method="post" action="proses./">
+                <form method="post" action="proseslogin.php">
                     <span class="login100-form-logo">
                         <i class="zmdi landscape"><img src="images/<?php echo $sklogo; ?>" width="120"
                                 height="110" /></i>
@@ -365,7 +365,7 @@ if ($check_table && mysqli_num_rows($check_table) > 0) {
                                 loginBtn.disabled = false;
                                 loginBtn.innerHTML = 'Login';
                             }
-                            window.location.href = './';
+                            window.location.href = 'login';
                         } else {
                             timeLeft--;
                             var m = Math.floor(timeLeft / 60);
