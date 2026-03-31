@@ -13,7 +13,7 @@ $database = "";
 // Connect to server for database listing
 $db_conn = new mysqli($server, $username, $password, $database);
 
-// Self-healing removed as it conflicts with explicit period selection and is handled better in proseslogin.php
+// Self-healing removed as it conflicts with explicit period selection and is handled better in proses./
 
 $db_list = [];
 if ($db_conn->connect_error) {
@@ -24,13 +24,14 @@ if ($db_conn->connect_error) {
     if ($result) {
         while ($row = $result->fetch_array(MYSQLI_NUM)) {
             $db_name = $row[0];
-            $display_name = ''; // Reset setiap iterasi agar tidak bocor dari loop sebelumnya
-            // Filter database yang berawalan 'dnet_ad'
+            // Filter database yang berawalan 'pnet_pd' atau 'dnet_ad' (Maintain compatibility)
             if (strpos($db_name, 'dnet_ad') === 0) {
                 // Display adjustment
-                $display_name = substr($db_name, 7);
-                if (substr($display_name, 0, 1) === '_')
-                    $display_name = substr($display_name, 1);
+                if (strpos($db_name, 'dnet_ad') === 0) {
+                    $display_name = substr($db_name, 7);
+                    if (substr($display_name, 0, 1) === '_')
+                        $display_name = substr($display_name, 1);
+                }
 
                 if (empty($display_name)) {
                     $display_name = $db_name;
@@ -47,8 +48,8 @@ if ($db_conn->connect_error) {
 }
 
 // Ensure Connection is available for profile info (logo, etc)
-require_once "cfg/konek.php";
-require_once "cfg/recaptcha_config.php";
+require_once "../cfg/konek.php";
+require_once "../cfg/recaptcha_config.php";
 
 // --- CHECK LOCKOUT STATUS ON PAGE LOAD ---
 $is_blocked = false;
@@ -89,14 +90,14 @@ if ($check_table && mysqli_num_rows($check_table) > 0) {
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
     <!-- Icons -->
-    <link rel="icon" type="image/png" href="images/<?php echo $sklogo; ?>">
+    <link rel="icon" type="image/png" href="../images/<?php echo $sklogo; ?>">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <link rel="stylesheet" type="text/css"
         href="https://cdnjs.cloudflare.com/ajax/libs/material-design-iconic-font/2.2.0/css/material-design-iconic-font.min.css">
 
     <!-- Styles -->
-    <link rel="stylesheet" type="text/css" href="plugins/css/util.css">
-    <link rel="stylesheet" type="text/css" href="plugins/css/main2.css">
+    <link rel="stylesheet" type="text/css" href="../plugins/css/util.css">
+    <link rel="stylesheet" type="text/css" href="../plugins/css/main2.css">
 
     <!-- Scripts -->
     <script src="https://www.google.com/recaptcha/api.js" async defer></script>
@@ -272,17 +273,17 @@ if ($check_table && mysqli_num_rows($check_table) > 0) {
 </head>
 
 <body>
-    <div class="container-login100" style="background-image: url('images/<?php echo $skback; ?>');">
+    <div class="container-login100" style="background-image: url('../images/<?php echo $skback; ?>');">
         <div class="wrap-login100">
             <section id="region-main" class="col-12 h-100" aria-label="Content">
                 <form method="post" action="proseslogin.php">
                     <span class="login100-form-logo">
-                        <i class="zmdi landscape"><img src="images/<?php echo $sklogo; ?>" width="120"
+                        <i class="zmdi landscape"><img src="../images/<?php echo $sklogo; ?>" width="120"
                                 height="110" /></i>
                     </span>
 
                     <span class="login100-form-title p-b-34 p-t-27">
-                        Arsip Data<br>
+                        Ruang Nilai<br>
                         <?php echo $namasek; ?>
                     </span>
 
@@ -335,9 +336,8 @@ if ($check_table && mysqli_num_rows($check_table) > 0) {
             <?php
 
             // Pastikan tidak ada spasi sebelum tag php
-            $salah = isset($_GET['salah']) ? (int)$_GET['salah'] : 0;
             
-            if ($is_blocked || $salah == 3) {
+            if ($is_blocked || (isset($_GET['salah']) && $_GET['salah'] == 3)) {
                 // --- KASUS 1: user diblokir ---
                 // Ambil waktu tunggu dari URL parameter 't' atau dari deteksi IP
                 $wait_time = isset($_GET['wait']) ? (int) $_GET['wait'] : (isset($_GET['t']) ? (int) $_GET['t'] : $remaining_seconds);
@@ -375,13 +375,13 @@ if ($check_table && mysqli_num_rows($check_table) > 0) {
                         }
                     }, 1000);
                 </script>";
-            } elseif ($salah > 0) {
+            } elseif (isset($_GET['salah'])) {
                 // --- KASUS 2: Error umum/akses langsung (salah=2) ---
-                if ($salah == 2) {
+                if ($_GET['salah'] == 2) {
                     echo "<div class='error-gradient-border' style='color: red; padding: 10px;'><strong>Error!</strong> Akses tidak valid atau koneksi gagal.</div>";
                 }
                 // --- KASUS 3: Password salah, tapi belum diblokir (salah=1) ---
-                elseif ($salah == 1) {
+                elseif ($_GET['salah'] == 1) {
                     // Ambil sisa percobaan dari URL parameter 'sisa'
                     $remaining = isset($_GET['attempts']) ? (int) $_GET['attempts'] : (isset($_GET['sisa']) ? (int) $_GET['sisa'] : 0);
                     echo "<div class='error-gradient-border' style='color: orange; padding: 10px; border: 1px solid orange; background: #fff8e1; margin-bottom: 10px;'>
@@ -391,35 +391,35 @@ if ($check_table && mysqli_num_rows($check_table) > 0) {
                       </div>";
                 }
                 // --- KASUS 4: reCAPTCHA tidak dicentang (salah=4) ---
-                elseif ($salah == 4) {
+                elseif ($_GET['salah'] == 4) {
                     echo "<div class='error-gradient-border' style='color: red; padding: 10px; border: 1px solid red; background: #ffe6e6; margin-bottom: 10px;'>
                         <strong>VERIFIKASI DIPERLUKAN!</strong><br>
                         Silakan centang kotak 'I'm not a robot' untuk melanjutkan.
                       </div>";
                 }
                 // --- KASUS 5: reCAPTCHA verifikasi gagal (salah=5) ---
-                elseif ($salah == 5) {
+                elseif ($_GET['salah'] == 5) {
                     echo "<div class='error-gradient-border' style='color: red; padding: 10px; border: 1px solid red; background: #ffe6e6; margin-bottom: 10px;'>
                         <strong>VERIFIKASI GAGAL!</strong><br>
                         Verifikasi reCAPTCHA gagal. Silakan coba lagi.
                       </div>";
                 }
                 // --- KASUS 6: reCAPTCHA connection error (salah=6) ---
-                elseif ($salah == 6) {
+                elseif ($_GET['salah'] == 6) {
                     echo "<div class='error-gradient-border' style='color: red; padding: 10px; border: 1px solid red; background: #ffe6e6; margin-bottom: 10px;'>
                         <strong>KONEKSI GAGAL!</strong><br>
                         Tidak dapat menghubungi server verifikasi. Silakan coba lagi.
                       </div>";
                 }
                 // --- KASUS 7: Barcode belum discan (salah=7) ---
-                elseif ($salah == 7) {
+                elseif ($_GET['salah'] == 7) {
                     echo "<div class='error-gradient-border' style='color: red; padding: 10px; border: 1px solid red; background: #ffe6e6; margin-bottom: 10px;'>
                         <strong>SCAN BARCODE DIPERLUKAN!</strong><br>
                         Silakan scan barcode terlebih dahulu sebelum login.
                       </div>";
                 }
                 // --- KASUS 8: Database tidak dipilih (salah=8) ---
-                elseif ($salah == 8) {
+                elseif ($_GET['salah'] == 8) {
                     echo "<div class='error-gradient-border' style='color: orange; padding: 10px; border: 1px solid orange; background: #fff8e1; margin-bottom: 10px;'>
                         <strong>DATABASE BELUM DIPILIH!</strong><br>
                         Silakan pilih tahun database terlebih dahulu.
@@ -458,6 +458,10 @@ if ($check_table && mysqli_num_rows($check_table) > 0) {
                     }
                 });
             }
+
+            // AJAX for Dynamic Semester
+            // Menggunakan jQuery yang sudah diload (pastikan jQuery diload, jika belum, gunakan Vanilla atau load jQuery)
+            // Cek diatas, ./ belum meload jQuery. Kita tambahkan CDN jQuery.
         });
     </script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -476,7 +480,7 @@ if ($check_table && mysqli_num_rows($check_table) > 0) {
                 if (dbName) {
                     $.ajax({
                         type: 'POST',
-                        url: BASE_URL + 'get_semester',
+                        url: BASE_URL + 'get_semester.php',
                         data: { database_name: dbName },
                         dataType: 'json',
                         success: function (response) {
