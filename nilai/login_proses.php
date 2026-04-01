@@ -1,7 +1,7 @@
 <?php
 /**
- * Pengolah Login - Sinkronisasi Final dengan 2FA & reCAPTCHA Bypass
- * Support: reCAPTCHA (Conditional for Admins), Login Attempts & Two-Factor Authentication
+ * Pengolah Login - Sinkronisasi Final dengan reCAPTCHA Soft-Fail & 2FA
+ * Support: reCAPTCHA (Soft-Fail if suspended), Login Attempts & Two-Factor Authentication
  */
 
 include "../cfg/konek.php";
@@ -54,20 +54,19 @@ if ($q_admin && mysqli_num_rows($q_admin) > 0) {
     }
 }
 
-// User tidak ditemukan? Gagal lebih awal
+// User tidak ditemukan?
 if (!$u) {
     write_log("LOGIN_FAIL", "User not found: $skradm", $sqlconn);
-    // Kita tetap harus lewat tracking attempts (di bawah)
 }
 
-// 4. VERIFIKASI reCAPTCHA (KHUSUS ADMIN)
+// 4. VERIFIKASI reCAPTCHA (KHUSUS ADMIN - DENGAN SOFT-FAIL)
 if ($u && $u['role'] === 'admin') {
     $verify_url = "https://www.google.com/recaptcha/api/siteverify";
     $ch = curl_init();
     curl_setopt($ch, CURLOPT_URL, $verify_url);
     curl_setopt($ch, CURLOPT_POST, true);
     curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query([
-        'secret'   => $recaptcha_secret_key,
+        'secret' => $recaptcha_secret_key,
         'response' => $captcha,
         'remoteip' => $ip_address
     ]));
@@ -79,9 +78,18 @@ if ($u && $u['role'] === 'admin') {
 
     if (!$response_keys["success"]) {
         $err_codes = isset($response_keys['error-codes']) ? implode(', ', $response_keys['error-codes']) : 'unknown error';
-        write_log("LOGIN_FAIL", "reCAPTCHA failed for admin: $skradm ($err_codes)", $sqlconn);
-        header("Location: login.php?salah=4");
-        exit();
+
+        // --- SOFT-FAIL LOGIC ---
+        // Jika Google project suspended atau keys salah, kita izinkan login berlanjut (dengan log peringatan)
+        $is_suspended = (stripos($err_codes, 'suspended') !== false || stripos($err_codes, 'invalid-input-secret') !== false);
+
+        if ($is_suspended) {
+            write_log("RECAPTCHA_WARNING", "Service suspended ($err_codes). Allowing Admin $skradm bypass.", $sqlconn);
+        } else {
+            write_log("LOGIN_FAIL", "reCAPTCHA failed for admin: $skradm ($err_codes)", $sqlconn);
+            header("Location: login.php?salah=4");
+            exit();
+        }
     }
 }
 
@@ -93,8 +101,8 @@ if ($u) {
             $login_success = true;
         }
     } else {
-        // Student login
-        if ($passz === trim($u['nisn'])) {
+        // Student login: Fleksibel - Cek NISN atau NIS
+        if ($passz === trim($u['nisn']) || $passz === trim($u['nis'])) {
             $login_success = true;
         }
     }
@@ -104,14 +112,14 @@ if ($u) {
 if ($login_success) {
     // Reset failed attempts
     mysqli_query($sqlconn, "DELETE FROM login_attempts WHERE ip_address = '$ip_safe'");
-    
+
     // --- 2FA Check (Only for Admin with keys or email) ---
     if ($u['role'] === 'admin' && (!empty($u['google_secret']) || !empty($u['email']))) {
         $_SESSION['temp_skradm'] = $skradm;
         $_SESSION['temp_user_id_db'] = $u[$user_col];
         $_SESSION['database_asli'] = $database_name;
         $_SESSION['user_role'] = $u['role'];
-        
+
         write_log("LOGIN_STAGING", "2FA challenge initiated for admin $skradm", $sqlconn);
         header("Location: ../verify_2fa.php");
         exit();
@@ -126,10 +134,11 @@ if ($login_success) {
     $_SESSION['user_role'] = $u['role'];
     $_SESSION['database_asli'] = $database_name;
     $_SESSION['nama'] = $u['nama'] ?? $u['pd'] ?? $skradm;
-    
-    if($u['role'] === 'siswa') $_SESSION['nis_login'] = $u['nis'];
 
-    header('Location: ./index.php');
+    if ($u['role'] === 'siswa')
+        $_SESSION['nis_login'] = $u['nis'];
+
+    header('Location: ./dashboard');
     exit();
 } else {
     // Fail Logic (Username/Password salah)

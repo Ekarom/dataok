@@ -2,10 +2,13 @@
 if (session_status() == PHP_SESSION_NONE) {
     session_start();
 }
-include "cfg/secure.php";
+include "../cfg/secure.php";
 
-$user_role = $_SESSION['user_role'] ?? 'admin';
-$skradm = $_SESSION['skradm'] ?? '';
+// Ensure variables are defined to prevent errors
+$nama = $nama ?? ($_SESSION['nama_siswa'] ?? 'Siswa');
+$nuser = $nuser ?? ($_SESSION['skradm'] ?? '');
+$student_id = $student_id ?? ($_SESSION['student_id'] ?? '');
+
 ?>
 <!-- Main content -->
 <section class="content">
@@ -13,111 +16,41 @@ $skradm = $_SESSION['skradm'] ?? '';
     <!-- Small stat cards -->
     <div class="row">
 
-        <?php if ($user_role === 'admin') { ?>
-            <!-- --- ADMIN STATS --- -->
-            <!-- Box 1: Prestasi -->
-            <div class="col-lg-3 col-6">
-                <div class="small-box bg-1">
-                    <div class="inner">
-                        <?php
-                            $query = mysqli_query($sqlconn, "SELECT COUNT(*) as total FROM prestasi");
-                            $row = $query ? mysqli_fetch_assoc($query) : null;
-                            $prestasi = $row ? $row['total'] : 0;
-                        ?>
-                        <h3 class="text-white"><?php echo $prestasi; ?></h3>
-                        <p>Total Laporan Prestasi</p>
-                    </div>
-                    <div class="icon"><i class="ion ion-trophy"></i></div>
-                    <a href="arsipdata/inputprestasi" class="small-box-footer">More info <i class="fa fa-arrow-circle-right"></i></a>
+        <!-- Box 1: Prestasi Saya -->
+        <div class="col-lg-3 col-6">
+            <div class="small-box bg-1">
+                <div class="inner">
+                    <?php
+                    // Count only for this student
+                    $query = mysqli_query($sqlconn, "SELECT COUNT(*) as total FROM prestasi WHERE pd = '$nama'");
+                    $row = $query ? mysqli_fetch_assoc($query) : null;
+                    $prestasi = $row ? $row['total'] : 0;
+                    ?>
+                    <h3 class="text-white"><?php echo $prestasi; ?></h3>
+                    <p>Prestasi Saya</p>
                 </div>
+                <div class="icon"><i class="ion ion-trophy"></i></div>
+                <a href="prestasi-saya?urut=<?php echo $student_id; ?>" class="small-box-footer">Lihat Detail <i class="fa fa-arrow-circle-right"></i></a>
             </div>
+        </div>
 
-            <!-- Box 2: Legalisir -->
-            <div class="col-lg-3 col-6">
-                <div class="small-box bg-3">
-                    <div class="inner">
-                        <?php
-                            $query = mysqli_query($sqlconn, "SELECT COUNT(*) as total FROM legalisir");
-                            $row = $query ? mysqli_fetch_assoc($query) : null;
-                            $legalisir = $row ? $row['total'] : 0;
-                        ?>
-                        <h3 class="text-white"><?php echo $legalisir; ?></h3>
-                        <p>Total Laporan Legalisir</p>
-                    </div>
-                    <div class="icon"><i class="ion ion-archive"></i></div>
-                    <a href="arsipdata/inputlegalisir" class="small-box-footer">More info <i class="fa fa-arrow-circle-right"></i></a>
+        <!-- Box 2: Legalisir Saya -->
+        <div class="col-lg-3 col-6">
+            <div class="small-box bg-3">
+                <div class="inner">
+                    <?php
+                    // Assuming pembuat matches student name
+                    $query = mysqli_query($sqlconn, "SELECT COUNT(*) as total FROM legalisir WHERE pembuat = '$nama'");
+                    $row = $query ? mysqli_fetch_assoc($query) : null;
+                    $legalisir = $row ? $row['total'] : 0;
+                    ?>
+                    <h3 class="text-white"><?php echo $legalisir; ?></h3>
+                    <p>Legalisir Saya</p>
                 </div>
+                <div class="icon"><i class="ion ion-archive"></i></div>
+                <a href="#" class="small-box-footer">Info Legalisir <i class="fa fa-arrow-circle-right"></i></a>
             </div>
-
-            <!-- Box 3: Siswa (Only for Level 1) -->
-            <?php if (isset($lv) && $lv == '1') { ?>
-            <div class="col-lg-3 col-6">
-                <div class="small-box bg-4">
-                    <div class="inner">
-                        <?php
-                            $query = mysqli_query($sqlconn, "SELECT COUNT(*) as total FROM siswa");
-                            $row = $query ? mysqli_fetch_assoc($query) : null;
-                            $siswa = $row ? $row['total'] : 0;
-                        ?>
-                        <h3 class="text-white"><?php echo $siswa; ?></h3>
-                        <p>Manajemen Peserta Didik</p>
-                    </div>
-                    <div class="icon"><i class="ion ion-person-stalker"></i></div>
-                    <a href="datasiswa" class="small-box-footer">More info <i class="fa fa-arrow-circle-right"></i></a>
-                </div>
-            </div>
-
-            <!-- Box 4: User (Only for Level 1) -->
-            <div class="col-lg-3 col-6">
-                <div class="small-box bg-5">
-                    <div class="inner">
-                        <?php
-                            $query = mysqli_query($sqlconn, "SELECT COUNT(*) as total FROM usera");
-                            $row = $query ? mysqli_fetch_assoc($query) : null;
-                            $user_count = $row ? $row['total'] : 0;
-                        ?>
-                        <h3 class="text-white"><?php echo $user_count; ?></h3>
-                        <p>Manajemen Staff & Admin</p>
-                    </div>
-                    <div class="icon"><i class="ion ion-person-stalker"></i></div>
-                    <a href="management/usermanagement" class="small-box-footer">More info <i class="fa fa-arrow-circle-right"></i></a>
-                </div>
-            </div>
-            <?php } ?>
-
-        <?php } else { ?>
-            <!-- --- STUDENT STATS --- -->
-            <div class="col-lg-4 col-12">
-                <div class="small-box bg-gradient-x-info">
-                    <div class="inner">
-                        <?php
-                            // Fetch student info to get pd name
-                            $q_s = mysqli_query($sqlconn, "SELECT pd, kelas FROM siswa WHERE nis = '$skradm'");
-                            $r_s = mysqli_fetch_assoc($q_s);
-                            $pd_name = $r_s['pd'] ?? '';
-                            $pd_kelas = $r_s['kelas'] ?? '';
-                            
-                            $query = mysqli_query($sqlconn, "SELECT COUNT(*) as total FROM prestasi WHERE pd = '$pd_name' AND kelas = '$pd_kelas'");
-                            $row = $query ? mysqli_fetch_assoc($query) : null;
-                            $my_prestasi = $row ? $row['total'] : 0;
-                        ?>
-                        <h3 class="text-white"><?php echo $my_prestasi; ?></h3>
-                        <p>Total Prestasi Saya</p>
-                    </div>
-                    <div class="icon"><i class="ion ion-trophy"></i></div>
-                    <a href="prestasi-saya?urut=<?php echo $student_id; ?>" class="small-box-footer">Lihat Semua Prestasi <i class="fa fa-arrow-circle-right"></i></a>
-                </div>
-            </div>
-            
-            <div class="col-lg-8 col-12">
-                <div class="card bg-gradient-x-warning shadow-sm">
-                    <div class="card-body text-white">
-                        <h5 class="font-weight-bold"><i class="fas fa-bullhorn mr-2"></i> Halo, <?php echo $nama; ?>!</h5>
-                        <p class="mb-0">Selamat datang di <b>Ruang Nilai Siswa</b>. Di sini kamu bisa melihat daftar prestasi dan nilai yang telah terdata di sistem. Jika ada data yang tidak sesuai, silakan hubungi operator sekolah.</p>
-                    </div>
-                </div>
-            </div>
-        <?php } ?>
+        </div>
 
     </div>
     <!-- /.row (stat cards) -->
@@ -137,10 +70,11 @@ $skradm = $_SESSION['skradm'] ?? '';
                 <div class="card-body border">
                     <div class="card">
                         <div class="card-header border">
-                            <h5 class="font-weight-bold"><i class="fas fa-info-circle mr-1"></i> &nbsp;Informasi Terbaru</h5>
+                            <h5 class="font-weight-bold"><i class="fas fa-info-circle mr-1"></i> &nbsp;Informasi Terbaru
+                            </h5>
                         </div>
                         <div class="card-body border">
-                            Harap Teliti Sebelum Menginput Prestasi Siswa. Terima Kasih.
+                            Selamat datang di Ruang Nilai. Di sini Anda dapat melihat riwayat prestasi dan data akademik Anda secara mandiri.
                         </div>
                     </div>
                 </div>
@@ -150,29 +84,31 @@ $skradm = $_SESSION['skradm'] ?? '';
             <!-- History Log Card -->
             <div class="card direct-chat">
                 <div class="card-header box-shadow-0 bg-gradient-x-info">
-                    <h5 class="card-title text-white">History Log</h5>
+                    <h5 class="card-title text-white">Log Aktivitas Saya</h5>
                 </div>
                 <div class="card-body">
                     <div class="direct-chat-messages">
                         <?php
-                            if (isset($log1) && $log1 && mysqli_num_rows($log1) > 0) {
-                                while ($log2 = mysqli_fetch_array($log1)) {
-                        ?>
-                                    <div class="direct-chat-msg">
-                                        <div class="direct-chat-infos clearfix">
-                                            <span class="direct-chat-name float-left"><?php echo htmlspecialchars($log2['nama']); ?></span>
-                                            <span class="direct-chat-timestamp float-right"><?php echo $log2['waktu']; ?></span>
-                                        </div>
-                                        <img class="direct-chat-img" src="images/info.png" alt="message user image">
-                                        <div class="direct-chat-text">
-                                            <?php echo htmlspecialchars($log2['info']); ?>
-                                        </div>
+                        // Safeguard: Check if $log1 is set (passed from index.php or secure.php)
+                        if (isset($log1) && $log1 && mysqli_num_rows($log1) > 0) {
+                            while ($log2 = mysqli_fetch_array($log1)) {
+                                ?>
+                                <div class="direct-chat-msg">
+                                    <div class="direct-chat-infos clearfix">
+                                        <span
+                                            class="direct-chat-name float-left"><?php echo htmlspecialchars($log2['nama'] ?? ''); ?></span>
+                                        <span class="direct-chat-timestamp float-right"><?php echo $log2['waktu'] ?? ''; ?></span>
                                     </div>
-                        <?php
-                                }
-                            } else {
-                                echo '<div class="p-3 text-center text-muted">No history logs available</div>';
+                                    <img class="direct-chat-img" src="../images/info.png" alt="message user image">
+                                    <div class="direct-chat-text">
+                                        <?php echo htmlspecialchars($log2['info'] ?? ''); ?>
+                                    </div>
+                                </div>
+                                <?php
                             }
+                        } else {
+                            echo '<div class="p-3 text-center text-muted">Belum ada riwayat aktivitas terbaru.</div>';
+                        }
                         ?>
                     </div>
                 </div>

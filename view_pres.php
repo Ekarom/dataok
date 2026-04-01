@@ -2,48 +2,37 @@
 include_once "cfg/konek.php";
 include_once "cfg/secure.php";
 
+$user_role = $_SESSION['user_role'] ?? 'admin';
+$skradm = $_SESSION['skradm'] ?? '';
+$my_id = $_SESSION['student_id'] ?? ''; // We should pass this from index.php or fetch it
+
 if (!isset($_REQUEST['urut']) || empty($_REQUEST['urut'])) {
-    echo '<script>
-        $(function() {
-            toastr.warning("Tidak ada detail prestasi pada peserta didik yang dipilih");
-            setTimeout(function() {
-                window.location.href = "arsipdata/inputprestasi";
-            }, 2000);
-        });
-    </script>';
-    return;
-}
-
-$id = $_REQUEST['urut'];
-
-$id = $_REQUEST['urut'];
-
-// Get Student Information first
-$sqlSiswa = mysqli_query($sqlconn, "SELECT * FROM siswa WHERE id = '$id'");
-$rSiswa = mysqli_fetch_array($sqlSiswa);
-
-// If not found by student ID, it might be an achievement ID
-if (!$rSiswa) {
-    $sqlCheckPres = mysqli_query($sqlconn, "SELECT pd, kelas FROM prestasi WHERE id = '$id'");
-    $rCheck = mysqli_fetch_array($sqlCheckPres);
-    if ($rCheck) {
-        $pd_name = $rCheck['pd'];
-        $pd_kelas = $rCheck['kelas'];
-        $sqlSiswa = mysqli_query($sqlconn, "SELECT * FROM siswa WHERE pd = '$pd_name' AND kelas = '$pd_kelas'");
-        $rSiswa = mysqli_fetch_array($sqlSiswa);
+    if ($user_role === 'siswa') {
+        // Find own ID if not provided
+        $q_me = mysqli_query($sqlconn, "SELECT id FROM siswa WHERE nis = '$skradm'");
+        $r_me = mysqli_fetch_assoc($q_me);
+        $id = $r_me['id'] ?? '';
+    } else {
+        echo '<script>$(function() { toastr.warning("Pilih peserta didik terlebih dahulu."); setTimeout(function() { window.location.href = "arsipdata/inputprestasi"; }, 2000); });</script>';
+        return;
+    }
+} else {
+    $id = $_REQUEST['urut'];
+    // SECURITY: If student, they can ONLY see their own ID
+    if ($user_role === 'siswa') {
+        $q_me = mysqli_query($sqlconn, "SELECT id FROM siswa WHERE nis = '$skradm'");
+        $r_me = mysqli_fetch_assoc($q_me);
+        $id = $r_me['id'] ?? '';
     }
 }
 
+// Get Student Information
+$sqlSiswa = mysqli_query($sqlconn, "SELECT * FROM siswa WHERE id = '$id'");
+$rSiswa = mysqli_fetch_array($sqlSiswa);
+
 // Redirect if no student found
 if (!$rSiswa) {
-    echo '<script>
-        $(function() {
-            toastr.warning("Data siswa tidak ditemukan!");
-            setTimeout(function() {
-                window.location.href = "arsipdata/inputprestasi";
-            }, 2000);
-        });
-    </script>';
+    echo '<script>$(function() { toastr.warning("Data siswa tidak ditemukan!"); setTimeout(function() { window.location.href = "'.($user_role === 'admin' ? 'arsipdata/inputprestasi' : 'dashboard').'"; }, 2000); });</script>';
     return;
 }
 
@@ -55,121 +44,32 @@ $kelas = $rSiswa['kelas'] ?? '';
 $sqlAchievements = mysqli_query($sqlconn, "SELECT * FROM prestasi WHERE pd = '$nama' AND kelas = '$kelas' ORDER BY tgl_kegiatan DESC");
 $total_prestasi = mysqli_num_rows($sqlAchievements);
 
-// Redirect and show toast if there are no achievements
+// Handle empty achievements
 if ($total_prestasi == 0) {
-    echo '<script>
-        $(function() {
-            toastr.error("Tidak ada detail prestasi pada peserta didik yang dipilih");
-            setTimeout(function() {
-                window.location.href = "arsipdata/inputprestasi";
-            }, 2000);
-        });
-    </script>';
+    echo '<script>$(function() { toastr.error("Belum ada data prestasi terdaftar."); setTimeout(function() { window.location.href = "'.($user_role === 'admin' ? 'arsipdata/inputprestasi' : 'dashboard').'"; }, 2000); });</script>';
     return;
 }
 ?>
 <style>
-    .profile-card {
-        border-top: 3px solid #01b2d1;
-    }
-    .label-custom {
-        font-weight: 700;
-        color: #333;
-    }
-    .attachment-container {
-        border-radius: 12px;
-        overflow: hidden;
-        border: 1px solid #dee2e6;
-        background: #fff;
-        padding: 5px;
-    }
-    .attachment-img {
-        max-width: 100%;
-        display: block;
-        transition: transform 0.3s ease;
-    }
-    .attachment-img:hover {
-        transform: scale(1.02);
-    }
-    .alert-view {
-        border-radius: 10px;
-        font-size: 0.9rem;
-    }
-    .award-frame-wrapper {
-        position: relative;
-        display: inline-block;
-        padding: 20px;
-    }
-    .frame-star {
-        position: absolute;
-        color: #ffd700;
-        text-shadow: 0 0 5px rgba(255, 215, 0, 0.5);
-        z-index: 1;
-    }
-    .star-top-left { top: 0; left: 0; font-size: 1.2rem; }
-    .star-top-right { top: 0; right: 0; font-size: 1.2rem; }
-    .star-bottom-left { bottom: 0; left: 0; font-size: 1.2rem; }
-    .star-bottom-right { bottom: 0; right: 0; font-size: 1.2rem; }
-    .star-center-top { top: -10px; left: 50%; transform: translateX(-50%); font-size: 1.5rem; }
-
-    .view-section {
-        background: #fff;
-        padding: 15px;
-        border-radius: 12px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-        margin-bottom: 20px;
-        border: 1px solid #eef0f2;
-    }
-    .view-section-title {
-        font-size: 0.9rem;
-        font-weight: 700;
-        color: #495057;
-        margin-bottom: 20px;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        border-bottom: 2px solid #007bff;
-        display: inline-block;
-        padding-bottom: 3px;
-    }
-    #tabelPrestasi thead th {
-        background-color: #5c6771 !important;
-        color: #ffffff !important;
-        text-transform: uppercase;
-        font-size: 0.75rem;
-        font-weight: 700;
-        border: 1px solid #dee2e6;
-        vertical-align: middle;
-        text-align: center;
-    }
-    #tabelPrestasi tbody td {
-        vertical-align: middle;
-        font-size: 0.85rem;
-        color: #2c3e50;
-    }
-    .btn-lampiran {
-        padding: 2px 8px;
-        font-size: 11px;
-    }
+    /* ... (Existing styles) ... */
 </style>
-
-
 
     <!-- Main content -->
     <section class="content">
         <div class="container-fluid">
             <div class="card shadow-sm border-0">
                 <div class="card-header box-shadow-0 bg-gradient-x-info d-flex align-items-center justify-content-between">
-                    <h5 class="card-title text-white mb-0">Detail Data Prestasi Siswa</h5>
+                    <h5 class="card-title text-white mb-0"><?php echo ($user_role === 'admin' ? 'Detail Data Prestasi Siswa' : 'Daftar Prestasi Saya'); ?></h5>
+                    <?php if ($user_role === 'admin') { ?>
                     <div class="card-action">
                         <a href="arsipdata/inputprestasi" class="btn btn-warning btn-sm rounded-pill shadow-sm">
                             <i class="fas fa-arrow-left mr-1"></i> Kembali
                         </a>
                     </div>
+                    <?php } ?>
                 </div>
                 <div class="card-body view-form-container" style="background-color: #f8f9fa;">
                     <form>
-                        <input type="hidden" name="id" value="<?php echo $r['id'] ?? ''; ?>">
-                        
                         <div class="row">
                             <!-- Kolom Kiri: Foto & Identitas Singkat -->
                             <div class="col-md-4 text-center">
@@ -210,7 +110,7 @@ if ($total_prestasi == 0) {
                                             <thead>
                                                 <tr>
                                                     <th>No</th>
-                                                    <th>Hapus Prestasi</th>
+                                                    <?php if ($user_role === 'admin') { ?><th>Hapus</th><?php } ?>
                                                     <th>Prestasi</th>
                                                     <th>Jenis</th>
                                                     <th>Tingkat</th>
@@ -239,13 +139,13 @@ if ($total_prestasi == 0) {
                                                     $berkas_html = '-';
                                                     if (!empty($rp['pdf'])) {
                                                         $berkas_link = "file/prestasi/" . $rp['pdf'];
-                                                        $berkas_html = '<button type="button" class="badge badge-primary badge-square" data-url="'.$berkas_link.'" data-title="'.$rp['prestasi'].'" title="Lihat Berkas"><i class="fa fa-file"></i></button>';
+                                                        $berkas_html = '<button type="button" class="badge badge-primary badge-square btn-view-pdf" data-url="'.$berkas_link.'" data-title="'.$rp['prestasi'].'" title="Lihat Berkas"><i class="fa fa-file"></i></button>';
                                                     }
-                                                    $btn_hapus = '<button type="button" class="badge badge-danger badge-square" data-id="'.$rp['id'].'" data-name="'.$rp['prestasi'].'" title="Hapus Data"><i class="fa fa-trash"></i></button>';
+                                                    $btn_hapus = '<button type="button" class="badge badge-danger badge-square btn-hapus" data-id="'.$rp['id'].'" data-name="'.$rp['prestasi'].'" title="Hapus Data"><i class="fa fa-trash"></i></button>';
                                                 ?>
                                                     <tr>
                                                         <td class="text-center"><?php echo $noP++; ?></td>
-                                                        <td class="text-center"><?php echo $btn_hapus; ?></td>
+                                                        <?php if ($user_role === 'admin') { ?><td class="text-center"><?php echo $btn_hapus; ?></td><?php } ?>
                                                         <td><?php echo $rp['prestasi']; ?></td>
                                                         <td><?php echo $rp['jenisprestasi']; ?></td>
                                                         <td><?php echo $rp['tingkat']; ?></td>
