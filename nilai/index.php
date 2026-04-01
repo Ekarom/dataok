@@ -1,6 +1,6 @@
 <?php
+session_name('NILAISESSID');
 session_start();
-
 include "../cfg/konek.php";
 include "../cfg/secure.php";
 include "../cfg/tapel.php";
@@ -24,13 +24,18 @@ $page_title = end($breadcrumb_items)['name'] ?? 'Dashboard';
 
 $user = $_SESSION['skradm'] ?? '';
 $user_role = $_SESSION['user_role'] ?? '';
+$user_level = $_SESSION['user_level'] ?? '';
 
-// Fetch Profile Data (Student or Admin)
+// --- ENFORCE STUDENT ONLY ---
+if ($user_level !== '3' || $user_role !== 'siswa') {
+    header("Location: exit.php");
+    exit();
+}
+
+// Fetch Profile Data (Student ONLY)
 $user_safe = mysqli_real_escape_string($sqlconn, $user);
 $p_siswa = [];
-$p_admin = [];
 
-// 1. Try fetching from student table (Primary for this portal)
 $sqlp_siswa = mysqli_query($sqlconn, "SELECT * FROM siswa WHERE nis = '$user_safe'");
 if ($sqlp_siswa && mysqli_num_rows($sqlp_siswa) > 0) {
     $p_siswa = mysqli_fetch_array($sqlp_siswa);
@@ -38,22 +43,10 @@ if ($sqlp_siswa && mysqli_num_rows($sqlp_siswa) > 0) {
     $nama = $p_siswa['pd'] ?? '';
     $photo = $p_siswa['photo'] ?? '';
     $student_id = $p_siswa['id'] ?? '';
-}
-// 2. Fallback to admin table if not found in student table
-else {
-    $sqlp_admin = mysqli_query($sqlconn, "SELECT * FROM usera WHERE userid = '$user_safe'");
-    if ($sqlp_admin && mysqli_num_rows($sqlp_admin) > 0) {
-        $p_admin = mysqli_fetch_array($sqlp_admin);
-        $nuser = $p_admin['userid'] ?? '';
-        $nama = $p_admin['nama'] ?? '';
-        $photo = $p_admin['poto'] ?? ''; // Note: admin table uses 'poto'
-        $student_id = ''; // Admins don't have a student_id
-    } else {
-        $nuser = $user;
-        $nama = "User Not Found";
-        $photo = "";
-        $student_id = "";
-    }
+} else {
+    // Session exists but student not found in table? Force logout.
+    header("Location: exit.php");
+    exit();
 }
 ?>
 <!DOCTYPE html>
@@ -193,31 +186,62 @@ else {
                 <nav class="">
                     <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu"
                         data-accordion="false">
-                        <!-- Main Menu Header -->
-                        <li class="nav-header">MENU SISWA</li>
 
-                        <li class="nav-item">
-                            <a href="dashboard"
-                                class="nav-link <?php echo ($route == 'home' || $route == 'dashboard') ? 'active' : ''; ?>">
-                                <i class="nav-icon fas fa-tachometer-alt"></i>
-                                <p>Dashboard</p>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="nilai-siswa?urut=<?php echo $student_id; ?>"
-                                class="nav-link <?php echo ($route == 'nilai-siswa') ? 'active' : ''; ?>">
-                                <i class="nav-icon fas fa-file-signature"></i>
-                                <p>Cek Nilai</p>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="profil" class="nav-link <?php echo ($route == 'profil') ? 'active' : ''; ?>">
-                                <i class="nav-icon fas fa-user-circle"></i>
-                                <p>Profil Saya</p>
-                            </a>
-                        </li>
+                        <?php $user_level = $_SESSION['user_level'] ?? '1'; ?>
 
-                        <!-- Logout -->
+                        <?php if ($user_level == '3'): ?>
+                            <!-- ========== MENU SISWA (Level 3) ========== -->
+                            <li class="nav-header">MENU SISWA</li>
+
+                            <li class="nav-item">
+                                <a href="dashboard"
+                                    class="nav-link <?php echo ($route == 'home' || $route == 'dashboard') ? 'active' : ''; ?>">
+                                    <i class="nav-icon fas fa-tachometer-alt"></i>
+                                    <p>Dashboard</p>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="nilai-siswa?urut=<?php echo $student_id; ?>"
+                                    class="nav-link <?php echo ($route == 'nilai-siswa') ? 'active' : ''; ?>">
+                                    <i class="nav-icon fas fa-file-signature"></i>
+                                    <p>Cek Nilai</p>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="profil" class="nav-link <?php echo ($route == 'profil') ? 'active' : ''; ?>">
+                                    <i class="nav-icon fas fa-user-circle"></i>
+                                    <p>Profil Saya</p>
+                                </a>
+                            </li>
+
+                        <?php else: ?>
+                            <!-- ========== MENU ADMIN/STAFF (Level 1/2) ========== -->
+                            <li class="nav-header">MENU ADMIN</li>
+
+                            <li class="nav-item">
+                                <a href="dashboard"
+                                    class="nav-link <?php echo ($route == 'home' || $route == 'dashboard') ? 'active' : ''; ?>">
+                                    <i class="nav-icon fas fa-tachometer-alt"></i>
+                                    <p>Dashboard</p>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="nilai-siswa"
+                                    class="nav-link <?php echo ($route == 'nilai-siswa') ? 'active' : ''; ?>">
+                                    <i class="nav-icon fas fa-file-signature"></i>
+                                    <p>Data Nilai Semua Siswa</p>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="profil" class="nav-link <?php echo ($route == 'profil') ? 'active' : ''; ?>">
+                                    <i class="nav-icon fas fa-user-circle"></i>
+                                    <p>Profil</p>
+                                </a>
+                            </li>
+
+                        <?php endif; ?>
+
+                        <!-- Logout (Semua Level) -->
                         <li class="nav-item">
                             <a href="exit.php" class="nav-link">
                                 <i class="nav-icon fas fa-sign-out-alt"></i>

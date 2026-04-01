@@ -1,8 +1,13 @@
 <?php
 /**
- * Pengolah Login - Sinkronisasi Final dengan reCAPTCHA Soft-Fail & 2FA
- * Support: reCAPTCHA (Soft-Fail if suspended), Login Attempts & Two-Factor Authentication
+ * Pengolah Login - Portal Nilai Siswa
+ * KHUSUS SISWA: Login menggunakan NIS sebagai username dan NISN sebagai password
+ * Admin TIDAK dapat login melalui portal ini
  */
+
+// Custom name to prevent clash with main portal
+session_name('NILAISESSID');
+if (session_status() == PHP_SESSION_NONE) session_start();
 
 include "../cfg/konek.php";
 include "../cfg/logger.php";
@@ -29,38 +34,38 @@ if (empty($skradm) || empty($passz) || empty($database_name)) {
     exit();
 }
 
-// 2. Pilih Database (Wajib untuk Identifikasi)
+// 2. Pilih Database
 if (!mysqli_select_db($sqlconn, $database_name)) {
     header("Location: login.php?salah=2");
     exit();
 }
 
 $user_safe = mysqli_real_escape_string($sqlconn, $skradm);
-$u = null;
 
-// 3. IDENTIFIKASI USER (SEBELUM reCAPTCHA - UNTUK BYPASS)
-// Cek Admin (usera)
-$check_col = mysqli_query($sqlconn, "SHOW COLUMNS FROM usera LIKE 'userid'");
-$user_col = ($check_col && mysqli_num_rows($check_col) > 0) ? 'userid' : 'username';
-$q_admin = mysqli_query($sqlconn, "SELECT *, 'admin' as role FROM usera WHERE $user_col = '$user_safe' AND status='1'");
-
-if ($q_admin && mysqli_num_rows($q_admin) > 0) {
-    $u = mysqli_fetch_assoc($q_admin);
-} else {
-    // Cek Siswa
-    $q_siswa = mysqli_query($sqlconn, "SELECT *, 'siswa' as role FROM siswa WHERE nis = '$user_safe'");
-    if ($q_siswa && mysqli_num_rows($q_siswa) > 0) {
-        $u = mysqli_fetch_assoc($q_siswa);
+// 3. Lockout Check
+$check_attempt = mysqli_query($sqlconn, "SELECT * FROM login_attempts WHERE ip_address = '$ip_safe'");
+if ($check_attempt && mysqli_num_rows($check_attempt) > 0) {
+    $attempt_data = mysqli_fetch_assoc($check_attempt);
+    if ($attempt_data['attempts'] >= 3) {
+        $last = strtotime($attempt_data['last_attempt_time']);
+        $lockout = 5 * 60;
+        if ((time() - $last) < $lockout) {
+            $remaining = $lockout - (time() - $last);
+            header("Location: login.php?salah=3&t=$remaining");
+            exit();
+        } else {
+            // Reset jika lockout sudah expired
+            mysqli_query($sqlconn, "DELETE FROM login_attempts WHERE ip_address = '$ip_safe'");
+        }
     }
 }
 
-// User tidak ditemukan?
-if (!$u) {
-    write_log("LOGIN_FAIL", "User not found: $skradm", $sqlconn);
-}
+// 4. IDENTIFIKASI SISWA (HANYA dari tabel siswa - Admin TIDAK diizinkan)
+$q_siswa = mysqli_query($sqlconn, "SELECT * FROM siswa WHERE nis = '$user_safe'");
+$u = ($q_siswa && mysqli_num_rows($q_siswa) > 0) ? mysqli_fetch_assoc($q_siswa) : null;
 
-// 4. VERIFIKASI reCAPTCHA (KHUSUS ADMIN - DENGAN SOFT-FAIL)
-if ($u && $u['role'] === 'admin') {
+// 4.5 VERIFIKASI reCAPTCHA
+if ($u) {
     $verify_url = "https://www.google.com/recaptcha/api/siteverify";
     $ch = curl_init();
     curl_setopt($ch, CURLOPT_URL, $verify_url);
@@ -80,69 +85,58 @@ if ($u && $u['role'] === 'admin') {
         $err_codes = isset($response_keys['error-codes']) ? implode(', ', $response_keys['error-codes']) : 'unknown error';
 
         // --- SOFT-FAIL LOGIC ---
-        // Jika Google project suspended atau keys salah, kita izinkan login berlanjut (dengan log peringatan)
         $is_suspended = (stripos($err_codes, 'suspended') !== false || stripos($err_codes, 'invalid-input-secret') !== false);
 
         if ($is_suspended) {
-            write_log("RECAPTCHA_WARNING", "Service suspended ($err_codes). Allowing Admin $skradm bypass.", $sqlconn);
+            write_log("RECAPTCHA_WARNING", "Service suspended ($err_codes). Allowing bypass for $skradm.", $sqlconn);
         } else {
-            write_log("LOGIN_FAIL", "reCAPTCHA failed for admin: $skradm ($err_codes)", $sqlconn);
+            write_log("LOGIN_FAIL", "reCAPTCHA failed: $skradm ($err_codes)", $sqlconn);
             header("Location: login.php?salah=4");
             exit();
         }
     }
 }
 
-// 5. PENGECEKAN PASSWORD (CREDENTIALS)
+// 5. VERIFIKASI PASSWORD (NISN atau NIS)
 $login_success = false;
 if ($u) {
-    if ($u['role'] === 'admin') {
-        if (password_verify($passz, $u['password']) || $u['password'] === md5($passz) || $u['password'] === $passz) {
-            $login_success = true;
-        }
-    } else {
-        // Student login: Fleksibel - Cek NISN atau NIS
-        if ($passz === trim($u['nisn']) || $passz === trim($u['nis'])) {
-            $login_success = true;
-        }
+    if ($passz === trim($u['nisn']) || $passz === trim($u['nis'])) {
+        $login_success = true;
     }
 }
-
 // 6. PENANGANAN SESI & LOGGING
 if ($login_success) {
+
     // Reset failed attempts
     mysqli_query($sqlconn, "DELETE FROM login_attempts WHERE ip_address = '$ip_safe'");
 
-    // --- 2FA Check (Only for Admin with keys or email) ---
-    if ($u['role'] === 'admin' && (!empty($u['google_secret']) || !empty($u['email']))) {
-        $_SESSION['temp_skradm'] = $skradm;
-        $_SESSION['temp_user_id_db'] = $u[$user_col];
-        $_SESSION['database_asli'] = $database_name;
-        $_SESSION['user_role'] = $u['role'];
-
-        write_log("LOGIN_STAGING", "2FA challenge initiated for admin $skradm", $sqlconn);
-        header("Location: ../verify_2fa.php");
-        exit();
-    }
-
-    // Direct Login (Success)
-    write_log("LOGIN_SUCCESS", "User $skradm logged in as " . $u['role'], $sqlconn);
-
+    // INITIALIZE SESSION FIRST (so logger picks up $skradm)
     session_regenerate_id(true);
     $_SESSION['idu'] = session_id();
     $_SESSION['skradm'] = $skradm;
-    $_SESSION['user_role'] = $u['role'];
+    $_SESSION['user_role'] = 'siswa';
+    $_SESSION['user_level'] = '3';            // Level 3 = Siswa
     $_SESSION['database_asli'] = $database_name;
-    $_SESSION['nama'] = $u['nama'] ?? $u['pd'] ?? $skradm;
+    $_SESSION['nama'] = $u['pd'] ?? $skradm;
+    $_SESSION['nis_login'] = $u['nis'];
+    $_SESSION['siswa_id'] = $u['id'] ?? '';
+    $_SESSION['siswa_nama'] = $u['pd'] ?? '';
+    $_SESSION['siswa_kelas'] = $u['kelas'] ?? '';
+    $_SESSION['siswa_nis'] = $u['nis'] ?? '';
+    $_SESSION['siswa_nisn'] = $u['nisn'] ?? '';
 
-    if ($u['role'] === 'siswa')
-        $_SESSION['nis_login'] = $u['nis'];
+    // Success Logging (Now it knows the session owner)
+    global $userc, $nama;
+    $userc = $skradm;
+    $nama = $u['pd'] ?? $skradm;
+    write_log("LOGIN_SUCCESS", "Masuk ke Ruang Nilai (Siswa)", $sqlconn);
 
     header('Location: ./dashboard');
     exit();
+
 } else {
-    // Fail Logic (Username/Password salah)
-    write_log("LOGIN_FAIL", "Invalid credentials for: $skradm", $sqlconn);
+    // Fail Logic
+    write_log("LOGIN_FAIL", "Invalid credentials for siswa: $skradm from $ip_address", $sqlconn);
 
     $check_attempt = mysqli_query($sqlconn, "SELECT * FROM login_attempts WHERE ip_address = '$ip_safe'");
     if ($check_attempt && mysqli_num_rows($check_attempt) > 0) {
@@ -162,5 +156,3 @@ if ($login_success) {
     header("Location: $redirect_url");
     exit();
 }
-
-

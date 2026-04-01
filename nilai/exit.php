@@ -1,5 +1,6 @@
 <?php
 // Start session
+session_name('NILAISESSID');
 session_start();
 
 // Hapus semua variabel session

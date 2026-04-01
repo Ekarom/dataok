@@ -1,4 +1,8 @@
 <?php
+// Ensure session uses a custom name to prevent clash with Admin Portal
+session_name('NILAISESSID');
+if (session_status() == PHP_SESSION_NONE) session_start();
+
 // Ensure session and core database connection are available
 require_once "../cfg/konek.php";
 require_once "../cfg/recaptcha_config.php";
@@ -241,13 +245,13 @@ if ($check_table && mysqli_num_rows($check_table) > 0) {
                         <?php echo $namasek; ?>
                     </span>
 
-                    <div class="wrap-input100 validate-input" data-validate="Masukan Username">
-                        <input class="input100" type="text" id="skradm" name="skradm" placeholder="Username">
+                    <div class="wrap-input100 validate-input" data-validate="Masukan NIS">
+                        <input class="input100" type="text" id="skradm" name="skradm" placeholder="Nomor Induk Siswa (NIS)">
                         <span class="focus-input100" data-placeholder="&#xf207;"></span>
                     </div>
 
                     <div class="wrap-input100 validate-input" data-validate="Masukan Password">
-                        <input class="input100" type="password" id="skrpass" name="skrpass" placeholder="Password">
+                        <input class="input100" type="password" id="skrpass" name="skrpass" placeholder="Password (NISN)">
                         <span class="focus-input100" data-placeholder="&#xf191;"></span>
                         <i class="fa fa-eye-slash eye-icon" id="toggle-password"></i>
                     </div>

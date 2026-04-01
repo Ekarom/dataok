@@ -141,14 +141,15 @@ $user_col = ($check_col && mysqli_num_rows($check_col) > 0) ? 'userid' : 'userna
 $q_user = mysqli_query($sqlconn, "SELECT * FROM usera WHERE $user_col = '$user_safe' AND status='1'");
 $u = ($q_user) ? mysqli_fetch_assoc($q_user) : null;
 
-// Password verification loop
+// --- 5A. ADMIN/STAFF LOGIN (from usera table) ---
 if ($u && (password_verify($passz, $u['password']) || $u['password'] === md5($passz))) {
     
-    // --- 6. SUCCESS FLOW ---
+    // --- 6. ADMIN SUCCESS FLOW ---
     
     // Session Initialization
     $_SESSION['idu'] = session_id();
     $_SESSION['skradm'] = $skradm;
+    $_SESSION['user_level'] = $u['level'] ?? '1'; // Level 1=Admin, 2=Staff
     $_SESSION['database_asli'] = $database_name;
     $_SESSION['tahundb'] = $tahundb;
     $_SESSION['tapel'] = $tapel_pilih;
@@ -194,7 +195,7 @@ if ($u && (password_verify($passz, $u['password']) || $u['password'] === md5($pa
     }
 
     // Success Logging
-    write_log("LOGIN", "Login Success", "User '$skradm' logged in from $ip_addr");
+    write_log("LOGIN", "Login Success", "Admin/Staff '$skradm' logged in from $ip_addr");
 
     // Check for Academic Period alignment alert
     if ($show_warning) {
@@ -207,7 +208,7 @@ if ($u && (password_verify($passz, $u['password']) || $u['password'] === md5($pa
     exit();
 
 } else {
-    // --- 7. FAILURE FLOW ---
+    // --- 7. FAILURE FLOW (No admin/staff matched) ---
     
     // Register failed attempt
     mysqli_query($sqlconn, "INSERT INTO login_attempts (userid, ip_address, attempts, last_attempt_time) 

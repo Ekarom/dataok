@@ -305,12 +305,13 @@ if (
                                     </a>
                                 </li>-->
                             <?php } ?>
-                            <?php $is_arsip = (strpos($route, 'arsipdata') === 0 || $route == 'dataprestasi' || $route == 'inputlegalisir' || $route == 'datanilai' || $route == 'legalisir'); ?>
-                            <li class="nav-item has-treeview <?php echo $is_arsip ? 'menu-open' : ''; ?>">
-                                <a href="javascript:void(0)" class="nav-link <?php echo $is_arsip ? 'active' : ''; ?>" id="2">
+                            <?php $nilaikelas = (strpos($route, 'datanilai') !== false || $route == 'nilaikelas'); ?>
+                            <li class="nav-item has-treeview <?php echo $nilaikelas ? 'menu-open' : ''; ?>">
+                                <a href="javascript:void(0)" class="nav-link <?php echo $nilaikelas ? 'active' : ''; ?>"
+                                    id="21">
                                     <i class="nav-icon fas fa-archive"></i>
                                     <p>
-                                        Arsip Data
+                                        Data Nilai
                                         <i class="right fas fa-angle-left"></i>
                                     </p>
                                 </a>
@@ -318,11 +319,24 @@ if (
                                     <li class="nav-item">
                                         <a href="arsipdata/datanilai"
                                             class="nav-link <?php echo ($route == 'arsipdata/datanilai' || $route == 'datanilai') ? 'active' : ''; ?>"
-                                            id="3">
+                                            id="22">
                                             <i class="nav-icon fas fa-table"></i>
-                                            <p>Data Nilai Siswa</p>
+                                            <p>Nilai Kelas 9</p>
                                         </a>
                                     </li>
+                                </ul>
+                            </li>
+                            <?php $is_arsip = ((strpos($route, 'arsipdata') === 0 && strpos($route, 'datanilai') === false) || $route == 'dataprestasi' || $route == 'inputlegalisir' || $route == 'legalisir'); ?>
+                            <li class="nav-item has-treeview <?php echo $is_arsip ? 'menu-open' : ''; ?>">
+                                <a href="javascript:void(0)" class="nav-link <?php echo $is_arsip ? 'active' : ''; ?>"
+                                    id="210">
+                                    <i class="nav-icon fas fa-archive"></i>
+                                    <p>
+                                        Arsip Data
+                                        <i class="right fas fa-angle-left"></i>
+                                    </p>
+                                </a>
+                                <ul class="nav nav-treeview">
                                     <li class="nav-item">
                                         <a href="arsipdata/inputprestasi"
                                             class="nav-link <?php echo ($route == 'arsipdata/inputprestasi' || $route == 'dataprestasi') ? 'active' : ''; ?>"
@@ -341,171 +355,178 @@ if (
                                     </li>
                                 </ul>
                             </li>
-                            <!-- Administrator Section -->
-                            <li class="nav-header">ADMINISTRATOR</li>
-                            <!-- Print Menu -->
-                            <?php $is_print = (strpos($route, 'print') === 0 || $route == 'laporanprestasi' || $route == 'laporanlegalisir'); ?>
-                            <li class="nav-item has-treeview <?php echo $is_print ? 'menu-open' : ''; ?>">
-                                <a href="print" class="nav-link <?php echo $is_print ? 'active' : ''; ?>" id="6">
-                                    <i class="nav-icon fas fa-print"></i>
+                        <!-- Administrator Section -->
+                        <li class="nav-header">ADMINISTRATOR</li>
+                        <!-- Print Menu -->
+                        <?php $is_print = (strpos($route, 'print') === 0 || $route == 'laporanprestasi' || $route == 'laporanlegalisir'); ?>
+                        <li class="nav-item has-treeview <?php echo $is_print ? 'menu-open' : ''; ?>">
+                            <a href="print" class="nav-link <?php echo $is_print ? 'active' : ''; ?>" id="6">
+                                <i class="nav-icon fas fa-print"></i>
+                                <p>
+                                    Print
+                                    <i class="right fas fa-angle-left"></i>
+                                </p>
+                            </a>
+                            <ul class="nav nav-treeview">
+                                <li class="nav-item">
+                                    <a href="#" class="nav-link" data-toggle="modal" data-target="#modalDaftarHadir" id="7">
+                                        <i class="nav-icon fas fa-clipboard-list"></i>
+                                        <p>Daftar Hadir</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href='print/laporanprestasi'
+                                        class="nav-link <?php echo ($route == 'print/laporanprestasi' || $route == 'laporanprestasi') ? 'active' : ''; ?>"
+                                        id="8">
+                                        <i class="nav-icon fas fa-clipboard-list"></i>
+                                        <p>Laporan Prestasi</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href='print/laporanlegalisir'
+                                        class="nav-link <?php echo ($route == 'print/laporanlegalisir' || $route == 'laporanlegalisir') ? 'active' : ''; ?>"
+                                        id="9">
+                                        <i class="nav-icon fas fa-clipboard-list"></i>
+                                        <p>Laporan Legalisir</p>
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+                        <!-- Management Menu -->
+                        <?php if ($lv == "1" || $lv == "2") { ?>
+                            <?php $is_mgt = (strpos($route, 'management') === 0 || in_array($route, ['usermanagement', 'datasekolah', 'pengaturan', 'profil', 'uploadsiswa', 'uploaduser', 'uploadfoto'])); ?>
+                            <li class="nav-item has-treeview <?php echo $is_mgt ? 'menu-open' : ''; ?>">
+                                <a href="management" class="nav-link <?php echo $is_mgt ? 'active' : ''; ?>" id="9">
+                                    <i class="nav-icon fas fa-layer-group"></i>
                                     <p>
-                                        Print
+                                        Management
+                                        <i class="right fas fa-angle-left"></i>
+                                    </p>
+                                </a>
+                                <ul class="nav nav-treeview">
+                                    <?php if ($lv == "1") { ?>
+                                        <li class="nav-item">
+                                            <a href="management/usermanagement"
+                                                class="nav-link <?php echo ($route == 'management/usermanagement' || $route == 'usermanagement') ? 'active' : ''; ?>"
+                                                id="10">
+                                                <i class="nav-icon fas fa-users-cog"></i>
+                                                <p>User Staff & Admin</p>
+                                            </a>
+                                        </li>
+                                        <li class="nav-item">
+                                            <a href="management/datasekolah"
+                                                class="nav-link <?php echo ($route == 'management/datasekolah' || $route == 'datasekolah') ? 'active' : ''; ?>"
+                                                id="11">
+                                                <i class="nav-icon fas fa-school"></i>
+                                                <p>Data Sekolah</p>
+                                            </a>
+                                        </li>
+                                        <li class="nav-item">
+                                            <a href="management/settings"
+                                                class="nav-link <?php echo ($route == 'management/settings' || $route == 'pengaturan') ? 'active' : ''; ?>"
+                                                id="12">
+                                                <i class="nav-icon fas fa-cogs"></i>
+                                                <p>Settings</p>
+                                            </a>
+                                        </li>
+                                    <?php } ?>
+
+                                    <li class="nav-item">
+                                        <a href="management/profil"
+                                            class="nav-link <?php echo ($route == 'management/profil' || $route == 'profil') ? 'active' : ''; ?>"
+                                            id="13">
+                                            <i class="nav-icon fas fa-user-edit"></i>
+                                            <p>Profile</p>
+                                        </a>
+                                    </li>
+
+                                    <?php if ($lv == "1") { ?>
+                                        <li class="nav-item">
+                                            <a href="management/uploadsiswa"
+                                                class="nav-link <?php echo ($route == 'management/uploadsiswa' || $route == 'uploadsiswa') ? 'active' : ''; ?>"
+                                                id="14">
+                                                <i class="nav-icon fas fa-file-excel"></i>
+                                                <p>Upload Excel Siswa</p>
+                                            </a>
+                                        </li>
+                                        <li class="nav-item">
+                                            <a href="management/uploaduser"
+                                                class="nav-link <?php echo ($route == 'management/uploaduser' || $route == 'uploaduser') ? 'active' : ''; ?>"
+                                                id="15">
+                                                <i class="nav-icon fas fa-file-excel"></i>
+                                                <p>Upload Data User</p>
+                                            </a>
+                                        </li>
+                                        <li class="nav-item">
+                                            <a href="management/uploadfoto"
+                                                class="nav-link <?php echo ($route == 'management/uploadfoto' || $route == 'uploadfoto') ? 'active' : ''; ?>"
+                                                id="16">
+                                                <i class="nav-icon fas fa-images"></i>
+                                                <p>Upload Foto (ZIP)</p>
+                                            </a>
+                                        </li>
+                                        <li class="nav-item">
+                                            <a href="management/uploadnilai"
+                                                class="nav-link <?php echo ($route == 'management/uploadnilai' || $route == 'uploadnilai') ? 'active' : ''; ?>"
+                                                id="14">
+                                                <i class="nav-icon fas fa-file-excel"></i>
+                                                <p>Upload Nilai Excel</p>
+                                            </a>
+                                        </li>
+                                    <?php } ?>
+
+                                </ul>
+                            </li>
+                        <?php } ?>
+
+                        <?php if ($lv == "1") { ?>
+                            <!-- System Menu (Admin Only) -->
+                            <?php $is_system = (strpos($route, 'system') === 0 || in_array($route, ['database', 'checkupdate', 'activitylog'])); ?>
+                            <li class="nav-item has-treeview <?php echo $is_system ? 'menu-open' : ''; ?>">
+                                <a href="system" class="nav-link <?php echo $is_system ? 'active' : ''; ?>" id="17">
+                                    <i class="nav-icon fas fa-cogs"></i>
+                                    <p>
+                                        System
                                         <i class="right fas fa-angle-left"></i>
                                     </p>
                                 </a>
                                 <ul class="nav nav-treeview">
                                     <li class="nav-item">
-                                        <a href="#" class="nav-link" data-toggle="modal" data-target="#modalDaftarHadir"
-                                            id="7">
-                                            <i class="nav-icon fas fa-clipboard-list"></i>
-                                            <p>Daftar Hadir</p>
+                                        <a href="system/database"
+                                            class="nav-link <?php echo ($route == 'system/database' || $route == 'database') ? 'active' : ''; ?>"
+                                            id="18">
+                                            <i class="nav-icon fas fa-database"></i>
+                                            <p>Database</p>
                                         </a>
                                     </li>
                                     <li class="nav-item">
-                                        <a href='print/laporanprestasi'
-                                            class="nav-link <?php echo ($route == 'print/laporanprestasi' || $route == 'laporanprestasi') ? 'active' : ''; ?>"
-                                            id="8">
-                                            <i class="nav-icon fas fa-clipboard-list"></i>
-                                            <p>Laporan Prestasi</p>
+                                        <a href="system/checkupdate"
+                                            class="nav-link <?php echo ($route == 'system/checkupdate' || $route == 'checkupdate') ? 'active' : ''; ?>"
+                                            id="19">
+                                            <i class="nav-icon fas fa-sync-alt"></i>
+                                            <p>Check Update</p>
                                         </a>
                                     </li>
                                     <li class="nav-item">
-                                        <a href='print/laporanlegalisir'
-                                            class="nav-link <?php echo ($route == 'print/laporanlegalisir' || $route == 'laporanlegalisir') ? 'active' : ''; ?>"
-                                            id="9">
-                                            <i class="nav-icon fas fa-clipboard-list"></i>
-                                            <p>Laporan Legalisir</p>
+                                        <a href="system/activitylog"
+                                            class="nav-link <?php echo ($route == 'system/activitylog' || $route == 'activitylog') ? 'active' : ''; ?>"
+                                            id="20">
+                                            <i class="fas fa-chart-line nav-icon"></i>
+                                            <p>Activity Log</p>
                                         </a>
                                     </li>
                                 </ul>
                             </li>
-                            <!-- Management Menu -->
-                            <?php if ($lv == "1" || $lv == "2") { ?>
-                                <?php $is_mgt = (strpos($route, 'management') === 0 || in_array($route, ['usermanagement', 'datasekolah', 'pengaturan', 'profil', 'uploadsiswa', 'uploaduser', 'uploadfoto'])); ?>
-                                <li class="nav-item has-treeview <?php echo $is_mgt ? 'menu-open' : ''; ?>">
-                                    <a href="management" class="nav-link <?php echo $is_mgt ? 'active' : ''; ?>" id="9">
-                                        <i class="nav-icon fas fa-layer-group"></i>
-                                        <p>
-                                            Management
-                                            <i class="right fas fa-angle-left"></i>
-                                        </p>
-                                    </a>
-                                    <ul class="nav nav-treeview">
-                                        <?php if ($lv == "1") { ?>
-                                            <li class="nav-item">
-                                                <a href="management/usermanagement"
-                                                    class="nav-link <?php echo ($route == 'management/usermanagement' || $route == 'usermanagement') ? 'active' : ''; ?>"
-                                                    id="10">
-                                                    <i class="nav-icon fas fa-users-cog"></i>
-                                                    <p>User Staff & Admin</p>
-                                                </a>
-                                            </li>
-                                            <li class="nav-item">
-                                                <a href="management/datasekolah"
-                                                    class="nav-link <?php echo ($route == 'management/datasekolah' || $route == 'datasekolah') ? 'active' : ''; ?>"
-                                                    id="11">
-                                                    <i class="nav-icon fas fa-school"></i>
-                                                    <p>Data Sekolah</p>
-                                                </a>
-                                            </li>
-                                            <li class="nav-item">
-                                                <a href="management/settings"
-                                                    class="nav-link <?php echo ($route == 'management/settings' || $route == 'pengaturan') ? 'active' : ''; ?>"
-                                                    id="12">
-                                                    <i class="nav-icon fas fa-cogs"></i>
-                                                    <p>Settings</p>
-                                                </a>
-                                            </li>
-                                        <?php } ?>
-
-                                        <li class="nav-item">
-                                            <a href="management/profil"
-                                                class="nav-link <?php echo ($route == 'management/profil' || $route == 'profil') ? 'active' : ''; ?>"
-                                                id="13">
-                                                <i class="nav-icon fas fa-user-edit"></i>
-                                                <p>Profile</p>
-                                            </a>
-                                        </li>
-
-                                        <?php if ($lv == "1") { ?>
-                                            <li class="nav-item">
-                                                <a href="management/uploadsiswa"
-                                                    class="nav-link <?php echo ($route == 'management/uploadsiswa' || $route == 'uploadsiswa') ? 'active' : ''; ?>"
-                                                    id="14">
-                                                    <i class="nav-icon fas fa-file-excel"></i>
-                                                    <p>Upload Excel Siswa</p>
-                                                </a>
-                                            </li>
-                                            <li class="nav-item">
-                                                <a href="management/uploaduser"
-                                                    class="nav-link <?php echo ($route == 'management/uploaduser' || $route == 'uploaduser') ? 'active' : ''; ?>"
-                                                    id="15">
-                                                    <i class="nav-icon fas fa-file-excel"></i>
-                                                    <p>Upload Data User</p>
-                                                </a>
-                                            </li>
-                                            <li class="nav-item">
-                                                <a href="management/uploadfoto"
-                                                    class="nav-link <?php echo ($route == 'management/uploadfoto' || $route == 'uploadfoto') ? 'active' : ''; ?>"
-                                                    id="16">
-                                                    <i class="nav-icon fas fa-images"></i>
-                                                    <p>Upload Foto (ZIP)</p>
-                                                </a>
-                                            </li>
-                                        <?php } ?>
-
-                                    </ul>
-                                </li>
-                            <?php } ?>
-
-                            <?php if ($lv == "1") { ?>
-                                <!-- System Menu (Admin Only) -->
-                                <?php $is_system = (strpos($route, 'system') === 0 || in_array($route, ['database', 'checkupdate', 'activitylog'])); ?>
-                                <li class="nav-item has-treeview <?php echo $is_system ? 'menu-open' : ''; ?>">
-                                    <a href="system" class="nav-link <?php echo $is_system ? 'active' : ''; ?>" id="17">
-                                        <i class="nav-icon fas fa-cogs"></i>
-                                        <p>
-                                            System
-                                            <i class="right fas fa-angle-left"></i>
-                                        </p>
-                                    </a>
-                                    <ul class="nav nav-treeview">
-                                        <li class="nav-item">
-                                            <a href="system/database"
-                                                class="nav-link <?php echo ($route == 'system/database' || $route == 'database') ? 'active' : ''; ?>"
-                                                id="18">
-                                                <i class="nav-icon fas fa-database"></i>
-                                                <p>Database</p>
-                                            </a>
-                                        </li>
-                                        <li class="nav-item">
-                                            <a href="system/checkupdate"
-                                                class="nav-link <?php echo ($route == 'system/checkupdate' || $route == 'checkupdate') ? 'active' : ''; ?>"
-                                                id="19">
-                                                <i class="nav-icon fas fa-sync-alt"></i>
-                                                <p>Check Update</p>
-                                            </a>
-                                        </li>
-                                        <li class="nav-item">
-                                            <a href="system/activitylog"
-                                                class="nav-link <?php echo ($route == 'system/activitylog' || $route == 'activitylog') ? 'active' : ''; ?>"
-                                                id="20">
-                                                <i class="fas fa-chart-line nav-icon"></i>
-                                                <p>Activity Log</p>
-                                            </a>
-                                        </li>
-                                    </ul>
-                                </li>
-                            <?php } ?>
-
-                            <!-- Logout -->
-                            <li class="nav-item">
-                                <a href="exit.php" class="nav-link">
-                                    <i class="nav-icon fas fa-sign-out-alt"></i>
-                                    <p>Exit</p>
-                                </a>
-                            </li>
                         <?php } ?>
+
+                        <!-- Logout -->
+                        <li class="nav-item">
+                            <a href="exit.php" class="nav-link">
+                                <i class="nav-icon fas fa-sign-out-alt"></i>
+                                <p>Exit</p>
+                            </a>
+                        </li>
+                    <?php } ?>
                     </ul>
                 </nav>
             </div>

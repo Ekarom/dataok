@@ -1,6 +1,6 @@
 <?php
 //===============================================//
-//          Student Data Import V 1.1 (Premium)
+//          Grade Data Import V 1.1 (Premium)
 //                  By
 //                  ME
 //            Copyright © 2023
@@ -134,13 +134,13 @@ include "cfg/secure.php";
                     <!-- Setup Card -->
                     <div class="card border-0 shadow-lg rounded-4 overflow-hidden mb-4">
                         <div class="card-header box-shadow-0 bg-gradient-x-info border-0 py-3 d-flex align-items-center justify-content-between">
-                            <h5 class="mb-0 fw-bold text-white"><i class="fas fa-file-excel me-2"></i> Import Excel Data</h5>
+                            <h5 class="mb-0 fw-bold text-white"><i class="fas fa-file-excel me-2"></i> Import Excel Nilai</h5>
                         </div>
                         
                         <div class="card-body p-4">
                             <div>
-                                <a href="file/data_user_siswa.xls" class="btn btn-sm btn-primary">
-                                <i class="fas fa-download me-1"></i> Template
+                                <a href="file/data_nilai_siswa.xls" class="btn btn-sm btn-primary">
+                                <i class="fas fa-download me-1"></i> Template Nilai
                             </a>
                             </div>
 
@@ -260,7 +260,7 @@ $(document).ready(function () {
 
         $.ajax({
             type: 'POST',
-            url: 'usiswa-go.php',
+            url: 'unilai-go.php',
             data: formData,
             processData: false,
             contentType: false,
