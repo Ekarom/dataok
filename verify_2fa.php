@@ -98,13 +98,13 @@ if (isset($_POST['verify_code'])) {
 
         // --- LOG SUCCESSFUL LOGIN ---
         // Log login
-        $userc = $userz;
-        $nama = $row_user['nama'];
-        write_log("LOGIN", "Login", "User Logged In");
+        $userc = $skradm;
+        $nama = isset($user['nama']) ? $user['nama'] : $skradm;
+        write_log("LOGIN", "Login Success after 2FA", "User Logged In", $sqlconn);
 
         // --------------------------------
 
-        header("Location: ./dashboard");
+        header("Location: ./nilai/index.php");
         exit();
     } else {
         $error = "Kode salah atau kadaluarsa.";
