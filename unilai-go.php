@@ -1,19 +1,21 @@
 <?php
 /**
- * Backend Handler for Grade Data Excel Import (AJAX)
+ * Backend Handler for Grade Data Excel Import (Final Optimized)
  * URL: unilai-go.php
  */
 
-error_reporting(0);
+// Sembunyikan error HTML, pastikan hanya JSON yang keluar
+error_reporting(E_ALL);
 ini_set('display_errors', 0);
 
+// Handler untuk menangkap Fatal Error agar tetap keluar sebagai JSON
 register_shutdown_function(function () {
     $err = error_get_last();
-    if ($err && ($err['type'] === E_ERROR || $err['type'] === E_USER_ERROR || $err['type'] === E_PARSE || $err['type'] === E_COMPILE_ERROR)) {
+    if ($err && in_array($err['type'], [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR])) {
         if (ob_get_length())
-            ob_clean(); // Clean any partial output
+            ob_clean();
         header('Content-Type: application/json');
-        echo json_encode(["11", "Fatal Error: " . $err['message'] . " in " . basename($err['file']) . ":" . $err['line']]);
+        echo json_encode(["11", "Fatal Error: " . $err['message'] . " di baris " . $err['line']]);
         exit;
     }
 });
@@ -28,239 +30,166 @@ set_time_limit(0);
 ini_set('memory_limit', '512M');
 
 if (!isset($_FILES['userfile'])) {
-    echo json_encode(["1", "Error: No file selected."]);
+    echo json_encode(["1", "Error: Tidak ada file yang dipilih."]);
     exit;
 }
 
 $file = $_FILES['userfile'];
-if ($file['error'] !== UPLOAD_ERR_OK) {
-    echo json_encode(["1", "Error: Upload failed with code " . $file['error']]);
-    exit;
-}
-
 $file_extension = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
-$log = ["3"]; // Status code 3 for success start
+$log = ["3"]; // Kode status 3: Proses dimulai
 $sukses = 0;
 $gagal = 0;
-$total_rows = 0;
 
+/**
+ * FIX: Mapping kolom disesuaikan berdasarkan image_d41790.png
+ * Kolom A=0 (nama), B=1 (jk), C=2 (nis), D=3 (nisn), E=4 (kelas), dst.
+ */
 $col_mapping = [
-    'pd' => 2,
-    'jk' => 3,
-    'nis' => 4,
-    'nisn' => 5,
-    'kelas' => 6,
-    'tempat_lahir' => 7,
-    'tgl_lahir' => 8,
-    'nik' => 9,
-    'agama' => 10,
-    'alamat' => 11,
-    'no_hp' => 12,
-    'email' => 13,
-    'nama_ayah' => 14,
-    'nama_ibu' => 15,
-    'pkn_1' => 16,
-    'ind_1' => 17,
-    'mtk_1' => 18,
-    'ipa_1' => 19,
-    'ips_1' => 20,
-    'eng_1' => 21,
-    'pkn_2' => 22,
-    'ind_2' => 23,
-    'mtk_2' => 24,
-    'ipa_2' => 25,
-    'ips_2' => 26,
-    'eng_2' => 27,
-    'pkn_3' => 28,
-    'ind_3' => 29,
-    'mtk_3' => 30,
-    'ipa_3' => 31,
-    'ips_3' => 32,
-    'eng_3' => 33,
-    'pkn_4' => 34,
-    'ind_4' => 35,
-    'mtk_4' => 36,
-    'ipa_4' => 37,
-    'ips_4' => 38,
-    'eng_4' => 39,
-    'pkn_5' => 40,
-    'ind_5' => 41,
-    'mtk_5' => 42,
-    'ipa_5' => 43,
-    'ips_5' => 44,
-    'eng_5' => 45
+    'pd' => 0,  // Kolom A
+    'jk' => 1,  // Kolom B
+    'nis' => 2,  // Kolom C
+    'nisn' => 3,  // Kolom D
+    'kelas' => 4,  // Kolom E
+    'tempat_lahir' => 5,  // Kolom F
+    'tgl_lahir' => 6,  // Kolom G
+    'nik' => 7,  // Kolom H
+    'agama' => 8,  // Kolom I
+    'alamat' => 9,  // Kolom J
+    'no_hp' => 10, // Kolom K
+    'email' => 11, // Kolom L
+    'nama_ayah' => 12, // Kolom M
+    'nama_ibu' => 13, // Kolom N
+    // Semester 1 (Mulai Kolom O = 14)
+    'pkn_1' => 14,
+    'ind_1' => 15,
+    'mtk_1' => 16,
+    'ipa_1' => 17,
+    'ips_1' => 18,
+    'eng_1' => 19,
+    // Semester 2
+    'pkn_2' => 20,
+    'ind_2' => 21,
+    'mtk_2' => 22,
+    'ipa_2' => 23,
+    'ips_2' => 24,
+    'eng_2' => 25,
+    // Semester 3
+    'pkn_3' => 26,
+    'ind_3' => 27,
+    'mtk_3' => 28,
+    'ipa_3' => 29,
+    'ips_3' => 30,
+    'eng_3' => 31,
+    // Semester 4
+    'pkn_4' => 32,
+    'ind_4' => 33,
+    'mtk_4' => 34,
+    'ipa_4' => 35,
+    'ips_4' => 36,
+    'eng_4' => 37,
+    // Semester 5
+    'pkn_5' => 38,
+    'ind_5' => 39,
+    'mtk_5' => 40,
+    'ipa_5' => 41,
+    'ips_5' => 42,
+    'eng_5' => 43
 ];
 
 $cols = array_keys($col_mapping);
 
 try {
-    $baris = 0;
-    $use_phpexcel = false;
-    $data_reader = null;
+    $excel_data = [];
 
+    // --- PROSES MEMBACA FILE ---
     if ($file_extension == 'xlsx') {
-        if (file_exists('PHPExcel/PHPExcel.php')) {
-            require_once 'PHPExcel/PHPExcel.php';
-            $use_phpexcel = true;
-            $objPHPExcel = PHPExcel_IOFactory::load($file['tmp_name']);
-            $worksheet = $objPHPExcel->getActiveSheet();
-            $baris = $worksheet->getHighestRow();
-        } else {
-            echo json_encode(["10", "File .xlsx tidak didukung karena ekstensi PHPExcel tidak terinstall. Silakan 'Save As' file Excel Anda menjadi format lama yaitu Excel 97-2003 Workbook (.xls)."]);
+        if (!file_exists('PHPExcel/PHPExcel.php')) {
+            echo json_encode(["10", "Library PHPExcel tidak ditemukan."]);
             exit;
+        }
+        require_once 'PHPExcel/PHPExcel.php';
+        $objPHPExcel = PHPExcel_IOFactory::load($file['tmp_name']);
+        $worksheet = $objPHPExcel->getActiveSheet();
+        $highestRow = $worksheet->getHighestRow();
+
+        for ($i = 2; $i <= $highestRow; $i++) {
+            $row = [];
+            $has_content = false;
+            foreach ($col_mapping as $colName => $idx) {
+                $val = trim((string) $worksheet->getCellByColumnAndRow($idx, $i)->getValue());
+                $row[$colName] = $val;
+                if ($val !== "")
+                    $has_content = true;
+            }
+            if ($has_content)
+                $excel_data[] = $row;
         }
     } elseif ($file_extension == 'xls') {
         require_once "excel_reader2.php";
-        if (!class_exists('Spreadsheet_Excel_Reader')) {
-            echo json_encode(["10", "Error: excel_reader2 library not found for .xls files."]);
-            exit;
-        }
         $data_reader = new Spreadsheet_Excel_Reader($file['tmp_name']);
-        if (isset($data_reader->error) && $data_reader->error == 1) {
-            echo json_encode(["10", "Error: Invalid Excel format."]);
-            exit;
+        $rowCount = $data_reader->rowcount();
+
+        for ($i = 2; $i <= $rowCount; $i++) {
+            $row = [];
+            $has_content = false;
+            foreach ($col_mapping as $colName => $idx) {
+                $val = trim((string) $data_reader->val($i, $idx + 1));
+                $row[$colName] = $val;
+                if ($val !== "")
+                    $has_content = true;
+            }
+            if ($has_content)
+                $excel_data[] = $row;
         }
-        $baris = $data_reader->rowcount($sheet_index = 0);
-    } else {
-        echo json_encode(["4", "Error: Unsupported file format. Use .xls or .xlsx"]);
-        exit;
     }
 
-    if ($baris < 2) {
-        echo json_encode(["5", "Error: Excel file is empty or missing data rows."]);
-        exit;
-    }
+    // --- DATABASE OPS ---
+    $stmt_check = mysqli_prepare($sqlconn, "SELECT id FROM nilai WHERE nis = ? LIMIT 1");
+    $fields = implode(", ", $cols);
+    $placeholders = implode(", ", array_fill(0, count($cols), "?"));
+    $stmt_ins = mysqli_prepare($sqlconn, "INSERT INTO nilai ($fields) VALUES ($placeholders)");
+    $set_clause = implode("=?, ", $cols) . "=?";
+    $stmt_upd = mysqli_prepare($sqlconn, "UPDATE nilai SET $set_clause WHERE nis = ?");
+    $types = str_repeat("s", count($cols));
 
-    $total_rows = $baris - 1;
-    $log[] = "INFO: Starting import of " . $total_rows . " rows from " . $file['name'];
-
-    for ($i = 2; $i <= $baris; $i++) {
-        $row_data = [];
-        foreach ($col_mapping as $colName => $excelIndex) {
-            if ($use_phpexcel) {
-                // getCellByColumnAndRow is 0-indexed for col, 1-indexed for row
-                $val = trim((string) $worksheet->getCellByColumnAndRow($excelIndex, $i)->getValue());
-            } else {
-                // excel_reader2 is 1-indexed for both
-                $val = trim((string) $data_reader->val($i, $excelIndex + 1));
-            }
-            $row_data[$colName] = $val;
-        }
-
-        $pd = $row_data['pd'];
-        $nis = $row_data['nis'];
-
-        if (empty($pd) && empty($nis)) {
-            $log[] = "SKIPPED: Row $i - Student name and NIS are empty";
+    foreach ($excel_data as $index => $row) {
+        $nis = $row['nis'];
+        $row_num = $index + 2;
+        if (empty($nis))
             continue;
-        }
 
-        if (strtolower($pd) === 'nama' || strtolower($pd) === 'pd') {
-            $log[] = "SKIPPED: Row $i - Header row detected";
-            continue;
-        }
+        mysqli_stmt_bind_param($stmt_check, "s", $nis);
+        mysqli_stmt_execute($stmt_check);
+        mysqli_stmt_store_result($stmt_check);
+        $exists = mysqli_stmt_num_rows($stmt_check) > 0;
 
-        // Default empty grades to NULL instead of saving them as empty strings if they are purely empty
-        foreach ($cols as $idx => $colName) {
-            if ($idx >= 5 && $row_data[$colName] === "") {
-                $row_data[$colName] = null;
-            }
-        }
-
-        // Check if student exists in `nilai` table to decide INSERT or UPDATE
-        $stmt = mysqli_prepare($sqlconn, "SELECT id FROM nilai WHERE nis = ? OR pd = ? LIMIT 1");
-        mysqli_stmt_bind_param($stmt, "ss", $nis, $pd);
-        mysqli_stmt_execute($stmt);
-        $res = mysqli_stmt_get_result($stmt);
-        $exists = (mysqli_num_rows($res) > 0);
-        mysqli_stmt_close($stmt);
-
-        // Prepare statements using dynamic arrays
-        $params = [];
-        $types = "";
-
-        foreach ($cols as $col) {
-            $params[] = $row_data[$col];
-            // Provide correctly typed strings or nulls for prepared statement binding
-            $types .= "s";
-        }
-
-        // To bind dynamically we must pass arguments by reference in PHP <= 8.0, 
-        // using the splat operator `...` is simpler but needs array of references if using call_user_func_array.
-        // Or we can just build an array of references:
-        $bind_params = [];
-        $bind_params[0] = $types;
-        for ($j = 0; $j < count($params); $j++) {
-            $bind_params[] = &$params[$j];
-        }
+        $values = array_values($row);
 
         if ($exists) {
-            $set_clause = implode("=?, ", $cols) . "=?";
-            $sql = "UPDATE nilai SET $set_clause WHERE nis = ?";
-
-            $bind_params[0] .= "s";
-            $bind_params[] = &$nis;
-
-            $upd = mysqli_prepare($sqlconn, $sql);
-            call_user_func_array(array($upd, 'bind_param'), $bind_params);
-
-            if (mysqli_stmt_execute($upd)) {
-                $log[] = "SUCCESS: Updated grades for [$pd] (NIS: $nis)";
-                $sukses++;
-            } else {
-                $log[] = "ERROR: Row $i - Failed to update [$pd]: " . mysqli_error($sqlconn);
-                $gagal++;
-            }
-            mysqli_stmt_close($upd);
+            $upd_values = array_merge($values, [$nis]);
+            mysqli_stmt_bind_param($stmt_upd, $types . "s", ...$upd_values);
+            $exec = mysqli_stmt_execute($stmt_upd);
         } else {
-            $col_names = implode(", ", $cols);
-            $placeholders = implode(", ", array_fill(0, count($cols), "?"));
-            $sql = "INSERT INTO nilai ($col_names) VALUES ($placeholders)";
-
-            $ins = mysqli_prepare($sqlconn, $sql);
-            call_user_func_array(array($ins, 'bind_param'), $bind_params);
-
-            if (mysqli_stmt_execute($ins)) {
-                $log[] = "SUCCESS: Inserted grades for [$pd] (NIS: $nis)";
-                $sukses++;
-            } else {
-                $log[] = "ERROR: Row $i - Failed to insert [$pd]: " . mysqli_error($sqlconn);
-                $gagal++;
-            }
-            mysqli_stmt_close($ins);
+            mysqli_stmt_bind_param($stmt_ins, $types, ...$values);
+            $exec = mysqli_stmt_execute($stmt_ins);
         }
+
+        if ($exec)
+            $sukses++;
+        else
+            $gagal++;
     }
 
-    $log[] = "DONE: Processed $total_rows rows.";
-    $log[] = "SUMMARY: Success=$sukses, Failed=$gagal";
+    $log[] = "IMPORT SELESAI: Berhasil=$sukses, Gagal=$gagal.";
 
 } catch (Throwable $e) {
     if (ob_get_length())
         ob_clean();
-    echo json_encode(["11", "Critical Error: " . $e->getMessage()]);
+    echo json_encode(["11", "Kesalahan Sistem: " . $e->getMessage()]);
     exit;
 }
 
 if (ob_get_length())
     ob_clean();
-
-function utf8ize($d)
-{
-    if (is_array($d)) {
-        foreach ($d as $k => $v) {
-            $d[$k] = utf8ize($v);
-        }
-    } else if (is_string($d)) {
-        return mb_convert_encoding($d, 'UTF-8', 'UTF-8');
-    }
-    return $d;
-}
-
-$log = utf8ize($log);
-$json = json_encode($log, JSON_PARTIAL_OUTPUT_ON_ERROR | JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_IGNORE);
-if ($json === false) {
-    echo json_encode(["11", "JSON Encode Error: " . json_last_error_msg()]);
-} else {
-    echo $json;
-}
+echo json_encode($log);
 ?>

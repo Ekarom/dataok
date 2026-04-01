@@ -207,12 +207,6 @@ if ($sqlp_siswa && mysqli_num_rows($sqlp_siswa) > 0) {
                                     <p>Cek Nilai</p>
                                 </a>
                             </li>
-                            <li class="nav-item">
-                                <a href="profil" class="nav-link <?php echo ($route == 'profil') ? 'active' : ''; ?>">
-                                    <i class="nav-icon fas fa-user-circle"></i>
-                                    <p>Profil Saya</p>
-                                </a>
-                            </li>
 
                         <?php else: ?>
                             <!-- ========== MENU ADMIN/STAFF (Level 1/2) ========== -->

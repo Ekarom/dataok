@@ -93,6 +93,7 @@ $route_map = [
     'viewlegalisir' => ['file' => 'view_legalisir.php', 'title' => 'Detail Legalisir'],
     'dh' => ['file' => 'daftar_hadir.php', 'title' => 'Daftar Hadir'],
     'prestasi-saya' => ['file' => 'view_pres.php', 'title' => 'Prestasi Saya'],
+    'nilai-siswa' => ['file' => 'view_nilai.php', 'title' => 'Cek Nilai'],
     'logout' => ['file' => 'index.php', 'title' => 'Logout']
 ];
 
