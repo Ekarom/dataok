@@ -1,7 +1,8 @@
 <?php
 
 if (!isset($_SESSION['skradm'])) {
-  header("Location: login");
+  $query_string = !empty($_SERVER['QUERY_STRING']) ? '?' . $_SERVER['QUERY_STRING'] : '';
+  header("Location: login" . $query_string);
   exit();
 } else {
   // Ensure connection exists

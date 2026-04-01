@@ -143,7 +143,7 @@ if (isset($_POST['send_email'])) {
     <link rel="icon" type="image/png" href="images/<?php echo $sklogo; ?>" />
     <link rel="stylesheet" type="text/css" href="plugins/fontawesome-free/css/font-awesome.min.css">
     <link rel="stylesheet" type="text/css" href="plugins/css/util.css">
-    <link rel="stylesheet" type="text/css" href="plugins/css/main.css">
+    <link rel="stylesheet" type="text/css" href="plugins/css/main2.css">
     <style>
         .alert {
             padding: 15px;

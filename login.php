@@ -335,8 +335,8 @@ if ($check_table && mysqli_num_rows($check_table) > 0) {
             <?php
 
             // Pastikan tidak ada spasi sebelum tag php
-            $salah = isset($_GET['salah']) ? (int)$_GET['salah'] : 0;
-            
+            $salah = isset($_GET['salah']) ? (int) $_GET['salah'] : 0;
+
             if ($is_blocked || $salah == 3) {
                 // --- KASUS 1: user diblokir ---
                 // Ambil waktu tunggu dari URL parameter 't' atau dari deteksi IP
@@ -476,7 +476,7 @@ if ($check_table && mysqli_num_rows($check_table) > 0) {
                 if (dbName) {
                     $.ajax({
                         type: 'POST',
-                        url: BASE_URL + 'get_semester',
+                        url: 'get_semester.php',
                         data: { database_name: dbName },
                         dataType: 'json',
                         success: function (response) {

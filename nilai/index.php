@@ -44,7 +44,7 @@ $nuser = $p['userid'] ?? '';
 $nama = $p['nama'] ?? '';
 $passworddb = $p['password'] ?? '';
 
-$sqlp_siswa = mysqli_query($sqlconn, "SELECT * FROM siswa WHERE pd = '$user_safe'");
+$sqlp_siswa = mysqli_query($sqlconn, "SELECT * FROM siswa WHERE nis = '$user_safe'");
 $p_siswa = ($sqlp_siswa && mysqli_num_rows($sqlp_siswa) > 0) ? mysqli_fetch_array($sqlp_siswa) : [];
 $photo = $p_siswa['photo'] ?? '';
 

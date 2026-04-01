@@ -1,55 +1,9 @@
 <?php
-// Database connection configuration
-// $server = "localhost";
-// $username = "arsip";
-// $password = "BHmD8VlJELecRqw4S5OAYXDpc";
-// $database = "";
-
-$server = "localhost";
-$username = "root";
-$password = "";
-$database = "";
-
-// Connect to server for database listing
-$db_conn = new mysqli($server, $username, $password, $database);
-
-// Self-healing removed as it conflicts with explicit period selection and is handled better in proses./
-
-$db_list = [];
-if ($db_conn->connect_error) {
-    $db_list[] = ["name" => "Koneksi Gagal", "display" => "Koneksi DB Gagal"];
-} else {
-    // Ambil daftar database
-    $result = $db_conn->query("SHOW DATABASES");
-    if ($result) {
-        while ($row = $result->fetch_array(MYSQLI_NUM)) {
-            $db_name = $row[0];
-            // Filter database yang berawalan 'pnet_pd' atau 'dnet_ad' (Maintain compatibility)
-            if (strpos($db_name, 'dnet_ad') === 0) {
-                // Display adjustment
-                if (strpos($db_name, 'dnet_ad') === 0) {
-                    $display_name = substr($db_name, 7);
-                    if (substr($display_name, 0, 1) === '_')
-                        $display_name = substr($display_name, 1);
-                }
-
-                if (empty($display_name)) {
-                    $display_name = $db_name;
-                } else {
-                    if (is_numeric($display_name) && strlen($display_name) == 4) {
-                        $display_name = $display_name . "/" . ($display_name + 1);
-                    }
-                }
-                $db_list[] = ["name" => $db_name, "display" => $display_name];
-            }
-        }
-    }
-    $db_conn->close();
-}
-
-// Ensure Connection is available for profile info (logo, etc)
+// Ensure session and core database connection are available
 require_once "../cfg/konek.php";
 require_once "../cfg/recaptcha_config.php";
+
+// Handled above
 
 // --- CHECK LOCKOUT STATUS ON PAGE LOAD ---
 $is_blocked = false;
@@ -85,7 +39,7 @@ if ($check_table && mysqli_num_rows($check_table) > 0) {
 <html lang="en">
 
 <head>
-    <title>Arsip Data</title>
+    <title>Ruang NIlai</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
@@ -276,14 +230,14 @@ if ($check_table && mysqli_num_rows($check_table) > 0) {
     <div class="container-login100" style="background-image: url('../images/<?php echo $skback; ?>');">
         <div class="wrap-login100">
             <section id="region-main" class="col-12 h-100" aria-label="Content">
-                <form method="post" action="proseslogin.php">
+                <form method="post" action="login_proses.php">
                     <span class="login100-form-logo">
                         <i class="zmdi landscape"><img src="../images/<?php echo $sklogo; ?>" width="120"
                                 height="110" /></i>
                     </span>
 
                     <span class="login100-form-title p-b-34 p-t-27">
-                        Ruang Nilai<br>
+                        Ruang Nilai Siswa<br>
                         <?php echo $namasek; ?>
                     </span>
 
@@ -297,30 +251,9 @@ if ($check_table && mysqli_num_rows($check_table) > 0) {
                         <span class="focus-input100" data-placeholder="&#xf191;"></span>
                         <i class="fa fa-eye-slash eye-icon" id="toggle-password"></i>
                     </div>
-                    <!-- Pilihan Database -->
-                    <div class="wrap-input100 validate-input" data-validate="Database Harus Dipilih">
-                        <select id="database" name="database_name" class="input100 form-control selectpicker"
-                            data-live-search="true" required>
-                            <option value="">Pilih Tahun Pelajaran</option>
-                            <?php foreach ($db_list as $db_item): ?>
-                                <option value="<?php echo htmlspecialchars($db_item['name']); ?>">
-                                    <?php echo htmlspecialchars($db_item['display']); ?>
-                                </option>
-                                <?php
-                            endforeach; ?>
-                        </select>
-                    </div>
-
-                    <!-- Pilihan Semester -->
-                    <div class="wrap-input100 validate-input" data-validate="Semester Harus Dipilih">
-                        <select id="semester" name="semester" class="input100 form-control" required
-                            style="border: none; background: transparent; color: white;">
-                            <option value="" style="color: black;">Pilih Semester:</option>
-                            <option value="1" style="color: black;">Semester 1 (Ganjil)</option>
-                            <option value="2" style="color: black;">Semester 2 (Genap)</option>
-                        </select>
-                        <span class="focus-input100" data-placeholder="&#xf271;"></span>
-                    </div>
+                    <!-- Pilihan Database Tersembunyi (Default: dnet_ad2025) -->
+                    <input type="hidden" name="database_name" value="<?php echo htmlspecialchars($database); ?>">
+                    <input type="hidden" name="semester" value="1">
 
                     <div class="g-recaptcha" data-sitekey="<?php echo $recaptcha_site_key; ?>"></div>
                     <br>
@@ -418,14 +351,13 @@ if ($check_table && mysqli_num_rows($check_table) > 0) {
                         Silakan scan barcode terlebih dahulu sebelum login.
                       </div>";
                 }
-                // --- KASUS 8: Database tidak dipilih (salah=8) ---
-                elseif ($_GET['salah'] == 8) {
+                // --- KASUS 9: Username/Password Kosong (salah=9) ---
+                elseif ($_GET['salah'] == 9) {
                     echo "<div class='error-gradient-border' style='color: orange; padding: 10px; border: 1px solid orange; background: #fff8e1; margin-bottom: 10px;'>
-                        <strong>DATABASE BELUM DIPILIH!</strong><br>
-                        Silakan pilih tahun database terlebih dahulu.
+                        <strong>DATA TIDAK LENGKAP!</strong><br>
+                        Silahkan isi Username dan Password Anda.
                       </div>";
                 }
-
             }
 
 
@@ -458,63 +390,10 @@ if ($check_table && mysqli_num_rows($check_table) > 0) {
                     }
                 });
             }
-
-            // AJAX for Dynamic Semester
-            // Menggunakan jQuery yang sudah diload (pastikan jQuery diload, jika belum, gunakan Vanilla atau load jQuery)
-            // Cek diatas, ./ belum meload jQuery. Kita tambahkan CDN jQuery.
         });
     </script>
+
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script>
-        var BASE_URL = './';
-        $(document).ready(function () {
-            // AJAX for Dynamic Semester
-            $('#database').change(function () {
-                var dbName = $(this).val();
-                var semesterSelect = $('#semester');
-
-                // Clear current options
-                semesterSelect.empty();
-                semesterSelect.append('<option value="">Loading...</option>');
-
-                if (dbName) {
-                    $.ajax({
-                        type: 'POST',
-                        url: BASE_URL + 'get_semester.php',
-                        data: { database_name: dbName },
-                        dataType: 'json',
-                        success: function (response) {
-                            semesterSelect.empty();
-                            semesterSelect.append('<option value="">Pilih Semester:</option>');
-
-                            if (response.error) {
-                                console.error(response.error);
-                                // Fallback or show error
-                                semesterSelect.append('<option value="">Error loading semesters</option>');
-                            } else if (response.length > 0) {
-                                $.each(response, function (index, value) {
-                                    var text = (value == 1) ? "Semester 1 (Ganjil)" : "Semester 2 (Genap)";
-                                    semesterSelect.append('<option value="' + value + '" style="color: black;">' + text + '</option>');
-                                });
-                            } else {
-                                semesterSelect.append('<option value="">Data Semester Kosong</option>');
-                            }
-                        },
-                        error: function (xhr, status, error) {
-                            console.error("AJAX Error: " + error);
-                            semesterSelect.empty();
-                            semesterSelect.append('<option value="">Gagal memuat semester</option>');
-                        }
-                    });
-                } else {
-                    semesterSelect.empty();
-                    semesterSelect.append('<option value="">Pilih Semester:</option>');
-                    semesterSelect.append('<option value="1" style="color: black;">Semester 1 (Ganjil)</option>');
-                    semesterSelect.append('<option value="2" style="color: black;">Semester 2 (Genap)</option>');
-                }
-            });
-        });
-    </script>
 
 </body>
 
