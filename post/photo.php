@@ -7,20 +7,10 @@
 include "../cfg/konek.php";
 include "../cfg/secure.php";
 
-// Initialize id_user from session if secure.php didn't provide it
-if (empty($id_user)) {
-    if (isset($_SESSION['id'])) {
-        $id_user = $_SESSION['id'];
-    } elseif (isset($userc)) { // $userc usually comes from secure.php
-         $q_temp = mysqli_query($sqlconn, "SELECT id FROM usera WHERE userid='$userc'");
-         if ($q_temp && mysqli_num_rows($q_temp) > 0) {
-            $r_temp = mysqli_fetch_assoc($q_temp);
-            $id_user = $r_temp['id'];
-         }
-    }
-}
+$user_role = $_SESSION['user_role'] ?? 'admin';
+$userc = $_SESSION['skradm'] ?? '';
 
-if (empty($id_user)) {
+if (empty($userc)) {
     die("ERROR: Unauthorized access.");
 }
 
@@ -40,27 +30,39 @@ if (!in_array($file["type"], $allowed_types)) {
     die("ERROR: Only JPG, JPEG, and PNG files are allowed.");
 }
 
-// Validate file size (e.g., 2MB max)
+// Validate file size (2MB max)
 if ($file["size"] > 2 * 1024 * 1024) {
     die("ERROR: File size exceeds 2MB limit.");
 }
 
 $temp = explode(".", $file["name"]);
 $extension = strtolower(end($temp));
-// Use $userc for filename if available, or just ID
-$file_prefix = isset($userc) ? $userc : $id_user;
-$newfilename = $file_prefix . "_" . time() . "." . $extension;
+$newfilename = $userc . "_" . time() . "." . $extension;
+
+// Determine target directory and table based on role
+if ($user_role === 'siswa') {
+    $target_dir = "../file/fotopd/";
+    $table = "siswa";
+    $col_photo = "photo";
+    $col_id = "nis";
+    $return_prefix = "file/fotopd/";
+} else {
+    $target_dir = "../images/";
+    $table = "usera";
+    $col_photo = "poto";
+    $col_id = "userid";
+    $return_prefix = "images/";
+}
 
 // Ensure directory exists
-$target_dir = "../images/";
 if (!file_exists($target_dir)) {
     mkdir($target_dir, 0777, true);
 }
 
 if (move_uploaded_file($file["tmp_name"], $target_dir . $newfilename)) {
     // Update database
-    $stmt = mysqli_prepare($sqlconn, "UPDATE usera SET poto = ? WHERE id = ?");
-    mysqli_stmt_bind_param($stmt, "si", $newfilename, $id_user);
+    $stmt = mysqli_prepare($sqlconn, "UPDATE $table SET $col_photo = ? WHERE $col_id = ?");
+    mysqli_stmt_bind_param($stmt, "ss", $newfilename, $userc);
     
     if (mysqli_stmt_execute($stmt)) {
         mysqli_stmt_close($stmt);
@@ -73,27 +75,30 @@ if (move_uploaded_file($file["tmp_name"], $target_dir . $newfilename)) {
         elseif (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) $ip = $_SERVER['HTTP_X_FORWARDED_FOR'];
         else $ip = $_SERVER['REMOTE_ADDR'];
         
-        // Ensure nama is set
-        if (empty($nama) && isset($userc)) {
-             // fetch nama if missing
-             $qn = mysqli_query($sqlconn, "SELECT nama FROM usera WHERE id='$id_user'");
-             if ($qn) { $rn = mysqli_fetch_assoc($qn); $nama = $rn['nama']; }
-             else { $nama = $userc; }
+        // Get Nama for logging
+        if ($user_role === 'siswa') {
+            $qn = mysqli_query($sqlconn, "SELECT pd as nama FROM siswa WHERE nis='$userc'");
+        } else {
+            $qn = mysqli_query($sqlconn, "SELECT nama FROM usera WHERE userid='$userc'");
+        }
+        
+        if ($qn && mysqli_num_rows($qn) > 0) {
+            $rn = mysqli_fetch_assoc($qn);
+            $nama_log = $rn['nama'];
+        } else {
+            $nama_log = $userc;
         }
 
-        $log_stmt = mysqli_prepare($sqlconn, "INSERT INTO usera_log (user, nama, info, waktu, ip) VALUES (?, ?, ?, NOW(), ?)");
-        // binding ssss (user, nama, info, ip)
-        // userc might be missing if only id_user is set
-        $log_user = isset($userc) ? $userc : $id_user;
-        
+        $waktu = date("Y-m-d H:i:s");
+        $log_stmt = mysqli_prepare($sqlconn, "INSERT INTO usera_log (user, nama, info, waktu, ip) VALUES (?, ?, ?, ?, ?)");
         if ($log_stmt) {
-            mysqli_stmt_bind_param($log_stmt, "ssss", $log_user, $nama, $activity, $ip);
+            mysqli_stmt_bind_param($log_stmt, "sssss", $userc, $nama_log, $activity, $waktu, $ip);
             mysqli_stmt_execute($log_stmt);
             mysqli_stmt_close($log_stmt);
         }
         
         // Return the new image URL and a success flag
-        echo "SUCCESS|" . "file/profil/" . $newfilename;
+        echo "SUCCESS|" . $return_prefix . $newfilename;
     } else {
         mysqli_stmt_close($stmt);
         die("ERROR: Failed to update database.");

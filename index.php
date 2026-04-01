@@ -305,22 +305,28 @@ if (
                                     </a>
                                 </li>-->
                             <?php } ?>
-
-                            <!-- Arsip Data Menu -->
-                            <?php $is_arsip = (strpos($route, 'arsipdata') === 0 || $route == 'dataprestasi' || $route == 'inputlegalisir'); ?>
+                            <?php $is_arsip = (strpos($route, 'arsipdata') === 0 || $route == 'dataprestasi' || $route == 'inputlegalisir' || $route == 'datanilai' || $route == 'legalisir'); ?>
                             <li class="nav-item has-treeview <?php echo $is_arsip ? 'menu-open' : ''; ?>">
-                                <a href="arsipdata" class="nav-link <?php echo $is_arsip ? 'active' : ''; ?>" id="2">
-                                    <i class="nav-icon fas fa-edit"></i>
+                                <a href="javascript:void(0)" class="nav-link <?php echo $is_arsip ? 'active' : ''; ?>" id="2">
+                                    <i class="nav-icon fas fa-archive"></i>
                                     <p>
-                                        Input
+                                        Arsip Data
                                         <i class="right fas fa-angle-left"></i>
                                     </p>
                                 </a>
                                 <ul class="nav nav-treeview">
                                     <li class="nav-item">
+                                        <a href="arsipdata/datanilai"
+                                            class="nav-link <?php echo ($route == 'arsipdata/datanilai' || $route == 'datanilai') ? 'active' : ''; ?>"
+                                            id="3">
+                                            <i class="nav-icon fas fa-table"></i>
+                                            <p>Data Nilai Siswa</p>
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
                                         <a href="arsipdata/inputprestasi"
                                             class="nav-link <?php echo ($route == 'arsipdata/inputprestasi' || $route == 'dataprestasi') ? 'active' : ''; ?>"
-                                            id="3">
+                                            id="4">
                                             <i class="nav-icon fas fa-trophy"></i>
                                             <p>Input Prestasi</p>
                                         </a>

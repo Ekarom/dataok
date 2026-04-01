@@ -2,12 +2,17 @@
 if (session_status() == PHP_SESSION_NONE) {
     session_start();
 }
-include "../cfg/secure.php";
+include_once "../cfg/secure.php";
 
 // Ensure variables are defined to prevent errors
-$nama = $nama ?? ($_SESSION['nama_siswa'] ?? 'Siswa');
-$nuser = $nuser ?? ($_SESSION['skradm'] ?? '');
-$student_id = $student_id ?? ($_SESSION['student_id'] ?? '');
+$nama = (!empty($nama)) ? $nama : ($_SESSION['pd'] ?? 'Siswa');
+$nuser = (!empty($nuser)) ? $nuser : ($_SESSION['skradm'] ?? '');
+$student_id = (!empty($student_id)) ? $student_id : ($_SESSION['student_id'] ?? '');
+
+// Prepare safe variables for queries
+$s_nama = mysqli_real_escape_string($sqlconn, $nama);
+$p_kelas = $p_siswa['kelas'] ?? ($_SESSION['kelas'] ?? '');
+$s_kelas = mysqli_real_escape_string($sqlconn, $p_kelas);
 
 ?>
 <!-- Main content -->
@@ -21,34 +26,17 @@ $student_id = $student_id ?? ($_SESSION['student_id'] ?? '');
             <div class="small-box bg-1">
                 <div class="inner">
                     <?php
-                    // Count only for this student
-                    $query = mysqli_query($sqlconn, "SELECT COUNT(*) as total FROM prestasi WHERE pd = '$nama'");
+                    // Count only for this student (Name + Class for precision)
+                    $query = mysqli_query($sqlconn, "SELECT COUNT(*) as total FROM prestasi WHERE pd = '$s_nama' AND kelas = '$s_kelas'");
                     $row = $query ? mysqli_fetch_assoc($query) : null;
                     $prestasi = $row ? $row['total'] : 0;
                     ?>
                     <h3 class="text-white"><?php echo $prestasi; ?></h3>
-                    <p>Prestasi Saya</p>
+                    <p>Cek Nilai</p>
                 </div>
                 <div class="icon"><i class="ion ion-trophy"></i></div>
-                <a href="prestasi-saya?urut=<?php echo $student_id; ?>" class="small-box-footer">Lihat Detail <i class="fa fa-arrow-circle-right"></i></a>
-            </div>
-        </div>
-
-        <!-- Box 2: Legalisir Saya -->
-        <div class="col-lg-3 col-6">
-            <div class="small-box bg-3">
-                <div class="inner">
-                    <?php
-                    // Assuming pembuat matches student name
-                    $query = mysqli_query($sqlconn, "SELECT COUNT(*) as total FROM legalisir WHERE pembuat = '$nama'");
-                    $row = $query ? mysqli_fetch_assoc($query) : null;
-                    $legalisir = $row ? $row['total'] : 0;
-                    ?>
-                    <h3 class="text-white"><?php echo $legalisir; ?></h3>
-                    <p>Legalisir Saya</p>
-                </div>
-                <div class="icon"><i class="ion ion-archive"></i></div>
-                <a href="#" class="small-box-footer">Info Legalisir <i class="fa fa-arrow-circle-right"></i></a>
+                <a href="nilai-siswa?urut=<?php echo $student_id; ?>" class="small-box-footer">Lihat Detail <i
+                        class="fa fa-arrow-circle-right"></i></a>
             </div>
         </div>
 
@@ -74,7 +62,7 @@ $student_id = $student_id ?? ($_SESSION['student_id'] ?? '');
                             </h5>
                         </div>
                         <div class="card-body border">
-                            Selamat datang di Ruang Nilai. Di sini Anda dapat melihat riwayat prestasi dan data akademik Anda secara mandiri.
+                            Selamat datang di Ruang Nilai. Di sini Anda dapat mengecek nilai anda secara mandiri.
                         </div>
                     </div>
                 </div>
@@ -96,8 +84,10 @@ $student_id = $student_id ?? ($_SESSION['student_id'] ?? '');
                                 <div class="direct-chat-msg">
                                     <div class="direct-chat-infos clearfix">
                                         <span
-                                            class="direct-chat-name float-left"><?php echo htmlspecialchars($log2['nama'] ?? ''); ?></span>
-                                        <span class="direct-chat-timestamp float-right"><?php echo $log2['waktu'] ?? ''; ?></span>
+                                            class="direct-chat-name float-left"><?php echo htmlspecialchars($log2['nama'] ?? ''); ?>
+                                            (<?php echo htmlspecialchars($log2['user'] ?? ''); ?>)</span>
+                                        <span
+                                            class="direct-chat-timestamp float-right"><?php echo $log2['waktu'] ?? ''; ?></span>
                                     </div>
                                     <img class="direct-chat-img" src="../images/info.png" alt="message user image">
                                     <div class="direct-chat-text">
@@ -120,13 +110,13 @@ $student_id = $student_id ?? ($_SESSION['student_id'] ?? '');
 
         <!-- Right col -->
         <section class="col-lg-7 connectedSortable">
-            <!-- Grafik Juara Berprestasi -->
+            <!-- Grafik Juara Berprestasi
             <div class="card">
                 <div class="card-header box-shadow-0 bg-gradient-x-info">
                     <h5 class="card-title text-white">Grafik Siswa Berprestasi</h5>
                 </div>
                 <div class="card-body">
-                    <!-- Filter Row -->
+                    <!-- Filter Row 
                     <div class="row mb-3">
                         <div class="col-md-4 col-6 mb-2">
                             <select id="filterBulanJuara" class="form-control form-control-sm">
@@ -158,11 +148,11 @@ $student_id = $student_id ?? ($_SESSION['student_id'] ?? '');
                             </select>
                         </div>
                     </div>
-                    <!-- Chart -->
+                    <!-- Chart -
                     <div class="chart">
                         <canvas id="juaraChart" style="min-height: 280px; height: 280px; max-height: 280px;"></canvas>
                     </div>
-                    <!-- Tabel Persentase Juara per Bulan -->
+                    <!-- Tabel Persentase Juara per Bulan -
                     <div class="mt-3 table-responsive" id="tabelPersenJuara" style="display:none;">
                         <h6 class="font-weight-bold text-center mb-2"><i class="fas fa-percentage mr-1"></i>
                             Persentase Juara per Bulan</h6>
@@ -194,8 +184,8 @@ $student_id = $student_id ?? ($_SESSION['student_id'] ?? '');
 
 
 
-<script>
-    $(document).ready(function () {
+<!---<script>
+    $(document).ready(function () 
         // Grafik Persentase Siswa Berprestasi per Bulan
         var juaraCtx = document.getElementById('juaraChart').getContext('2d');
         var juaraChart = new Chart(juaraCtx, {
@@ -240,7 +230,7 @@ $student_id = $student_id ?? ($_SESSION['student_id'] ?? '');
             var semester = $('#filterSemesterJuara').val();
             var tahun = $('#filterTpJuara').val();
             $.ajax({
-                url: 'ajax_juara_chart.php',
+            url: '../ajax_juara_chart.php',
                 type: 'GET',
                 data: { bulan: bulan, semester: semester, tahun: tahun },
                 dataType: 'json',
@@ -290,4 +280,4 @@ $student_id = $student_id ?? ($_SESSION['student_id'] ?? '');
         loadJuaraChart();
         $('#filterBulanJuara, #filterSemesterJuara, #filterTpJuara').on('change', loadJuaraChart);
     });
-</script>
+</script>-->

@@ -25,19 +25,36 @@ $page_title = end($breadcrumb_items)['name'] ?? 'Dashboard';
 $user = $_SESSION['skradm'] ?? '';
 $user_role = $_SESSION['user_role'] ?? '';
 
-// Fetch Profile Data (Student Only for this Portal)
+// Fetch Profile Data (Student or Admin)
 $user_safe = mysqli_real_escape_string($sqlconn, $user);
 $p_siswa = [];
+$p_admin = [];
 
+// 1. Try fetching from student table (Primary for this portal)
 $sqlp_siswa = mysqli_query($sqlconn, "SELECT * FROM siswa WHERE nis = '$user_safe'");
-$p_siswa = ($sqlp_siswa && mysqli_num_rows($sqlp_siswa) > 0) ? mysqli_fetch_array($sqlp_siswa) : [];
-
-// Map variables for display
-$nuser = $p_siswa['nis'] ?? '';
-$nama = $p_siswa['pd'] ?? '';
-$photo = $p_siswa['photo'] ?? '';
-$student_id = $p_siswa['id'] ?? '';
-
+if ($sqlp_siswa && mysqli_num_rows($sqlp_siswa) > 0) {
+    $p_siswa = mysqli_fetch_array($sqlp_siswa);
+    $nuser = $p_siswa['nis'] ?? '';
+    $nama = $p_siswa['pd'] ?? '';
+    $photo = $p_siswa['photo'] ?? '';
+    $student_id = $p_siswa['id'] ?? '';
+}
+// 2. Fallback to admin table if not found in student table
+else {
+    $sqlp_admin = mysqli_query($sqlconn, "SELECT * FROM usera WHERE userid = '$user_safe'");
+    if ($sqlp_admin && mysqli_num_rows($sqlp_admin) > 0) {
+        $p_admin = mysqli_fetch_array($sqlp_admin);
+        $nuser = $p_admin['userid'] ?? '';
+        $nama = $p_admin['nama'] ?? '';
+        $photo = $p_admin['poto'] ?? ''; // Note: admin table uses 'poto'
+        $student_id = ''; // Admins don't have a student_id
+    } else {
+        $nuser = $user;
+        $nama = "User Not Found";
+        $photo = "";
+        $student_id = "";
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -47,7 +64,7 @@ $student_id = $p_siswa['id'] ?? '';
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>S.A.D | <?php echo htmlspecialchars($page_title, ENT_QUOTES, 'UTF-8'); ?></title>
-    <base href="/dataok/">
+    <base href="/dataok/nilai/">
 
     <!-- Favicon -->
     <link rel="shortcut icon" type="image/x-icon" href="">
@@ -97,14 +114,13 @@ $student_id = $p_siswa['id'] ?? '';
                     <a class="nav-link" data-widget="pushmenu" href="#" role="button"><i class="fas fa-bars"></i></a>
                 </li>
                 <li class="nav-item d-none d-sm-inline-block text-white">
-                    <span class="nav-link">Tahun Pelajaran: <?php echo $tapel ?> | Semester:
-                        <?php echo $semester == '1' ? 'Ganjil' : ($semester == '2' ? 'Genap' : '-'); ?></span>
+                    <span class="nav-link">Home</span>
                 </li>
             </ul>
 
             <!-- Right navbar links -->
             <ul class="navbar-nav ml-auto align-items-center">
-                <li class="nav-item d-none d-sm-inline-block text-white pr-3">
+                <li class="nav-item d-none d-sm-inline-block text-white">
                     <span class="nav-link">
                         <script type='text/javascript'>
                             (function () {
@@ -144,7 +160,7 @@ $student_id = $p_siswa['id'] ?? '';
         <aside class="main-sidebar sidebar-dark-primary elevation">
             <!-- Brand Logo -->
             <a href="dashboard" class="brand-link d-flex flex-column align-items-center text-center py-2">
-                <img src="logo_sekolah.png" alt="smpn171" class="brand-image img-circle elevation-3 mb-1"
+                <img src="../images/logo_sekolah.png" alt="smpn171" class="brand-image img-circle elevation-3 mb-1"
                     style="opacity: .7; float: none; margin-left: 0;">
                 <span class="brand-text font-weight-light text-wrap" style="line-height: 1.2;">Ruang Nilai Siswa</span>
             </a>
@@ -153,7 +169,7 @@ $student_id = $p_siswa['id'] ?? '';
             <div class="sidebar">
                 <!-- User Panel -->
                 <div class="user-panel mt-1 pb-1 mb-1 d-flex">
-                    <div class="image">
+                    <div class="image text-center">
                         <?php
                         if (!empty($photo) && file_exists("../file/fotopd/$photo")) {
                             echo "<img src='../file/fotopd/$photo' class='img-circle elevation-2' alt='Student Photo'>";
@@ -188,15 +204,14 @@ $student_id = $p_siswa['id'] ?? '';
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a href="prestasi-saya?urut=<?php echo $student_id; ?>"
-                                class="nav-link <?php echo ($route == 'prestasi-saya') ? 'active' : ''; ?>">
-                                <i class="nav-icon fas fa-medal"></i>
-                                <p>Prestasi Saya</p>
+                            <a href="nilai-siswa?urut=<?php echo $student_id; ?>"
+                                class="nav-link <?php echo ($route == 'nilai-siswa') ? 'active' : ''; ?>">
+                                <i class="nav-icon fas fa-file-signature"></i>
+                                <p>Cek Nilai</p>
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a href="profil"
-                                class="nav-link <?php echo ($route == 'profil') ? 'active' : ''; ?>">
+                            <a href="profil" class="nav-link <?php echo ($route == 'profil') ? 'active' : ''; ?>">
                                 <i class="nav-icon fas fa-user-circle"></i>
                                 <p>Profil Saya</p>
                             </a>

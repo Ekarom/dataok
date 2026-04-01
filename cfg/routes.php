@@ -21,6 +21,8 @@ $route_map = [
     'arsipdata/inputprestasi' => ['file' => 'inputprestasi_logic', 'title' => 'Input Prestasi'],
     'inputprestasi'           => ['file' => 'inputprestasi_logic', 'title' => 'Input Prestasi'],
     'dataprestasi'            => ['file' => 'inputprestasi_logic', 'title' => 'Input Prestasi'],
+    'arsipdata/datanilai'     => ['file' => 'datanilai.php', 'title' => 'Data Nilai'],
+    'datanilai'               => ['file' => 'datanilai.php', 'title' => 'Data Nilai'],
     'input'                   => ['file' => 'inputprestasi_logic', 'title' => 'Input Prestasi'],
 
     // Input Legalisir
@@ -88,6 +90,7 @@ $route_map = [
     'viewlegalisir'  => ['file' => 'view_legalisir.php', 'title' => 'Detail Legalisir'],
     'dh'             => ['file' => 'daftar_hadir.php', 'title' => 'Daftar Hadir'],
     'prestasi-saya'  => ['file' => 'view_pres.php', 'title' => 'Prestasi Saya'],
+    'nilai-siswa'    => ['file' => 'view_pres.php', 'title' => 'Cek Nilai'],
     'logout'         => ['file' => 'index.php', 'title' => 'Logout']
 ];
 
@@ -95,6 +98,9 @@ $route_map = [
  * Get include file based on route
  */
 function get_route_include($route, $route_map) {
+    // Detect if we are in the student portal (nilai/ directory)
+    $is_student_portal = (strpos($_SERVER['SCRIPT_NAME'], '/nilai/') !== false);
+
     if ($route === 'modul') {
         $mod = strtolower($_GET['modul'] ?? '');
         $mod_map = [
@@ -108,23 +114,26 @@ function get_route_include($route, $route_map) {
             'activitylog'   => 'activity_log.php',
             'log-aktivitas' => 'activity_log.php'
         ];
-        return $mod_map[$mod] ?? 'load.php';
+        $file = $mod_map[$mod] ?? 'load.php';
+    } elseif (!isset($route_map[$route])) {
+        $file = 'load.php';
+    } else {
+        $file = $route_map[$route]['file'];
+
+        // Special Logic Cases
+        if ($file === 'inputprestasi_logic') {
+            $file = isset($_GET['nis']) ? 'inputprestasi.php' : 'dataprestasi.php';
+        } elseif ($file === 'legalisir_logic') {
+            $_GET['aksi'] = 'tambah';
+            $file = 'laporanlegalisir.php';
+        }
     }
 
-    if (!isset($route_map[$route])) {
-        return 'load.php';
-    }
-
-    $file = $route_map[$route]['file'];
-
-    // Special Logic Cases
-    if ($file === 'inputprestasi_logic') {
-        return isset($_GET['nis']) ? 'inputprestasi.php' : 'dataprestasi.php';
-    }
-
-    if ($file === 'legalisir_logic') {
-        $_GET['aksi'] = 'tambah';
-        return 'laporanlegalisir.php';
+    // Path Correction: If in student portal, files NOT in the 'nilai' folder must be prefixed with '../'
+    // For now, we assume only 'index.php', 'profil.php', 'load.php', 'login.php' are in 'nilai/'
+    $local_files = ['index.php', 'profil.php', 'load.php', 'login.php', 'login_proses.php'];
+    if ($is_student_portal && !in_array($file, $local_files)) {
+        return '../' . $file;
     }
 
     return $file;
