@@ -7,7 +7,8 @@
 
 // Custom name to prevent clash with main portal
 session_name('NILAISESSID');
-if (session_status() == PHP_SESSION_NONE) session_start();
+if (session_status() == PHP_SESSION_NONE)
+    session_start();
 
 include "../cfg/konek.php";
 include "../cfg/logger.php";
@@ -129,7 +130,7 @@ if ($login_success) {
     global $userc, $nama;
     $userc = $skradm;
     $nama = $u['pd'] ?? $skradm;
-    write_log("LOGIN_SUCCESS", "Masuk ke Ruang Nilai (Siswa)", $sqlconn);
+    write_log("LOGIN_SUCCESS", "Login", $sqlconn);
 
     header('Location: ./dashboard');
     exit();
